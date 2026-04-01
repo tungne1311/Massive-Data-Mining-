@@ -1,0 +1,10 @@
+# ── NOTE: pyspark KHÔNG khai báo ở đây ───────────────────────────
+# bitnami/spark:3.5 đã cung cấp PySpark qua PYTHONPATH.
+# Cài lại pyspark sẽ xung đột với Spark binaries của bitnami.
+# Nếu muốn chạy LOCAL (ngoài Docker), tự thêm: pyspark==3.5.1
+
+datasets==2.19.2
+huggingface-hub==0.23.0
+pyyaml==6.0.1
+boto3==1.34.100
+tqdm==4.66.4
