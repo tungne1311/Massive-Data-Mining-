@@ -1,0 +1,24 @@
+{
+  "config_id": "baseline",
+  "weights": {
+    "w_verified": 0.5,
+    "w_text": 0.3,
+    "w_helpful": 0.2,
+    "unverified_value": 0.5
+  },
+  "total_rows": 44066834,
+  "verified_ratio": 0.9237,
+  "short_review_ratio": 0.4447,
+  "duplicate_text_ratio": 0.0525,
+  "avg_reliability_score": 0.5883,
+  "rating_distribution": {
+    "1": 5373837,
+    "2": 2265648,
+    "3": 2895614,
+    "4": 5582988,
+    "5": 27948747
+  },
+  "month_min": "2001-09",
+  "month_max": "2023-09",
+  "generated_at": "2026-03-31T10:13:45.912103"
+}

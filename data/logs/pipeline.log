@@ -1,0 +1,511 @@
+2026-03-31 03:37:47 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 03:37:47 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 03:37:47 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 03:37:50 [INFO] pipeline_runner — Spark version   : 3.5.1
+2026-03-31 03:37:50 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 03:37:50 [INFO] pipeline_runner — App ID          : app-20260331033749-0000
+2026-03-31 03:37:50 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 03:37:50 [INFO] pipeline_runner — === Chạy bước 3–6 | config_id=baseline ===
+2026-03-31 03:37:50 [INFO] step3_silver_cleaning — === Bước 3: Silver Cleaning — config_id=baseline ===
+2026-03-31 03:37:50 [INFO] step3_silver_cleaning —   Đọc bronze reviews: s3a://recsys/bronze/reviews
+2026-03-31 03:37:51 [ERROR] pipeline_runner — Pipeline lỗi: An error occurred while calling o67.parquet.
+: org.apache.hadoop.security.KerberosAuthException: failure to login: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name
+	at jdk.security.auth/com.sun.security.auth.UnixPrincipal.<init>(UnixPrincipal.java:71)
+	at jdk.security.auth/com.sun.security.auth.module.UnixLoginModule.login(UnixLoginModule.java:134)
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:755)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1986)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name
+	at jdk.security.auth/com.sun.security.auth.UnixPrincipal.<init>(UnixPrincipal.java:71)
+	at jdk.security.auth/com.sun.security.auth.module.UnixLoginModule.login(UnixLoginModule.java:134)
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:755)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:850)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	... 30 more
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 291, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 182, in run_steps_3_6
+    df_silver  = step3.run(spark, cfg, rel_cfg, config_id)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3_silver_cleaning.py", line 368, in run
+    df_reviews  = read_bronze_reviews(spark, cfg)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3_silver_cleaning.py", line 46, in read_bronze_reviews
+    return spark.read.parquet(path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 326, in get_return_value
+    raise Py4JJavaError(
+py4j.protocol.Py4JJavaError: An error occurred while calling o67.parquet.
+: org.apache.hadoop.security.KerberosAuthException: failure to login: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name
+	at jdk.security.auth/com.sun.security.auth.UnixPrincipal.<init>(UnixPrincipal.java:71)
+	at jdk.security.auth/com.sun.security.auth.module.UnixLoginModule.login(UnixLoginModule.java:134)
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:755)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1986)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name
+	at jdk.security.auth/com.sun.security.auth.UnixPrincipal.<init>(UnixPrincipal.java:71)
+	at jdk.security.auth/com.sun.security.auth.module.UnixLoginModule.login(UnixLoginModule.java:134)
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:755)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	at org.apache.hadoop.security.UserGroupInformation.createLoginUser(UserGroupInformation.java:719)
+	at org.apache.hadoop.security.UserGroupInformation.getLoginUser(UserGroupInformation.java:669)
+	at org.apache.hadoop.security.UserGroupInformation.getCurrentUser(UserGroupInformation.java:579)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3746)
+	at org.apache.hadoop.fs.FileSystem$Cache$Key.<init>(FileSystem.java:3736)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3520)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.parquet(DataFrameReader.scala:563)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+	at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:850)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:679)
+	at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:677)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:677)
+	at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at org.apache.hadoop.security.UserGroupInformation$HadoopLoginContext.login(UserGroupInformation.java:2065)
+	at org.apache.hadoop.security.UserGroupInformation.doSubjectLogin(UserGroupInformation.java:1975)
+	... 30 more
+
+2026-03-31 03:37:52 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 04:16:23 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 04:16:23 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 04:16:23 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 04:16:25 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 04:16:25 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 04:16:25 [INFO] pipeline_runner — App ID          : app-20260331041624-0000
+2026-03-31 04:16:25 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 04:16:25 [INFO] pipeline_runner — === Chạy bước 3–6 | config_id=baseline ===
+2026-03-31 04:16:25 [INFO] step3_silver_cleaning — === Bước 3: Silver Cleaning — config_id=baseline ===
+2026-03-31 04:16:25 [INFO] step3_silver_cleaning —   Đọc bronze reviews: s3a://recsys/bronze/reviews
+2026-03-31 04:19:24 [INFO] step3_silver_cleaning —   Đọc bronze metadata: s3a://recsys/bronze/metadata
+2026-03-31 04:19:24 [INFO] step3_silver_cleaning —   Làm sạch + join Bronze...
+2026-03-31 04:19:25 [INFO] step3_silver_cleaning —   Sau lọc timestamp [2010–2025]: còn lại
+2026-03-31 04:19:25 [INFO] step3_silver_cleaning —   Tính signal scores (w_v=0.5, w_t=0.3, w_h=0.2)...
+2026-03-31 04:43:05 [INFO] step3_silver_cleaning —   Ghi silver interactions → s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 05:52:34 [INFO] step3_silver_cleaning —   ✓ Ghi xong silver: s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 05:52:34 [INFO] step3_silver_cleaning —   Tính summary metrics...
+2026-03-31 06:32:33 [INFO] step3_silver_cleaning —   Summary ghi → data/logs/silver_summary_baseline.json
+2026-03-31 06:32:36 [INFO] step3_silver_cleaning —   Summary MinIO → s3a://recsys/silver/logs/silver_summary_baseline.json
+2026-03-31 06:32:36 [INFO] step3_silver_cleaning —   ✓ Bước 3 xong: 43,442,415 rows | avg_reliability=0.5882
+2026-03-31 06:32:41 [INFO] step4_labeling — === Bước 4: Labeling — config_id=baseline ===
+2026-03-31 06:32:42 [INFO] step4_labeling —   Tính phân phối interaction_type...
+2026-03-31 06:34:01 [INFO] step4_labeling —     hard_negative: 4,795,119
+2026-03-31 06:34:01 [INFO] step4_labeling —     medium_negative: 2,020,469
+2026-03-31 06:34:01 [INFO] step4_labeling —     neutral: 940,055
+2026-03-31 06:34:01 [INFO] step4_labeling —     strong_positive: 30,978,682
+2026-03-31 06:34:01 [INFO] step4_labeling —     weak_positive: 4,708,090
+2026-03-31 06:34:01 [INFO] step4_labeling —   Ghi labeled interactions → s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-03-31 08:06:58 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 08:06:58 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 08:06:58 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 08:07:00 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 08:07:00 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 08:07:00 [INFO] pipeline_runner — App ID          : app-20260331080659-0000
+2026-03-31 08:07:00 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 08:07:00 [INFO] step3_silver_cleaning — === Bước 3: Silver Cleaning — config_id=baseline ===
+2026-03-31 08:07:00 [INFO] step3_silver_cleaning —   Đọc bronze reviews: s3a://recsys/bronze/reviews
+2026-03-31 08:10:36 [INFO] step3_silver_cleaning —   Đọc bronze metadata: s3a://recsys/bronze/metadata
+2026-03-31 08:10:37 [INFO] step3_silver_cleaning —   Làm sạch + join Bronze...
+2026-03-31 08:10:37 [INFO] step3_silver_cleaning —   Sau lọc timestamp [2010–2025]: còn lại
+2026-03-31 08:10:38 [INFO] step3_silver_cleaning —   Tính signal scores (w_v=0.5, w_t=0.3, w_h=0.2)...
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=4>
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 08:27:56 [ERROR] root — Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=4>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o56.sc
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 08:27:56 [ERROR] root — Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o56.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 08:27:56 [ERROR] pipeline_runner — Pipeline lỗi: An error occurred while calling o243.collectToPython
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 288, in main
+    run_single_step(spark, cfg, step, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 199, in run_single_step
+    step3.run(spark, cfg, rel_cfg, config_id)
+  File "/app/src/step3_silver_cleaning.py", line 376, in run
+    df = compute_signal_scores(df, rel_cfg)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3_silver_cleaning.py", line 203, in compute_signal_scores
+    max_helpful = df.agg(F.max("helpful_vote").alias("mx")).collect()[0]["mx"] or 0
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/dataframe.py", line 1263, in collect
+    sock_info = self._jdf.collectToPython()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o243.collectToPython
+2026-03-31 08:27:56 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 08:40:01 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 08:40:01 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 08:40:01 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 08:40:04 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 08:40:04 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 08:40:04 [INFO] pipeline_runner — App ID          : app-20260331084003-0000
+2026-03-31 08:40:04 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 08:40:04 [INFO] step3_silver_cleaning — === Bước 3: Silver Cleaning — config_id=baseline ===
+2026-03-31 08:40:04 [INFO] step3_silver_cleaning —   Đọc bronze reviews: s3a://recsys/bronze/reviews
+2026-03-31 08:40:39 [INFO] step3_silver_cleaning —   Đọc bronze metadata: s3a://recsys/bronze/metadata
+2026-03-31 08:40:40 [INFO] step3_silver_cleaning —   Làm sạch + join Bronze...
+2026-03-31 08:40:41 [INFO] step3_silver_cleaning —   Tính signal scores (w_v=0.5, w_t=0.3, w_h=0.2)...
+2026-03-31 08:59:39 [INFO] step3_silver_cleaning —   Ghi silver interactions → s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 09:51:41 [INFO] step3_silver_cleaning —   ✓ Ghi xong silver: s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 09:51:41 [INFO] step3_silver_cleaning —   Tính summary metrics...
+2026-03-31 10:13:45 [INFO] step3_silver_cleaning —   Summary ghi → data/logs/silver_summary_baseline.json
+2026-03-31 10:13:47 [INFO] step3_silver_cleaning —   Summary MinIO → s3a://recsys/silver/logs/silver_summary_baseline.json
+2026-03-31 10:13:47 [INFO] step3_silver_cleaning —   ✓ Bước 3 xong: 44,066,834 rows | avg_reliability=0.5883
+2026-03-31 10:14:00 [INFO] pipeline_runner — === Pipeline hoàn tất ===
+2026-03-31 10:14:00 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 10:17:26 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 10:17:26 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 10:17:26 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 10:17:27 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 10:17:27 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 10:17:27 [INFO] pipeline_runner — App ID          : app-20260331101727-0001
+2026-03-31 10:17:27 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 10:17:27 [INFO] step4_labeling — === Bước 4: Labeling — config_id=baseline ===
+2026-03-31 10:17:27 [INFO] step4_labeling —   Đọc silver từ disk: s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 10:17:34 [INFO] step4_labeling —   Tính phân phối interaction_type...
+2026-03-31 10:18:34 [INFO] step4_labeling —     hard_negative: 4,818,043
+2026-03-31 10:18:34 [INFO] step4_labeling —     medium_negative: 2,035,213
+2026-03-31 10:18:34 [INFO] step4_labeling —     neutral: 1,045,028
+2026-03-31 10:18:34 [INFO] step4_labeling —     strong_positive: 31,214,972
+2026-03-31 10:18:34 [INFO] step4_labeling —     weak_positive: 4,953,578
+2026-03-31 10:18:34 [INFO] step4_labeling —   Ghi labeled interactions → s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-03-31 10:52:24 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 10:52:24 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 10:52:24 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 10:52:26 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 10:52:26 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 10:52:26 [INFO] pipeline_runner — App ID          : app-20260331105225-0000
+2026-03-31 10:52:26 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 10:52:26 [INFO] step4_labeling — === Bước 4: Labeling — config_id=baseline ===
+2026-03-31 10:52:26 [INFO] step4_labeling —   Đọc silver từ disk: s3a://recsys/silver/interactions/config_id=baseline
+2026-03-31 10:52:40 [INFO] step4_labeling —   Tính phân phối interaction_type...
+2026-03-31 10:53:40 [INFO] step4_labeling —     hard_negative: 4,818,043
+2026-03-31 10:53:40 [INFO] step4_labeling —     medium_negative: 2,035,213
+2026-03-31 10:53:40 [INFO] step4_labeling —     neutral: 1,045,028
+2026-03-31 10:53:40 [INFO] step4_labeling —     strong_positive: 31,214,972
+2026-03-31 10:53:40 [INFO] step4_labeling —     weak_positive: 4,953,578
+2026-03-31 10:53:40 [INFO] step4_labeling —   Ghi labeled interactions → s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-03-31 11:09:57 [INFO] step4_labeling —   ✓ Ghi xong labeled: s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-03-31 11:09:57 [INFO] step4_labeling —   ✓ Bước 4 xong: config_id=baseline
+2026-03-31 11:10:02 [INFO] pipeline_runner — === Pipeline hoàn tất ===
+2026-03-31 11:10:02 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-03-31 12:48:59 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-03-31 12:48:59 [INFO] pipeline_runner — Config ID   : baseline
+2026-03-31 12:48:59 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-03-31 12:49:01 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-03-31 12:49:01 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-03-31 12:49:01 [INFO] pipeline_runner — App ID          : app-20260331124900-0000
+2026-03-31 12:49:01 [INFO] pipeline_runner — Default parallelism: 2
+2026-03-31 12:49:01 [INFO] step5_temporal_split — === Bước 5: Temporal Split — config_id=baseline ===
+2026-03-31 12:49:01 [INFO] step5_temporal_split —   Đọc labeled từ disk: s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-03-31 12:50:19 [INFO] step5_temporal_split —   Max month (T)  = 2023-09
+2026-03-31 12:50:19 [INFO] step5_temporal_split —   Train months  : ['2001-09', '2001-10', '2001-11']... (262 tháng)
+2026-03-31 12:50:19 [INFO] step5_temporal_split —   Val months    : ['2023-07', '2023-08']
+2026-03-31 12:50:19 [INFO] step5_temporal_split —   Test months   : ['2023-09']
+2026-03-31 12:50:20 [INFO] step5_temporal_split —   Ghi train → s3a://recsys/splits/config_id=baseline/train
+2026-03-31 12:55:33 [INFO] step5_temporal_split —   ✓ Ghi xong train
+2026-03-31 12:56:15 [INFO] step5_temporal_split —   train: 43,925,339 rows | 18,200,233 users | 1,602,487 items
+2026-03-31 12:56:15 [INFO] step5_temporal_split —   Ghi val → s3a://recsys/splits/config_id=baseline/val
+2026-03-31 12:56:22 [INFO] step5_temporal_split —   ✓ Ghi xong val
+2026-03-31 12:56:22 [INFO] step5_temporal_split —   val: 137,715 rows | 106,094 users | 52,239 items
+2026-03-31 12:56:22 [INFO] step5_temporal_split —   Ghi test → s3a://recsys/splits/config_id=baseline/test
+2026-03-31 12:56:24 [INFO] step5_temporal_split —   ✓ Ghi xong test
+2026-03-31 12:56:24 [INFO] step5_temporal_split —   test: 3,780 rows | 2,993 users | 3,101 items
+2026-03-31 12:56:24 [INFO] step5_temporal_split —   ✓ Bước 5 xong: config_id=baseline
+2026-03-31 12:56:24 [INFO] pipeline_runner — === Pipeline hoàn tất ===
+2026-03-31 12:56:25 [INFO] py4j.clientserver — Closing down clientserver connection

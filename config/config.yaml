@@ -1,0 +1,108 @@
+# RecSys Pipeline v3 — Full config (Bước 1–6)
+
+huggingface:
+  review_dataset:   "McAuley-Lab/Amazon-Reviews-2023"
+  review_subset:    "raw_review_Electronics"
+  metadata_dataset: "McAuley-Lab/Amazon-Reviews-2023"
+  metadata_subset:  "raw_meta_Electronics"
+  stream_batch_size:    100000
+  max_review_records:   null   # null = toàn bộ | int = giới hạn để test
+  max_metadata_records: null
+
+paths:
+  bronze_base:   "s3a://recsys/bronze"
+  silver_base:   "s3a://recsys/silver"
+  splits_base:   "s3a://recsys/splits"
+  feature_base:  "s3a://recsys/feature_store"
+  log_dir:       "data/logs"
+
+minio:
+  endpoint:    "http://minio:9000"      # hostname nội bộ Docker network
+  access_key:  "minioadmin"             # override bằng env MINIO_ACCESS_KEY
+  secret_key:  "minioadmin"             # override bằng env MINIO_SECRET_KEY
+  bucket:      "recsys"
+
+spark:
+  app_name:   "RecSys_Pipeline"
+  # ── Cluster mode ─────────────────────────────────────────────────
+  # Giá trị này bị override bởi env SPARK_MASTER hoặc bởi spark-submit --master
+  # Đặt local[*] ở đây chỉ để dev/test ngoài Docker
+  master:              "local[*]"
+  deploy_mode:         "client"
+  driver_memory:       "4g"
+  executor_memory:     "4g"
+  executor_cores:      "2"
+  # ── Shuffle & partitions ─────────────────────────────────────────
+  # Cluster 2 workers × 2 cores = 4 cores → 100–200 partitions là hợp lý
+  shuffle_partitions:  "100"
+  # ── AQE (Adaptive Query Execution) ───────────────────────────────
+  aqe_enabled:              "true"   # bật AQE để tự điều chỉnh partition
+  aqe_coalesce_partitions:  "true"   # gộp partition nhỏ sau shuffle
+  aqe_skew_join:            "true"   # xử lý skew tự động
+  # ── Output ───────────────────────────────────────────────────────
+  parquet_compression: "snappy"
+  # write_partitions: số file parquet khi ghi output cuối
+  # Đặt 0 = không coalesce, để Spark tự quyết (phù hợp cluster)
+  # Đặt > 0 = coalesce về N file (giảm số file nhỏ, phù hợp data nhỏ-trung)
+  write_partitions:    0
+
+bronze:
+  write_mode: "overwrite"
+
+quality_check:
+  max_null_ratio:      0.01
+  max_duplicate_ratio: 0.05
+  min_verified_ratio:  0.30
+  max_five_star_ratio: 0.70
+
+silver:
+  write_mode:       "overwrite"
+  min_year:         2010
+  max_year:         2025
+  short_review_len: 20
+
+reliability_tuning:
+  selected_config_id: "baseline"
+  configs:
+    - config_id: "baseline"
+      w_verified:       0.50
+      w_text:           0.30
+      w_helpful:        0.20
+      unverified_value: 0.50
+
+    - config_id: "cfg_2"
+      w_verified:       0.60
+      w_text:           0.25
+      w_helpful:        0.15
+      unverified_value: 0.50
+
+    - config_id: "cfg_3"
+      w_verified:       0.40
+      w_text:           0.40
+      w_helpful:        0.20
+      unverified_value: 0.50
+
+    - config_id: "cfg_4"
+      w_verified:       0.50
+      w_text:           0.20
+      w_helpful:        0.30
+      unverified_value: 0.50
+
+    - config_id: "cfg_5"
+      w_verified:       0.55
+      w_text:           0.25
+      w_helpful:        0.20
+      unverified_value: 0.40
+
+    - config_id: "cfg_6"
+      w_verified:       0.45
+      w_text:           0.35
+      w_helpful:        0.20
+      unverified_value: 0.60
+
+temporal_split:
+  mode: "auto"
+  # explicit example:
+  # train_months: ["2022-01", "2022-02"]
+  # val_months:   ["2022-03"]
+  # test_months:  ["2022-04"]
