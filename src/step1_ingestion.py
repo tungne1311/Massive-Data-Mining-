@@ -1,14 +1,17 @@
 """
-Bước 1 — Data Ingestion
-Stream Amazon Reviews 2023 Electronics từ HuggingFace → normalize → Spark DataFrame.
+Bước 1 — Data Ingestion (Producer-Consumer & Micro-batch)
+Sử dụng luồng chạy ngầm (Background Thread) và ThreadPool để kéo dữ liệu từ HuggingFace
+song song với việc Spark ghi xuống MinIO. Không ghi file raw rác.
 """
 
 import logging
-import re
+import queue
+import threading
+import concurrent.futures
 from datetime import datetime
 from typing import Iterator, Optional
 
-from pyspark.sql import DataFrame, SparkSession
+from datasets import load_dataset
 from pyspark.sql.types import (
     BooleanType, FloatType, IntegerType, LongType,
     StringType, StructField, StructType,
@@ -18,6 +21,13 @@ logger = logging.getLogger(__name__)
 
 SOURCE_NAME = "amazon_reviews_2023_electronics"
 INGEST_DATE = datetime.now().strftime("%Y-%m-%d")
+
+# ── 1. SCHEMA (LƯU Ý QUAN TRỌNG KHI GIỮ NGUYÊN DATA GỐC) ──────────────────────
+# CẢNH BÁO: Vì bạn muốn giữ lại TOÀN BỘ dữ liệu gốc từ HuggingFace, 
+# nếu bạn ép Spark dùng Schema cứng này lúc tạo DataFrame, Spark sẽ DROP các cột 
+# không có tên trong đây.
+# => KHUYẾN NGHỊ: Ở bước tạo DataFrame, hãy để Spark tự inferSchema (không truyền biến schema)
+# hoặc bạn phải tự động gen schema dựa trên data thực tế. Ở đây mình giữ lại để tham khảo.
 
 REVIEW_SCHEMA = StructType([
     StructField("reviewer_id",       StringType(),  False),
@@ -30,6 +40,7 @@ REVIEW_SCHEMA = StructType([
     StructField("verified_purchase", BooleanType(), True),
     StructField("ingest_date",       StringType(),  True),
     StructField("source_name",       StringType(),  True),
+    StructField("year_month",        StringType(),  False), # <-- Partition key mới thêm
 ])
 
 METADATA_SCHEMA = StructType([
@@ -37,197 +48,122 @@ METADATA_SCHEMA = StructType([
     StructField("item_title",    StringType(), True),
     StructField("brand",         StringType(), True),
     StructField("main_category", StringType(), True),
-    StructField("description",   StringType(), True),
-    StructField("features",      StringType(), True),
     StructField("price_bucket",  StringType(), True),
     StructField("ingest_date",   StringType(), True),
     StructField("source_name",   StringType(), True),
+    
 ])
 
-
-# ── Streaming ─────────────────────────────────────────────────────────────────
-
-def _stream_batched(
-    dataset_name: str,
-    subset: str,
-    batch_size: int,
-    max_records: Optional[int],
-) -> Iterator[list[dict]]:
-    """Yield batches từ HuggingFace streaming — không load toàn bộ vào RAM."""
-    from datasets import load_dataset
-    logger.info(f"  Kết nối: {dataset_name} / {subset}")
-
-    ds = load_dataset(dataset_name, subset, split="full",
-                      streaming=True, trust_remote_code=True)
-    batch: list[dict] = []
-    total = 0
-
-    for record in ds:
-        batch.append(record)
-        total += 1
-        if len(batch) >= batch_size:
-            logger.info(f"  {total:,} records streamed...")
-            yield batch
-            batch = []
-        if max_records and total >= max_records:
-            break
-
-    if batch:
-        yield batch
-    logger.info(f"  Stream xong: {total:,} records")
-
-
-# ── Normalizers ───────────────────────────────────────────────────────────────
+# ── 2. NORMALIZERS (CHỈ THÊM YEAR_MONTH, GIỮ NGUYÊN GỐC) ──────────────────────
 
 def normalize_review(raw: dict) -> Optional[dict]:
-    """Chuẩn hóa 1 record review. Trả về None nếu thiếu field bắt buộc."""
-    reviewer_id = raw.get("user_id") or raw.get("reviewer_id") or raw.get("reviewerID")
-    parent_asin = raw.get("parent_asin") or raw.get("asin")
-    rating_raw  = raw.get("rating") or raw.get("overall")
-
-    if not reviewer_id or not parent_asin or rating_raw is None:
-        return None
-    try:
-        rating = float(rating_raw)
-    except (TypeError, ValueError):
-        return None
-    if not (1.0 <= rating <= 5.0):
-        return None
-
-    review_text = str(raw.get("text") or raw.get("reviewText") or "").strip()
-
+    """
+    Giữ nguyên toàn bộ dữ liệu gốc của Review.
+    Chỉ trích xuất timestamp để sinh ra cột phân mảnh year_month.
+    """
     ts_raw = raw.get("timestamp") or raw.get("unixReviewTime") or 0
     try:
         ts = int(ts_raw)
-        ts = ts // 1000 if ts > 1_000_000_000_000 else ts  # ms → s
-    except (TypeError, ValueError):
-        ts = 0
+        # Xử lý trường hợp timestamp ở dạng milliseconds
+        ts = ts // 1000 if ts > 1_000_000_000_000 else ts
+        
+        # Tính toán trực tiếp year_month từ timestamp
+        dt = datetime.fromtimestamp(ts)
+        year_month = dt.strftime("%Y-%m")
+    except Exception:
+        year_month = "unknown_date"
 
-    helpful_raw = raw.get("helpful_vote") or raw.get("helpful") or 0
-    if isinstance(helpful_raw, list):   # dataset cũ có dạng [x, y]
-        helpful_raw = helpful_raw[0] if helpful_raw else 0
-    try:
-        helpful_vote = int(helpful_raw)
-    except (TypeError, ValueError):
-        helpful_vote = 0
-
-    return {
-        "reviewer_id":       reviewer_id,
-        "parent_asin":       parent_asin,
-        "rating":            rating,
-        "review_text":       review_text,
-        "text_len":          len(review_text.split()) if review_text else 0,
-        "timestamp":         ts,
-        "helpful_vote":      helpful_vote,
-        "verified_purchase": bool(raw.get("verified_purchase") or raw.get("verified") or False),
-        "ingest_date":       INGEST_DATE,
-        "source_name":       SOURCE_NAME,
-    }
+    # Gán thêm cột year_month vào data gốc và trả về toàn bộ
+    raw["year_month"] = year_month
+    return raw
 
 
 def normalize_metadata(raw: dict) -> Optional[dict]:
-    """Chuẩn hóa 1 record metadata. Trả về None nếu thiếu parent_asin."""
-    parent_asin = raw.get("parent_asin") or raw.get("asin")
-    if not parent_asin:
-        return None
+    """
+    Giữ nguyên toàn bộ dữ liệu gốc của Metadata.
+    Sinh ra cột phân mảnh year_month dựa trên ngày chạy pipeline (INGEST_DATE).
+    """
+    
+    return raw
 
-    desc_raw = raw.get("description") or ""
-    description = (
-        " ".join(str(x) for x in desc_raw if x)
-        if isinstance(desc_raw, list) else str(desc_raw).strip()
+
+# ── 3. KIẾN TRÚC PRODUCER-CONSUMER (ĐA LUỒNG TRÊN RAM) ───────────────────────
+
+def _fetch_and_process_worker(ds, batch_size, max_records, n_threads, out_queue, normalizer_func):
+    """Hàm chạy ngầm: Kéo dữ liệu từ HF và đẩy vào ThreadPool để xử lý."""
+    
+    def _process(rb):
+        # Chuyển dữ liệu cột thành dữ liệu dòng
+        keys = rb.keys()
+        row_oriented = [dict(zip(keys, vals)) for vals in zip(*rb.values())]
+        # Xử lý (chỉ thêm year_month)
+        return [r for r in (normalizer_func(raw) for raw in row_oriented) if r is not None]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_threads) as pool:
+        futures = set()
+        batch_idx = 0
+        
+        for raw_batch in ds.iter(batch_size=batch_size):
+            # Nhét batch thô vào ThreadPool xử lý
+            futures.add(pool.submit(_process, raw_batch))
+            batch_idx += 1
+            
+            # Cân bằng tải: Giữ số lượng tác vụ song song bằng n_threads
+            if len(futures) >= n_threads:
+                done, futures = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                for f in done:
+                    # Lệnh put này sẽ BỊ CHẶN (Block) nếu out_queue đầy do Spark xử lý chậm -> Chống tràn RAM
+                    out_queue.put(f.result())
+                    
+            if max_records and (batch_idx * batch_size >= max_records):
+                break
+                
+        # Nhét nốt các batch còn sót lại vào hàng đợi
+        for f in concurrent.futures.as_completed(futures):
+            out_queue.put(f.result())
+            
+    # Báo hiệu cho Spark (Consumer) biết là đã hết dữ liệu
+    out_queue.put(None)
+
+
+def _create_iterator(cfg: dict, dataset_name: str, subset: str, max_records: Optional[int], normalizer_func) -> Iterator[list[dict]]:
+    hf = cfg["huggingface"]
+    batch_size = hf["stream_batch_size"]
+    n_threads = hf.get("staging_threads", 4)
+    
+    ds = load_dataset(dataset_name, subset, split="full", streaming=True, trust_remote_code=True)
+    
+    # Hàng đợi giao tiếp: Giới hạn maxsize = n_threads * 2 để bảo vệ RAM Driver
+    out_queue = queue.Queue(maxsize=n_threads * 2)
+    
+    # Khởi chạy luồng ngầm (Producer)
+    t = threading.Thread(
+        target=_fetch_and_process_worker,
+        args=(ds, batch_size, max_records, n_threads, out_queue, normalizer_func)
     )
-
-    feats_raw = raw.get("features") or []
-    features = (
-        " | ".join(str(f) for f in feats_raw if f)
-        if isinstance(feats_raw, list) else str(feats_raw).strip()
-    )
-
-    return {
-        "parent_asin":   parent_asin,
-        "item_title":    str(raw.get("title") or "").strip(),
-        "brand":         str(raw.get("store") or raw.get("brand") or raw.get("manufacturer") or "").strip(),
-        "main_category": str(raw.get("main_category") or "").strip(),
-        "description":   description,
-        "features":      features,
-        "price_bucket":  _price_bucket(raw.get("price") or ""),
-        "ingest_date":   INGEST_DATE,
-        "source_name":   SOURCE_NAME,
-    }
+    t.start()
+    
+    total_valid = 0
+    while True:
+        # Luồng chính (Consumer/Spark) lấy dữ liệu. Sẽ chờ nếu chưa có data.
+        batch = out_queue.get()
+        if batch is None:
+            break # Tín hiệu kết thúc
+            
+        if batch:
+            total_valid += len(batch)
+            logger.info(f"  [QUEUE] Spark rút {len(batch):,} rows để ghi (Tổng đã rút: {total_valid:,})")
+            yield batch
+            
+    t.join()
 
 
-def _price_bucket(price_raw) -> str:
-    match = re.search(r"[\d.]+", str(price_raw).replace(",", ""))
-    if not match:
-        return "unknown"
-    try:
-        val = float(match.group())
-    except ValueError:
-        return "unknown"
-    if val < 25:   return "budget"
-    if val < 100:  return "mid"
-    if val < 300:  return "premium"
-    return "high_end"
-
-
-# ── Ingestion ─────────────────────────────────────────────────────────────────
 def iter_review_batches(cfg: dict) -> Iterator[list[dict]]:
     hf = cfg["huggingface"]
-    skipped = 0
-    total_valid = 0
-
-    for raw_batch in _stream_batched(
-        hf["review_dataset"],
-        hf["review_subset"],
-        hf["stream_batch_size"],
-        hf["max_review_records"],
-    ):
-        batch_rows: list[dict] = []
-
-        for raw in raw_batch:
-            r = normalize_review(raw)
-            if r is None:
-                skipped += 1
-                continue
-            batch_rows.append(r)
-
-        if batch_rows:
-            total_valid += len(batch_rows)
-            logger.info(
-                f"Review batch hợp lệ: {len(batch_rows):,} | "
-                f"total={total_valid:,} | skipped={skipped:,}"
-            )
-            yield batch_rows
-
-    logger.info(f"Reviews tổng hợp lệ: {total_valid:,} | tổng bỏ qua: {skipped:,}")
-
+    logger.info(f"[INGESTION] Khởi động Kéo Reviews Song Song (Producer-Consumer)")
+    return _create_iterator(cfg, hf["review_dataset"], hf["review_subset"], hf.get("max_review_records"), normalize_review)
 
 def iter_metadata_batches(cfg: dict) -> Iterator[list[dict]]:
     hf = cfg["huggingface"]
-    skipped = 0
-    total_valid = 0
-
-    for raw_batch in _stream_batched(
-        hf["metadata_dataset"],
-        hf["metadata_subset"],
-        hf["stream_batch_size"],
-        hf["max_metadata_records"],
-    ):
-        batch_rows: list[dict] = []
-
-        for raw in raw_batch:
-            r = normalize_metadata(raw)
-            if r is None:
-                skipped += 1
-                continue
-            batch_rows.append(r)
-
-        if batch_rows:
-            total_valid += len(batch_rows)
-            logger.info(
-                f"Metadata batch hợp lệ: {len(batch_rows):,} | "
-                f"total={total_valid:,} | skipped={skipped:,}"
-            )
-            yield batch_rows
-
-    logger.info(f"Metadata tổng hợp lệ: {total_valid:,} | tổng bỏ qua: {skipped:,}")
+    logger.info(f"[INGESTION] Khởi động Kéo Metadata Song Song (Producer-Consumer)")
+    return _create_iterator(cfg, hf["metadata_dataset"], hf["metadata_subset"], hf.get("max_metadata_records"), normalize_metadata)
