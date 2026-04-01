@@ -1,12 +1,12 @@
 """
-Bước 2 — Bronze Storage (Tối giản & MapReduce)
-Đọc dữ liệu từ Staging (MinIO) -> Gom file nhỏ -> Ghi Parquet (zstd) xuống Bronze.
-Không lưu Cache, Không chạy Quality Check. Ghi ngay lập tức từng luồng.
+Bước 2 — Bronze Storage (Micro-batch Append & Compaction)
+Ghi từng batch thô dạng part-files, sau đó gom nhóm và nén zstd.
+Cuối cùng tự động xóa sạch thư mục tạm để giải phóng dung lượng.
 """
 
 import logging
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql import functions as F
+import step1_ingestion as step1
 
 logger = logging.getLogger(__name__)
 
@@ -16,83 +16,104 @@ def join_uri(base: str, *parts: str) -> str:
     suffix = "/".join(p.strip("/") for p in parts)
     return f"{base}/{suffix}"
 
+# ── HÀM TIỆN ÍCH XÓA THƯ MỤC BẰNG HADOOP API (HỖ TRỢ MINIO & LOCAL) ───────────
+def delete_path(spark: SparkSession, path: str) -> None:
+    """Xóa hoàn toàn một thư mục (kể cả có chứa file bên trong)"""
+    sc = spark.sparkContext
+    # Gọi xuống tầng Java JVM của Hadoop để thao tác xóa file
+    URI = sc._gateway.jvm.java.net.URI
+    Path = sc._gateway.jvm.org.apache.hadoop.fs.Path
+    FileSystem = sc._gateway.jvm.org.apache.hadoop.fs.FileSystem
+    
+    fs = FileSystem.get(URI(path), sc._jsc.hadoopConfiguration())
+    hadoop_path = Path(path)
+    if fs.exists(hadoop_path):
+        fs.delete(hadoop_path, True)  # True = Xóa đệ quy (recursive) toàn bộ file bên trong
 
-def process_and_write_reviews(spark: SparkSession, staging_path: str, cfg: dict) -> None:
-    """Đọc Reviews từ Staging, tạo year_month, gom file và ghi ngay xuống Bronze."""
-    logger.info(f"[SPARK MAP] Đọc reviews từ staging: {staging_path}")
+
+# ── 1. GHI LẺ TỪNG BATCH LÊN THƯ MỤC TẠM ──────────────────────────────────────
+
+def write_review_batch(spark: SparkSession, batch_rows: list[dict], cfg: dict, write_mode: str = "append") -> None:
+    """Ghi trực tiếp không nén vào temp_reviews"""
+    temp_path = join_uri(cfg["paths"]["bronze_base"], "temp_reviews")
+    df = spark.createDataFrame(batch_rows, schema=step1.REVIEW_SCHEMA)
+    df.write.mode(write_mode).partitionBy("year_month").parquet(temp_path)
+
+def write_metadata_batch(spark: SparkSession, batch_rows: list[dict], cfg: dict, write_mode: str = "append") -> None:
+    """Ghi trực tiếp không nén vào temp_metadata"""
+    temp_path = join_uri(cfg["paths"]["bronze_base"], "temp_metadata")
+    df = spark.createDataFrame(batch_rows, schema=step1.METADATA_SCHEMA)
+    df.write.mode(write_mode).partitionBy("year_month").parquet(temp_path)
+
+
+# ── 2. GOM NHÓM COMPACTION VÀ NÉN ZSTD ────────────────────────────────────────
+
+def run_compaction(spark: SparkSession, cfg: dict) -> None:
+    """Gom các file nhỏ từ thư mục tạm và nén ZSTD vào Bronze đích"""
+    logger.info("=== Bắt đầu Compaction & Compress (ZSTD) ===")
     
-    df = spark.read.parquet(staging_path)
-    
-    # 1. Lọc và tạo partition key (year_month)
-    df = df.filter((F.col("timestamp").isNotNull()) & (F.col("timestamp") > 0))
-    df = df.withColumn("review_time", F.to_timestamp(F.from_unixtime(F.col("timestamp"))))
-    df = df.filter((F.year("review_time") >= 1995) & (F.year("review_time") <= 2030))
-    df = df.withColumn("year_month", F.date_format(F.col("review_time"), "yyyy-MM"))
-    
-    out_path = join_uri(cfg["paths"]["bronze_base"], "reviews")
+    bronze_base = cfg["paths"]["bronze_base"]
     n_partitions = int(cfg["spark"].get("write_partitions", 0))
-    write_mode = cfg["bronze"].get("write_mode", "append")
 
-    # 2. Giải quyết vấn đề "Nhiều file nhỏ" (Small Files Problem)
-    # Sử dụng repartition theo cột phân mảnh (year_month)
-    # Thao tác này buộc Spark phải Shuffle dữ liệu: tất cả các dòng của cùng một tháng 
-    # sẽ được gom về chung 1 task/executor. Kết quả là mỗi thư mục tháng chỉ sinh ra 1 (hoặc rất ít) file lớn.
-    if n_partitions > 0:
-        df = df.repartition(n_partitions, "year_month")
-    else:
-        df = df.repartition("year_month")
-
-    # 3. Lập tức kích hoạt Action: Ghi Parquet với chuẩn nén ZSTD
-    logger.info(f"[SPARK REDUCE] Đang ghi Bronze reviews (ZSTD) → {out_path}")
-    (
-        df.write
-        .mode(write_mode)
-        .partitionBy("year_month")
-        .option("compression", "zstd")
-        .parquet(out_path)
-    )
-    logger.info("✓ Ghi xong Reviews.")
-
-
-def process_and_write_metadata(spark: SparkSession, staging_path: str, cfg: dict) -> None:
-    """Đọc Metadata từ Staging và ghi thẳng xuống Bronze (Không phân mảnh)."""
-    logger.info(f"[SPARK MAP] Đọc metadata từ staging: {staging_path}")
+    temp_rev = join_uri(bronze_base, "temp_reviews")
+    final_rev = join_uri(bronze_base, "reviews")
+    temp_meta = join_uri(bronze_base, "temp_metadata")
+    final_meta = join_uri(bronze_base, "metadata")
     
-    df = spark.read.parquet(staging_path)
-    
-    out_path = join_uri(cfg["paths"]["bronze_base"], "metadata")
-    n_partitions = int(cfg["spark"].get("write_partitions", 0))
-    write_mode = cfg["bronze"].get("write_mode", "append")
+    rev_success = False
+    meta_success = False
+    ## --- Gom nhóm Reviews ---
+    logger.info(f"[COMPACT] Gom nhóm Reviews: {temp_rev} -> {final_rev}")
+    try:
+        df_rev = spark.read.parquet(temp_rev)
+        df_rev = df_rev.repartition(n_partitions, "year_month") if n_partitions > 0 else df_rev.repartition("year_month")
+            
+        (
+            df_rev.write
+            .mode("overwrite")
+            .partitionBy("year_month")
+            .option("compression", "zstd")
+            .parquet(final_rev)
+        )
+        logger.info("  ✓ Đã gom nhóm và nén ZSTD thành công cho Reviews.")
+        rev_success = True  # <--- Bật cờ thành công
+    except Exception as e:
+        logger.error(f"  ✗ Lỗi gom file Reviews: {e}")
 
-    # Chỉ gom file lại thành N file lớn, KHÔNG gom theo year_month nữa
-    if n_partitions > 0:
-        df = df.repartition(n_partitions)
-
-    # Ghi Parquet ZSTD, KHÔNG dùng partitionBy("year_month") nữa
-    logger.info(f"[SPARK REDUCE] Đang ghi Bronze metadata (ZSTD) → {out_path}")
-    (
-        df.write
-        .mode(write_mode)
-        .option("compression", "zstd")
-        .parquet(out_path)
-    )
-    logger.info("✓ Ghi xong Metadata.")
-
-
-# ── Entry point ───────────────────────────────────────────────────────────────
-
-def run(spark: SparkSession, cfg: dict, staging_paths: dict) -> None:
-    """
-    Điểm bắt đầu của Bước 2: Xử lý độc lập và ghi ngay lập tức (không gom chờ).
-    """
-    logger.info("=== Bước 2: Bronze Storage (MapReduce + ZSTD) ===")
-
-    # Thực hiện luồng Reviews: Map -> Shuffle (Gom file) -> Reduce (Ghi ngay lập tức)
-    if "reviews" in staging_paths and staging_paths["reviews"]:
-        process_and_write_reviews(spark, staging_paths["reviews"], cfg)
-
-    # Thực hiện luồng Metadata: Map -> Shuffle (Gom file) -> Reduce (Ghi ngay lập tức)
-    if "metadata" in staging_paths and staging_paths["metadata"]:
-        process_and_write_metadata(spark, staging_paths["metadata"], cfg)
+    # --- Gom nhóm Metadata ---
+    logger.info(f"[COMPACT] Gom nhóm Metadata: {temp_meta} -> {final_meta}")
+    try:
+        df_meta = spark.read.parquet(temp_meta)
+        df_meta = df_meta.repartition(n_partitions, "year_month") if n_partitions > 0 else df_meta.repartition("year_month")
+            
+        (
+            df_meta.write
+            .mode("overwrite")
+            .partitionBy("year_month")
+            .option("compression", "zstd")
+            .parquet(final_meta)
+        )
+        logger.info("  ✓ Đã gom nhóm và nén ZSTD thành công cho Metadata.")
+        meta_success = True # <--- Bật cờ thành công
+    except Exception as e:
+        logger.error(f"  ✗ Lỗi gom file Metadata: {e}")
         
-    logger.info("=== Bước 2 hoàn tất ===")
+    # --- DỌN DẸP THƯ MỤC TẠM (CHỈ KHI THÀNH CÔNG) ---
+    logger.info("=== Đang dọn dẹp xóa sạch thư mục rác (temp_reviews & temp_metadata) ===")
+    try:
+        if rev_success:
+            delete_path(spark, temp_rev)
+            logger.info("  ✓ Đã xóa sạch temp_reviews.")
+        else:
+            logger.warning("  ! Bỏ qua xóa temp_reviews vì quá trình gom nhóm bị lỗi.")
+            
+        if meta_success:
+            delete_path(spark, temp_meta)
+            logger.info("  ✓ Đã xóa sạch temp_metadata.")
+        else:
+            logger.warning("  ! Bỏ qua xóa temp_metadata vì quá trình gom nhóm bị lỗi.")
+            
+    except Exception as e:
+        logger.error(f"  ✗ Lỗi khi xóa thư mục tạm: {e}")
+
+    logger.info("=== Hoàn tất toàn bộ Bước 2 ===")
