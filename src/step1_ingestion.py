@@ -48,6 +48,7 @@ METADATA_SCHEMA = StructType([
     StructField("item_title",    StringType(), True),
     StructField("brand",         StringType(), True),
     StructField("main_category", StringType(), True),
+    StructField("features",      StringType(), True),
     StructField("price_bucket",  StringType(), True),
     StructField("ingest_date",   StringType(), True),
     StructField("source_name",   StringType(), True),
@@ -59,21 +60,35 @@ METADATA_SCHEMA = StructType([
 def normalize_review(raw: dict) -> Optional[dict]:
     """
     Giữ nguyên toàn bộ dữ liệu gốc của Review.
-    Chỉ trích xuất timestamp để sinh ra cột phân mảnh year_month.
+    Đồng bộ khóa chính và trích xuất timestamp để sinh ra cột phân mảnh year_month.
     """
+    # 1. Đồng bộ các key định danh (để Spark không bị thiếu khóa Join sau này)
+    raw["reviewer_id"] = raw.get("user_id") or raw.get("reviewer_id") or raw.get("reviewerID")
+    raw["parent_asin"] = raw.get("parent_asin") or raw.get("asin")
+    
+    # Bỏ qua ngay lập tức các dòng rác không có thông tin định danh
+    if not raw["reviewer_id"] or not raw["parent_asin"]:
+        return None
+
+    # 2. Xử lý thời gian và sinh year_month
     ts_raw = raw.get("timestamp") or raw.get("unixReviewTime") or 0
     try:
         ts = int(ts_raw)
-        # Xử lý trường hợp timestamp ở dạng milliseconds
+        # Ép về định dạng giây (seconds) nếu đang ở dạng mili-giây (milliseconds)
         ts = ts // 1000 if ts > 1_000_000_000_000 else ts
         
-        # Tính toán trực tiếp year_month từ timestamp
+        # Tính toán year_month và chặn các năm quá vô lý (bảo vệ hệ thống thư mục)
         dt = datetime.fromtimestamp(ts)
-        year_month = dt.strftime("%Y-%m")
+        if 1995 <= dt.year <= 2030:
+            year_month = dt.strftime("%Y-%m")
+        else:
+            year_month = "unknown_date"
+            
+        raw["timestamp"] = ts  # Ghi đè lại bằng timestamp chuẩn
     except Exception:
         year_month = "unknown_date"
 
-    # Gán thêm cột year_month vào data gốc và trả về toàn bộ
+    # 3. Gán partition key và trả về toàn bộ dữ liệu gốc
     raw["year_month"] = year_month
     return raw
 
@@ -83,7 +98,14 @@ def normalize_metadata(raw: dict) -> Optional[dict]:
     Giữ nguyên toàn bộ dữ liệu gốc của Metadata.
     Sinh ra cột phân mảnh year_month dựa trên ngày chạy pipeline (INGEST_DATE).
     """
-    
+    if not raw.get("parent_asin") and not raw.get("asin"):
+        return None
+    #Xử lý cột features (gom list thành chuỗi)
+    feats_raw = raw.get("features") or []
+    features = " | ".join(str(f) for f in feats_raw if f) if isinstance(feats_raw, list) else str(feats_raw).strip()
+    raw["features"] = features
+    raw["ingest_date"] = INGEST_DATE
+    raw["source_name"] = SOURCE_NAME
     return raw
 
 
