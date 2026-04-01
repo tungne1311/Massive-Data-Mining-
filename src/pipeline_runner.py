@@ -124,18 +124,27 @@ def _n_parts(cfg: dict) -> int:
 # ── Các khối chạy ─────────────────────────────────────────────────────────────
 
 def run_steps_1_2(spark, cfg: dict, logger: logging.Logger) -> None:
-    """
-    Chạy Bước 1+2 theo kiến trúc MapReduce:
-    - Giai đoạn 1 (Driver): Parallel Staging đẩy raw file lên MinIO.
-    - Giai đoạn 2 (Spark): Đọc song song, gom nhóm và ghi zstd xuống Bronze.
-    """
-    logger.info("=== Bước 1: Giai đoạn Parallel Staging (Python ThreadPool) ===")
-    staging_paths = step1.run_staging(cfg)
+    logger.info("=== Bước 1: Kéo dữ liệu đa luồng và ghi ngay xuống MinIO (thư mục tạm) ===")
     
-    logger.info("=== Bước 2: Giai đoạn Spark Distributed Processing ===")
-    step2.run(spark, cfg, staging_paths)
+    # 1. Chạy luồng Review (Producer-Consumer)
+    first_rev = True
+    for batch in step1.iter_review_batches(cfg):
+        mode = "overwrite" if first_rev else "append"
+        step2.write_review_batch(spark, batch, cfg, write_mode=mode)
+        first_rev = False
+        
+    # 2. Chạy luồng Metadata (Producer-Consumer)
+    first_meta = True
+    for batch in step1.iter_metadata_batches(cfg):
+        mode = "overwrite" if first_meta else "append"
+        step2.write_metadata_batch(spark, batch, cfg, write_mode=mode)
+        first_meta = False
+        
+    logger.info("=== Bước 2: Gom các file nhỏ và nén ZSTD (Compaction) ===")
+    # Spark huy động 2 worker để gom nhóm và nén toàn bộ dữ liệu
+    step2.run_compaction(spark, cfg)
 
-    logger.info("✓ Bước 1+2 hoàn tất toàn diện")
+    logger.info("✓ Bước 1+2 hoàn tất toàn diện theo kiến trúc Compaction đa luồng")
 
 
 def run_steps_3_6(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:

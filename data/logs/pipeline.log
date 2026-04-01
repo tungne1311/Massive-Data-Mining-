@@ -509,3 +509,160 @@ py4j.protocol.Py4JError: An error occurred while calling o243.collectToPython
 2026-03-31 12:56:24 [INFO] step5_temporal_split —   ✓ Bước 5 xong: config_id=baseline
 2026-03-31 12:56:24 [INFO] pipeline_runner — === Pipeline hoàn tất ===
 2026-03-31 12:56:25 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 04:51:14 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-04-01 04:51:14 [INFO] pipeline_runner — Config ID   : baseline
+2026-04-01 04:51:14 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-04-01 04:51:19 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-04-01 04:51:19 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-04-01 04:51:19 [INFO] pipeline_runner — App ID          : app-20260401045117-0000
+2026-04-01 04:51:19 [INFO] pipeline_runner — Default parallelism: 2
+2026-04-01 04:51:19 [INFO] pipeline_runner — === Bước 1: Giai đoạn Parallel Staging (Python ThreadPool) ===
+2026-04-01 04:51:19 [ERROR] pipeline_runner — Pipeline lỗi: module 'step1_ingestion' has no attribute 'run_staging'
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 245, in main
+    run_steps_1_2(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 133, in run_steps_1_2
+    staging_paths = step1.run_staging(cfg)
+                    ^^^^^^^^^^^^^^^^^
+AttributeError: module 'step1_ingestion' has no attribute 'run_staging'
+2026-04-01 04:51:19 [INFO] pipeline_runner — ⏱ TỔNG THỜI GIAN CHẠY: 0:00:05 (5.35 giây)
+2026-04-01 04:51:19 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 04:52:43 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-04-01 04:52:43 [INFO] pipeline_runner — Config ID   : baseline
+2026-04-01 04:52:43 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-04-01 04:52:47 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-04-01 04:52:47 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-04-01 04:52:47 [INFO] pipeline_runner — App ID          : app-20260401045245-0001
+2026-04-01 04:52:47 [INFO] pipeline_runner — Default parallelism: 2
+2026-04-01 04:52:47 [INFO] pipeline_runner — === Bước 1: Kéo dữ liệu đa luồng và ghi ngay xuống MinIO (thư mục tạm) ===
+2026-04-01 04:52:47 [INFO] step1_ingestion — [INGESTION] Khởi động Kéo Reviews Song Song (Producer-Consumer)
+2026-04-01 04:54:35 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 250,000)
+2026-04-01 04:54:36 [ERROR] pipeline_runner — Pipeline lỗi: module 'step2_bronze_storage' has no attribute 'write_review_batch'
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 254, in main
+    run_steps_1_2(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 133, in run_steps_1_2
+    step2.write_review_batch(spark, batch, cfg, write_mode=mode)
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'step2_bronze_storage' has no attribute 'write_review_batch'
+2026-04-01 04:54:36 [INFO] pipeline_runner — ⏱ TỔNG THỜI GIAN CHẠY: 0:01:54 (114.53 giây)
+2026-04-01 04:55:07 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 04:57:49 [INFO] pipeline_runner — Config file : /app/config/config.yaml
+2026-04-01 04:57:49 [INFO] pipeline_runner — Config ID   : baseline
+2026-04-01 04:57:49 [INFO] pipeline_runner — Spark master: spark://spark-master:7077
+2026-04-01 04:57:53 [INFO] pipeline_runner — Spark version   : 3.5.2
+2026-04-01 04:57:53 [INFO] pipeline_runner — Spark master    : spark://spark-master:7077
+2026-04-01 04:57:53 [INFO] pipeline_runner — App ID          : app-20260401045752-0002
+2026-04-01 04:57:53 [INFO] pipeline_runner — Default parallelism: 2
+2026-04-01 04:57:53 [INFO] pipeline_runner — === Bước 1: Kéo dữ liệu đa luồng và ghi ngay xuống MinIO (thư mục tạm) ===
+2026-04-01 04:57:53 [INFO] step1_ingestion — [INGESTION] Khởi động Kéo Reviews Song Song (Producer-Consumer)
+2026-04-01 04:59:42 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 250,000)
+2026-04-01 05:03:29 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 500,000)
+2026-04-01 05:06:11 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 750,000)
+2026-04-01 05:08:33 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 1,000,000)
+2026-04-01 05:11:09 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 1,250,000)
+2026-04-01 05:13:25 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 1,500,000)
+2026-04-01 05:15:42 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 1,750,000)
+2026-04-01 05:18:11 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 2,000,000)
+2026-04-01 05:20:27 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 2,250,000)
+2026-04-01 05:22:43 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 2,500,000)
+2026-04-01 05:25:22 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 2,750,000)
+2026-04-01 05:25:37 [INFO] py4j.clientserver — Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+2026-04-01 05:25:37 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 05:25:37 [ERROR] root — Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-01 05:25:37 [INFO] py4j.clientserver — Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o56.sc
+2026-04-01 05:25:37 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 05:25:37 [ERROR] root — Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o56.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-01 05:25:37 [INFO] py4j.clientserver — Closing down clientserver connection
+2026-04-01 05:25:37 [ERROR] pipeline_runner — Pipeline lỗi: An error occurred while calling o278.parquet
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 254, in main
+    run_steps_1_2(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 133, in run_steps_1_2
+    step2.write_review_batch(spark, batch, cfg, write_mode=mode)
+  File "/app/src/step2_bronze_storage.py", line 25, in write_review_batch
+    Path = sc._gateway.jvm.org.apache.hadoop.fs.Path
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o278.parquet
+2026-04-01 05:25:38 [INFO] pipeline_runner — ⏱ TỔNG THỜI GIAN CHẠY: 0:28:02 (1682.15 giây)
