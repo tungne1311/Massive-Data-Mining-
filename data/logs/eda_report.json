@@ -1,0 +1,62 @@
+{
+    "generated_at": "2026-04-02T11:15:14.986679",
+    "summary_metrics": {
+        "num_users": 18286191,
+        "num_products": 1610012,
+        "total_reviews_clean": 43408906,
+        "avg_rating": 4.1,
+        "avg_reviews_per_user": 2.37,
+        "avg_reviews_per_item": 26.96,
+        "sparsity_pct": 99.99985,
+        "orphan_reviews_pct": 0.0
+    },
+    "detailed_metrics": {
+        "reviews": {
+            "missing_pct": {
+                "reviewer_id": 0.0,
+                "parent_asin": 0.0,
+                "rating": 0.0,
+                "review_text": 0.0,
+                "text_len": 0.0,
+                "timestamp": 0.0,
+                "helpful_vote": 0.0,
+                "verified_purchase": 0.0,
+                "ingest_date": 0.0,
+                "source_name": 0.0,
+                "year_month": 0.0
+            },
+            "rating_distribution": {
+                "0.0": 2,
+                "1.0": 5292288,
+                "2.0": 2232122,
+                "3.0": 2852473,
+                "4.0": 5498530,
+                "5.0": 27533491
+            },
+            "text_len_quantiles": {
+                "Q1": 40.0,
+                "Median": 120.0,
+                "Q3": 240.0,
+                "P95": 35208.0
+            },
+            "verified_purchase_dist": {
+                "True": 40105872,
+                "False": 3303034
+            }
+        },
+        "meta": {
+            "missing_pct": {
+                "parent_asin": 0.0,
+                "item_title": 0.0,
+                "brand": 0.0,
+                "main_category": 0.0,
+                "features": 0.0,
+                "price_bucket": 0.0,
+                "ingest_date": 0.0,
+                "source_name": 0.0,
+                "year_month": 0.0
+            }
+        },
+        "join": {}
+    }
+}

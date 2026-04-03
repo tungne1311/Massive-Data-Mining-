@@ -732,3 +732,815 @@ py4j.protocol.Py4JError: An error occurred while calling o278.parquet
 2026-04-01 07:45:47 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 13,750,000)
 2026-04-01 07:48:41 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 14,000,000)
 2026-04-01 07:51:29 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 14,250,000)
+2026-04-01 07:54:13 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 14,500,000)
+2026-04-01 07:57:09 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 14,750,000)
+2026-04-01 07:59:44 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 15,000,000)
+2026-04-01 08:02:18 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 15,250,000)
+2026-04-01 08:05:04 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 15,500,000)
+2026-04-01 08:07:33 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 15,750,000)
+2026-04-01 08:10:06 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 16,000,000)
+2026-04-01 08:13:03 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 16,250,000)
+2026-04-01 08:15:44 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 16,500,000)
+2026-04-01 08:18:25 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 16,750,000)
+2026-04-01 08:21:16 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 17,000,000)
+2026-04-01 08:24:02 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 17,250,000)
+2026-04-01 08:26:34 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 17,500,000)
+2026-04-01 08:29:15 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 17,750,000)
+2026-04-01 08:31:45 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 18,000,000)
+2026-04-01 08:34:21 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 18,250,000)
+2026-04-01 08:37:16 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 18,500,000)
+2026-04-01 08:39:51 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 18,750,000)
+2026-04-01 08:42:26 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 19,000,000)
+2026-04-01 08:45:09 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 19,250,000)
+2026-04-01 08:47:53 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 19,500,000)
+2026-04-01 08:50:34 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 19,750,000)
+2026-04-01 08:53:31 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 20,000,000)
+2026-04-01 08:56:11 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 20,250,000)
+2026-04-01 08:58:53 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 20,500,000)
+2026-04-01 09:01:41 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 20,750,000)
+2026-04-01 09:04:17 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 21,000,000)
+2026-04-01 09:06:58 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 21,250,000)
+2026-04-01 09:10:18 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 21,500,000)
+2026-04-01 09:12:58 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 21,750,000)
+2026-04-01 09:15:35 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 22,000,000)
+2026-04-01 09:18:23 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 22,250,000)
+2026-04-01 09:21:05 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 22,500,000)
+2026-04-01 09:23:41 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 22,750,000)
+2026-04-01 09:26:38 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 23,000,000)
+2026-04-01 09:29:23 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 23,250,000)
+2026-04-01 09:32:04 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 23,500,000)
+2026-04-01 09:35:06 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 23,750,000)
+2026-04-01 09:37:55 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 24,000,000)
+2026-04-01 09:40:44 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 24,250,000)
+2026-04-01 09:43:37 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 24,500,000)
+2026-04-01 09:46:39 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 24,750,000)
+2026-04-01 09:49:23 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 25,000,000)
+2026-04-01 09:52:17 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 25,250,000)
+2026-04-01 09:54:58 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 25,500,000)
+2026-04-01 09:57:43 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 25,750,000)
+2026-04-01 10:00:34 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 26,000,000)
+2026-04-01 10:03:12 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 26,250,000)
+2026-04-01 10:05:59 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 26,500,000)
+2026-04-01 10:09:08 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 26,750,000)
+2026-04-01 10:11:49 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 27,000,000)
+2026-04-01 10:14:50 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 27,250,000)
+2026-04-01 10:18:01 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 27,500,000)
+2026-04-01 10:20:45 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 27,750,000)
+2026-04-01 10:23:32 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 28,000,000)
+2026-04-01 10:26:28 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 28,250,000)
+2026-04-01 10:29:24 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 28,500,000)
+2026-04-01 10:32:17 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 28,750,000)
+2026-04-01 10:35:26 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 29,000,000)
+2026-04-01 10:38:12 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 29,250,000)
+2026-04-01 10:41:00 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 29,500,000)
+2026-04-01 10:44:04 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 29,750,000)
+2026-04-01 10:46:50 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 30,000,000)
+2026-04-01 10:49:37 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 30,250,000)
+2026-04-01 10:52:41 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 30,500,000)
+2026-04-01 10:55:26 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 30,750,000)
+2026-04-01 10:58:06 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 31,000,000)
+2026-04-01 11:01:29 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 31,250,000)
+2026-04-01 11:04:20 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 31,500,000)
+2026-04-01 11:07:12 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 31,750,000)
+2026-04-01 11:10:13 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 32,000,000)
+2026-04-01 11:13:02 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 32,250,000)
+2026-04-01 11:15:49 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 32,500,000)
+2026-04-01 11:18:51 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 32,750,000)
+2026-04-01 11:21:40 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 33,000,000)
+2026-04-01 11:24:23 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 33,250,000)
+2026-04-01 11:27:19 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 33,500,000)
+2026-04-01 11:30:16 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 33,750,000)
+2026-04-01 11:33:06 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 34,000,000)
+2026-04-01 11:36:23 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 34,250,000)
+2026-04-01 11:39:17 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 34,500,000)
+2026-04-01 11:42:05 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 34,750,000)
+2026-04-01 11:45:35 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 35,000,000)
+2026-04-01 11:48:27 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 35,250,000)
+2026-04-01 11:51:15 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 35,500,000)
+2026-04-01 11:54:28 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 35,750,000)
+2026-04-01 11:57:18 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 36,000,000)
+2026-04-01 12:00:08 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 36,250,000)
+2026-04-01 12:03:19 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 36,500,000)
+2026-04-01 12:06:21 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 36,750,000)
+2026-04-01 12:09:22 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 37,000,000)
+2026-04-01 12:12:27 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 37,250,000)
+2026-04-01 12:15:21 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 37,500,000)
+2026-04-01 12:18:04 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 37,750,000)
+2026-04-01 12:20:57 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 38,000,000)
+2026-04-01 12:23:52 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 38,250,000)
+2026-04-01 12:26:35 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 38,500,000)
+2026-04-01 12:29:32 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 38,750,000)
+2026-04-01 12:32:20 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 39,000,000)
+2026-04-01 12:35:15 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 39,250,000)
+2026-04-01 12:38:58 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 39,500,000)
+2026-04-01 12:42:02 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 39,750,000)
+2026-04-01 12:45:10 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 40,000,000)
+2026-04-01 12:48:08 [WARNING] huggingface_hub.utils._http — 'HTTPSConnectionPool(host='cas-bridge.xethub.hf.co', port=443): Read timed out.' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:48:08 [WARNING] huggingface_hub.utils._http — Retrying in 1s [Retry 1/5].
+2026-04-01 12:48:19 [WARNING] huggingface_hub.utils._http — '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 66dcc7ff-f83e-4dd9-9c36-bf5ac32e5818)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:48:19 [WARNING] huggingface_hub.utils._http — Retrying in 2s [Retry 2/5].
+2026-04-01 12:48:21 [WARNING] huggingface_hub.utils._http — '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 5c6b7fa2-cfea-4c25-b99b-62caf632b7e3)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:48:21 [WARNING] huggingface_hub.utils._http — Retrying in 4s [Retry 3/5].
+2026-04-01 12:48:25 [WARNING] huggingface_hub.utils._http — '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 17b3affe-ff46-4428-a0fd-bcebf8cefdd7)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:48:25 [WARNING] huggingface_hub.utils._http — Retrying in 8s [Retry 4/5].
+2026-04-01 12:48:29 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 40,250,000)
+2026-04-01 12:48:33 [WARNING] huggingface_hub.utils._http — '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: e75c208c-d4cb-4145-80c2-24919e836e16)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:48:33 [WARNING] huggingface_hub.utils._http — Retrying in 8s [Retry 5/5].
+2026-04-01 12:48:41 [WARNING] huggingface_hub.utils._http — '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 86933bca-62db-421a-ba65-93a7de8890e9)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/review_categories/Electronics.jsonl
+2026-04-01 12:51:30 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 40,500,000)
+2026-04-01 12:54:55 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 40,750,000)
+2026-04-01 12:58:26 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 41,000,000)
+2026-04-01 13:01:44 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 41,250,000)
+2026-04-01 13:04:53 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 41,500,000)
+2026-04-01 13:07:57 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 41,750,000)
+2026-04-01 13:10:54 [INFO] step1_ingestion —   [QUEUE] Spark rút 250,000 rows để ghi (Tổng đã rút: 42,000,000)
+2026-04-02 06:56:40,703 [INFO] === Bước 1 & 2: Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone ===
+2026-04-02 06:56:40,704 [INFO]   -> Đang xử lý tập Reviews...
+2026-04-02 06:57:26,226 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_0421a90033f64f3c9c7696ad8f17c1b6.parquet
+2026-04-02 06:57:52,830 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_60dbf01d93bf496c9e48c695e95a8724.parquet
+2026-04-02 06:58:21,867 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_8fa1ce9e537a4cb4a63ffedf66f31de7.parquet
+2026-04-02 06:58:51,943 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_7ff031daacba4b43a07868b204755338.parquet
+2026-04-02 06:59:20,809 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_72aaadc416af492ba36f3edc93eb5d3c.parquet
+2026-04-02 06:59:53,136 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_c5c26c0f15684b59b2f9cb4dd4f49a1e.parquet
+2026-04-02 07:00:21,839 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_308ef76c9cec47a88456d58cc309bcd8.parquet
+2026-04-02 07:00:52,030 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_588dabb1dcbb4943a51d20e5ee5edecb.parquet
+2026-04-02 07:01:21,227 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_14ed31cecfbf40349d2d026d90accdb4.parquet
+2026-04-02 07:01:51,905 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_59101740aeea4e4c9fc52df6e4f096d8.parquet
+2026-04-02 07:02:26,188 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_ae8c83126aaf4f7e8d6e20b63d7ea283.parquet
+2026-04-02 07:02:59,805 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_02374399e01a44bc8de2a87fcd562abb.parquet
+2026-04-02 07:03:28,360 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_fedbdabe1b094cc8ad61cef7e1c4a29c.parquet
+2026-04-02 07:04:00,390 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_849e09cb94ea4c4883660ab1c10059e8.parquet
+2026-04-02 07:04:33,579 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_0565c95c619f4c64af116a37959dbb9b.parquet
+2026-04-02 07:05:05,595 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_21151e3b13d346568588ca7057ba5fdd.parquet
+2026-04-02 07:05:34,471 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_2c6c553438404a759224d3b12f87d330.parquet
+2026-04-02 07:06:05,892 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_77e8a2243838476685a27274af69d4b4.parquet
+2026-04-02 07:06:35,543 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_bff1220bd56a4205a581e8a25e2c94db.parquet
+2026-04-02 07:07:04,445 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_f8534c5cc8bf42c4883bd6f9ef96b14a.parquet
+2026-04-02 07:07:35,497 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_3177cf7ed2b342b38872dfdc583f519a.parquet
+2026-04-02 07:08:05,020 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_6027cb1bfa06442880ee543c07929e3c.parquet
+2026-04-02 07:08:34,929 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_6631aa93f1564c63b309008ff2a40117.parquet
+2026-04-02 07:09:02,682 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_dfc8ad4f120e46928174b8cd69eb8544.parquet
+2026-04-02 07:09:33,064 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_10b3abc7e3b44c5fbe69d91e70924af3.parquet
+2026-04-02 07:10:04,463 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_6993fc27f8f047d3b2ec733c1af1e17a.parquet
+2026-04-02 07:10:36,143 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_e2d9ee9c33324bf493fe5f7e657a958b.parquet
+2026-04-02 07:11:06,770 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_988847bc9a8b4b278e050e67873f771a.parquet
+2026-04-02 07:11:39,608 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_18477fc56fe0466298d0f5f62b52205e.parquet
+2026-04-02 07:12:07,930 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_79fe5ef07f0345e6a9e42710cb8b5a08.parquet
+2026-04-02 07:12:38,471 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_3f40fe3f1f764482822d241b82a89f26.parquet
+2026-04-02 07:13:07,304 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_31831645e3f6498a9d49c7c80390d223.parquet
+2026-04-02 07:13:37,186 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_fae79a73fa414b6aabab3b67b8e83104.parquet
+2026-04-02 07:14:05,739 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_7f9fc86fc74d425a950b15fa4ee368ca.parquet
+2026-04-02 07:14:35,613 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_9a5bccbadb2d4886b9589208e140324d.parquet
+2026-04-02 07:15:04,361 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_e04d0c93c14e476382d8ddf2ab5f3c22.parquet
+2026-04-02 07:15:34,065 [INFO]   -> Đã đẩy block 250000 rows vào: recsys/bronze/landing_zone/reviews/chunk_b54cd0a120c34d9f8bc263b00cdba84c.parquet
+2026-04-02 07:15:40,968 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:19:04
+2026-04-02 07:28:39,601 [INFO] === Bước 1 & 2: Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone ===
+2026-04-02 07:28:39,602 [INFO]   -> Đang xử lý tập Reviews...
+2026-04-02 07:29:27,168 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_d5a689ba0afc413e9c4b25d61bd25263.parquet
+2026-04-02 07:29:59,784 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_226c2b1ba1224ef487f23385e401193f.parquet
+2026-04-02 07:30:37,745 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_1130db393cb0403e8582be3eaba8f7bf.parquet
+2026-04-02 07:31:12,878 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_149065da15874631a7ac41ad55c53fa8.parquet
+2026-04-02 07:31:50,434 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ee99fe937e314f569fb4fec6a4482343.parquet
+2026-04-02 07:32:27,416 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_3378f8c6f1a446908f9647ceb7ba7a6f.parquet
+2026-04-02 07:33:01,797 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_cde414309b1d40ed9236948b9d72aa09.parquet
+2026-04-02 07:33:36,596 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ddd3a3140d1647199fea4264b8fcad29.parquet
+2026-04-02 07:37:52,759 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:09:15
+2026-04-02 07:38:13,278 [INFO] === Bước 1 & 2: Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone ===
+2026-04-02 07:38:13,279 [INFO]   -> Đang xử lý tập Reviews...
+2026-04-02 07:39:00,533 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_0626d4a80e154d8db2bc7041982b7167.parquet
+2026-04-02 07:39:35,648 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_48390e25eccd446e9cc58359670743a6.parquet
+2026-04-02 07:40:11,735 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5e4d6dceb99741c7853dc030f5f30797.parquet
+2026-04-02 07:40:47,758 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_412fb0c1c14840b488e3454abc82cee0.parquet
+2026-04-02 07:41:22,808 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_3c884b472e8d4823bf237a98103c51ef.parquet
+2026-04-02 07:41:58,688 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_d2a85bda022e42b8a5c6f908eab1bd97.parquet
+2026-04-02 07:42:35,992 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_743fd4fddd494063ad3bcfc547c672b8.parquet
+2026-04-02 07:43:08,911 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_cfa94c9645714f49b60c7face27cef9f.parquet
+2026-04-02 07:43:44,537 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a0c8b08301e44be5b0427bdf50a2ff50.parquet
+2026-04-02 07:44:19,373 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_994ec3ce1dac445c88170a5294724699.parquet
+2026-04-02 07:44:54,092 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_97c8b2b154e844d99f17a0c6afb4e68f.parquet
+2026-04-02 07:45:27,777 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f0a051f732d14d1a96ecfc7e00659974.parquet
+2026-04-02 07:46:02,235 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_4cebebda19a946bfb899e686c0a9d4cc.parquet
+2026-04-02 07:46:37,190 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a9f85f7afc46424e913a16ebf085121e.parquet
+2026-04-02 07:47:12,409 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_d57348eee9724558bcbf99b1d615756d.parquet
+2026-04-02 07:47:47,916 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_76000d31b42b494b902252d262672f37.parquet
+2026-04-02 07:48:20,429 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_30907a0aeea94acc83e72acaf1794fa6.parquet
+2026-04-02 07:48:56,248 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f14e3ec9ae324fb29aaf5676db79108f.parquet
+2026-04-02 07:49:30,329 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f8c859db97f24504acec5946397c93b2.parquet
+2026-04-02 07:50:05,132 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5a64deb16fec4832b7258e9cc204e2b0.parquet
+2026-04-02 07:50:42,833 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b30c4e4be0594981a2dbf6da944404b8.parquet
+2026-04-02 07:51:22,149 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_3f1a395f5c214b8ea077a60713b612ce.parquet
+2026-04-02 07:52:00,941 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ecd0f5219ccb49cab29b9b05d03870aa.parquet
+2026-04-02 07:52:37,763 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_60f7886a5e444dba862df3b6315dcdeb.parquet
+2026-04-02 07:53:12,937 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a7b369be82354c7f8135d971c5bcf666.parquet
+2026-04-02 07:53:47,249 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_0b3a66aae847405592b1e42139539664.parquet
+2026-04-02 07:54:22,392 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_50f1edb367d845e2afd847f3457376c8.parquet
+2026-04-02 07:55:03,077 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_96c9348e61834256a96355a83176520c.parquet
+2026-04-02 07:55:38,202 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f7362d2c8e8344839c6805fd5b84e679.parquet
+2026-04-02 07:56:12,814 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_39ed39eb638641a6b9c9ef8591da5ada.parquet
+2026-04-02 07:56:47,049 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_1c4ace36a9f944bb988ec84532193e2f.parquet
+2026-04-02 07:57:22,558 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_410e4ceb46ae434f879ad17f31fea277.parquet
+2026-04-02 07:57:55,203 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_2928c4408ccc483d8d5b52d7710c3e79.parquet
+2026-04-02 07:58:29,720 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_eca5cf14db0c43a285cadff732377926.parquet
+2026-04-02 07:59:04,489 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_47dc08c2f148401c91b624a014ec9ee7.parquet
+2026-04-02 07:59:39,576 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_8c703dc082fc4cdcab7616832c0d5fad.parquet
+2026-04-02 08:00:14,932 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b3e6a503199146fc8a4a0229cb151303.parquet
+2026-04-02 08:00:49,810 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7f76f0054a804e3fa5aa8e7dd396c581.parquet
+2026-04-02 08:01:24,833 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_870c54b2e9864936b20e21111905ea4e.parquet
+2026-04-02 08:01:58,410 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_1bc2f847c8c645dfa1d06d172e526e3b.parquet
+2026-04-02 08:02:33,470 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_068b45bb99b2497197efe4490046ccf1.parquet
+2026-04-02 08:03:07,132 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_010a97a982064fe8ad67e5a38429518f.parquet
+2026-04-02 08:03:42,265 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_6040baf19484402ca2f8dfad5db7fe1c.parquet
+2026-04-02 08:04:22,551 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_71d0bda63b6d4da191a860116f3e9025.parquet
+2026-04-02 08:04:55,998 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f597b293e8b143f8a3db455bef883083.parquet
+2026-04-02 08:05:30,282 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_71284f4ae7874a2aac1022ee0b9752ac.parquet
+2026-04-02 08:06:03,295 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_c2c5ab5360e641a99564bf9e3a1b15a0.parquet
+2026-04-02 08:06:37,396 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_36b328035034466ab89886b931770c1f.parquet
+2026-04-02 08:07:10,524 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ed15ca19fc8f431b80fbcc6dd65d8dc1.parquet
+2026-04-02 08:07:44,315 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5d4c234e44164a9cbc2b51c353ebf59c.parquet
+2026-04-02 08:08:18,872 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_0515fb2971b846c58991e19964fc77fa.parquet
+2026-04-02 08:08:51,843 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_33fd057afece444ea82807f3ccb488ab.parquet
+2026-04-02 08:09:30,242 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a949561dbfbc46a791bc28c4636875dd.parquet
+2026-04-02 08:10:02,508 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_8bb641b8a7d646eca4562c623ec2e0bc.parquet
+2026-04-02 08:10:37,307 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a5a13eb82fb74acea6f25e312fb4b003.parquet
+2026-04-02 08:11:11,312 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7d13cc0a083f4ca290a55f8b399b1d97.parquet
+2026-04-02 08:11:45,509 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b57994bc13c84bad9ca998882fffe50c.parquet
+2026-04-02 08:12:19,889 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_665a4a07026b424698c119ba67d6588a.parquet
+2026-04-02 08:12:53,158 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f1403f0293434683bec5b4098a05aa6b.parquet
+2026-04-02 08:13:28,658 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a1e335b5dbd04550ab52089c5102d377.parquet
+2026-04-02 08:14:03,392 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_264a0bfd96b54c58a1672198a1266a71.parquet
+2026-04-02 08:14:35,963 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5a6fafa6f65d4949a930626aa0ab76c5.parquet
+2026-04-02 08:15:11,184 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_693cf457f24d44988e0cf24521a65165.parquet
+2026-04-02 08:15:46,129 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9e253099ef704ca486ad27af7ac14394.parquet
+2026-04-02 08:16:24,726 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7ec43524e0024a24a67926ed5c00a0c6.parquet
+2026-04-02 08:17:01,429 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_03f87528df4f418da8a238d4e7367b23.parquet
+2026-04-02 08:17:36,085 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_09bb1fb5f292437483fb433153398467.parquet
+2026-04-02 08:18:11,463 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9c062f4a57d9410fbce34a14260326cb.parquet
+2026-04-02 08:18:47,521 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_15c747fa74a542d7b35b693cc61bc577.parquet
+2026-04-02 08:19:25,086 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7702c49c0b864e28ab20fed1fbc76047.parquet
+2026-04-02 08:19:58,890 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_350ed21eb04f4d81a2d434a6dabe9ee4.parquet
+2026-04-02 08:20:34,892 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_0017df04e7c54dd29e33c2e4d7dfc10d.parquet
+2026-04-02 08:21:10,710 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9ff9a089f7964e15aeff3bde9eda627d.parquet
+2026-04-02 08:21:44,532 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_1a28ec3509354fcaa4e2a63f940e52fe.parquet
+2026-04-02 08:22:19,410 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ed90d7fc2c684ce6ae545ff46cd61a9a.parquet
+2026-04-02 08:22:52,590 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_e7156b7151a3461cab54d02be7fd2472.parquet
+2026-04-02 08:23:27,745 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9fe78bb4492c4ec59e95c9ed16da446a.parquet
+2026-04-02 08:24:03,583 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_45d63166e29343b2b26bab535adcde70.parquet
+2026-04-02 08:24:39,396 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_625f441265364dfabab8153f3910ab09.parquet
+2026-04-02 08:25:14,952 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_4c51f663178349e9888093f0cc647caa.parquet
+2026-04-02 08:25:49,539 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b6752e2c3e884bc9860453ef85ca3c03.parquet
+2026-04-02 08:26:23,739 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_031991676ff34ecea2e1ee1d36c17fab.parquet
+2026-04-02 08:26:56,858 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_1b0cbdfb3eaa499ba95010be6c2d863b.parquet
+2026-04-02 08:27:34,975 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b7d56ac7f6094a959a5a78e2ca883548.parquet
+2026-04-02 08:28:08,351 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_8fe535ab247543e2ab0035a0d38071f1.parquet
+2026-04-02 08:28:45,347 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_890a3c92f25a4de2ad3f7e1630755970.parquet
+2026-04-02 08:29:17,264 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_28ca4ce8cd4a428497e0fcbf598c5746.parquet
+2026-04-02 08:29:54,548 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_edd177a659074f63b0d9ff9500df645c.parquet
+2026-04-02 08:30:29,997 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5b94bd18efa84ab19fd0e855ae392846.parquet
+2026-04-02 08:31:04,671 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_213b29566b6c47279f1a91a2b0f0f152.parquet
+2026-04-02 08:31:40,664 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_369d519148ac481c819585c3c793af1b.parquet
+2026-04-02 08:32:15,471 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_59a497a27501468b8493320f826dd76d.parquet
+2026-04-02 08:32:50,121 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_115461531cb0401984f23f39a305acbc.parquet
+2026-04-02 08:33:23,698 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_95287fbe146441e8817ba93dbf67345d.parquet
+2026-04-02 08:33:59,288 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_3b0ea0d9638b40748faef73a46731fa9.parquet
+2026-04-02 08:34:34,473 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_cb2a3e2974034283985e6ce48fa3a9a0.parquet
+2026-04-02 08:35:07,182 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_57b77ae55d3444fbaa0ef3592be8c668.parquet
+2026-04-02 08:35:42,736 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_390989b0b3e24a19a198e7dfa474b323.parquet
+2026-04-02 08:36:19,257 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_318db6849d3c47a692fbadd5bd288faf.parquet
+2026-04-02 08:36:55,511 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_945d08f39a484e5b9e71663e0c7e8981.parquet
+2026-04-02 08:37:34,834 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_d09a2a0eed394f9c8883bb4200b107f5.parquet
+2026-04-02 08:38:09,178 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7242b421947b4cc28801ddc38cb225cc.parquet
+2026-04-02 08:38:42,935 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_063bcb8e7fcc4cd2a60bc2f574173e48.parquet
+2026-04-02 08:39:18,349 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9bcef7cd9260407e8864cf1faeedf1b0.parquet
+2026-04-02 08:39:53,031 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_94f94864028a4a0389f87849dec0d1c0.parquet
+2026-04-02 08:40:25,377 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_be7c897f7a98411cbcba579bc63e29ab.parquet
+2026-04-02 08:40:59,753 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_19ca341c94d64ae3ab987212e2a1e09d.parquet
+2026-04-02 08:41:32,828 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_17d58ff1c0a147cab9ecb703776c2d72.parquet
+2026-04-02 08:42:07,003 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_c2143b85dc60406aa3b5293bc2e984eb.parquet
+2026-04-02 08:42:41,821 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a7af1213a450475896fac15318381c09.parquet
+2026-04-02 08:43:16,405 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_db951d2958424eba9416d9a8b414d177.parquet
+2026-04-02 08:43:51,003 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_03cd82cda3a4415692ec4b1bf616c796.parquet
+2026-04-02 08:44:24,161 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_82a9d6f6f81a47719bbac4024a75a594.parquet
+2026-04-02 08:44:58,999 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_aad263bf714e4130a9a7c2806786aece.parquet
+2026-04-02 08:45:35,463 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_da5fe44ddebc413bac128ad8c8cccf31.parquet
+2026-04-02 08:46:08,445 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_77676af6b99e48cbbe8e9ae6d6ce1437.parquet
+2026-04-02 08:46:43,334 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_f1c296901c8449f3a5e23aafa04c2443.parquet
+2026-04-02 08:47:16,864 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_c2c0ad9441734160ab5840a84496d2a3.parquet
+2026-04-02 08:47:51,320 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_469de94fa7164c50b193a7bfab605a11.parquet
+2026-04-02 08:48:24,264 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_93c7ebc0a943499898bb9b1b07692fd5.parquet
+2026-04-02 08:48:59,837 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_929c24ce7c004044ae90091eabffa896.parquet
+2026-04-02 08:49:33,839 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_4080955c13994d79b2939ac2040e375f.parquet
+2026-04-02 08:50:09,808 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_951d1ccdd06e4b18b27150da2faf3e9a.parquet
+2026-04-02 08:50:44,308 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_10226e224bfd4f22879306fd1509685f.parquet
+2026-04-02 08:51:21,058 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_dbbe6dccbb4b4403ae09c0c9423defcb.parquet
+2026-04-02 08:51:53,681 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b66ca83f993441d4affe1ab036644d58.parquet
+2026-04-02 08:52:28,748 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_ca141aefd392481d826eb2c47b1487bb.parquet
+2026-04-02 08:53:02,426 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_71053b33bac945c29431be3ccc44b2ea.parquet
+2026-04-02 08:53:36,683 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_b9143f5dad2f48639172ec9142c9eb78.parquet
+2026-04-02 08:54:10,803 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_c34da17997c7494ea50c8f0acce25eb7.parquet
+2026-04-02 08:54:45,935 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_8e2dcccab29e4be2bbdcef3dbd520470.parquet
+2026-04-02 08:55:19,243 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_a0ad3f6a753743569617fbf2056b5b24.parquet
+2026-04-02 08:55:53,589 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_7ba1b92e81ae405a9d76d257d0a5b0a5.parquet
+2026-04-02 08:56:27,072 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_693e00ba469f4dff9fb07ed83bfbb343.parquet
+2026-04-02 08:57:01,117 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_d2bedadd730846998231763187e5e751.parquet
+2026-04-02 08:57:32,760 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_5e5f683d3a7b4bfca4b8ca8fab7518fe.parquet
+2026-04-02 08:58:07,081 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_4e4925035ad04e2f9b579d520ed34728.parquet
+2026-04-02 08:58:41,780 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_289281580766447fb14b07ddeacf6d72.parquet
+2026-04-02 08:59:14,051 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_77146cbefbeb4caaba30fabf79a63937.parquet
+2026-04-02 08:59:49,698 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_9a3ea28a927d441aa5ef92175024a689.parquet
+2026-04-02 09:00:21,879 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_3191913fdc3e4d9fb713269b41a30f26.parquet
+2026-04-02 09:00:55,666 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_65794dcb19344838a79f3e721bb56357.parquet
+2026-04-02 09:01:31,340 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_124359dcaca24058836f0f39a0331114.parquet
+2026-04-02 09:02:03,640 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_122a572ce8e24630a5f2190df167407e.parquet
+2026-04-02 09:02:38,058 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_710b5857e2414443a19c25d3245b55c3.parquet
+2026-04-02 09:03:12,800 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/reviews/chunk_acc99dfe99574cad9738abc4f4e8c5d1.parquet
+2026-04-02 09:03:21,153 [INFO]   -> Đã đẩy block 86944 rows vào: s3://recsys/landing/reviews/chunk_32d802e7f9cf44ad98758c3e6d653d35.parquet
+2026-04-02 09:03:21,154 [INFO]   -> Đang xử lý tập Metadata...
+2026-04-02 09:07:25,725 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/metadata/chunk_79a727ab4cdd4237b25f03e314685cc0.parquet
+2026-04-02 09:13:22,147 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/metadata/chunk_0e97222985c54285bc3f3d9d34fcf24a.parquet
+2026-04-02 09:17:43,075 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/metadata/chunk_f3e7089aca254bfe90eaada2f4fc96f4.parquet
+2026-04-02 09:22:19,343 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/metadata/chunk_1a4aa6ab573c4dfcb3620661ed806d7b.parquet
+2026-04-02 09:25:56,658 [INFO]   -> Đã đẩy block 300000 rows vào: s3://recsys/landing/metadata/chunk_7bf708900c9a4269aa1eb90d67afad47.parquet
+2026-04-02 09:27:11,432 [INFO]   -> Đã đẩy block 110012 rows vào: s3://recsys/landing/metadata/chunk_20d544d3dfc44d19a3c95d723d300d43.parquet
+2026-04-02 09:27:11,435 [INFO] ✓ Bước 1+2 hoàn tất. Dữ liệu đã nằm an toàn trên MinIO (Landing Zone).
+2026-04-02 09:27:11,437 [INFO] ⏱ THỜI GIAN CHẠY BƯỚC 1 & 2: 1:49:49 (6589.17 giây)
+2026-04-02 09:27:11,459 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 1:49:49
+2026-04-02 13:23:58,843 [ERROR] Pipeline lỗi: No module named 'pyspark'
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 162, in main
+    spark = build_spark(cfg)
+            ^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 51, in build_spark
+    from pyspark.sql import SparkSession
+ModuleNotFoundError: No module named 'pyspark'
+2026-04-02 13:23:58,854 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:00
+2026-04-02 13:27:37,822 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 13:27:37,824 [INFO] === Bước 3: Silver Cleaning (MapReduce & Broadcast Optimized) ===
+2026-04-02 13:27:56,121 [ERROR] Pipeline lỗi: [AMBIGUOUS_REFERENCE] Reference `year_month` is ambiguous, could be: [`year_month`, `year_month`].
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 163, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 114, in run_steps_3_6
+    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 87, in run
+    df = compute_signal_scores(df, rel_cfg)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 62, in compute_signal_scores
+    df_max_helpful = df.groupBy("year_month").agg(F.max("helpful_vote").alias("max_helpful_month"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/group.py", line 186, in agg
+    jdf = self._jgd.agg(exprs[0]._jc, _to_seq(self.session._sc, [c._jc for c in exprs[1:]]))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [AMBIGUOUS_REFERENCE] Reference `year_month` is ambiguous, could be: [`year_month`, `year_month`].
+2026-04-02 13:27:56,144 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:24
+2026-04-02 13:27:56,148 [INFO] Closing down clientserver connection
+2026-04-02 13:32:52,757 [ERROR] Pipeline lỗi: No module named 'pyspark'
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 162, in main
+    spark = build_spark(cfg)
+            ^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 51, in build_spark
+    from pyspark.sql import SparkSession
+ModuleNotFoundError: No module named 'pyspark'
+2026-04-02 13:32:52,766 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:00
+2026-04-02 13:33:52,362 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 13:33:52,363 [INFO] === Bước 3: Silver Cleaning (MapReduce & Broadcast Optimized) ===
+2026-04-02 13:34:12,819 [ERROR] Pipeline lỗi: [AMBIGUOUS_REFERENCE] Reference `year_month` is ambiguous, could be: [`year_month`, `year_month`].
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 163, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 114, in run_steps_3_6
+    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 91, in run
+    df = compute_signal_scores(df, rel_cfg)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 66, in compute_signal_scores
+    df_max_helpful = df.groupBy("year_month").agg(F.max("helpful_vote").alias("max_helpful_month"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/group.py", line 186, in agg
+    jdf = self._jgd.agg(exprs[0]._jc, _to_seq(self.session._sc, [c._jc for c in exprs[1:]]))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [AMBIGUOUS_REFERENCE] Reference `year_month` is ambiguous, could be: [`year_month`, `year_month`].
+2026-04-02 13:34:12,841 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:25
+2026-04-02 13:34:12,844 [INFO] Closing down clientserver connection
+2026-04-02 13:39:12,523 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 13:39:12,525 [INFO] === Bước 3: Silver Cleaning (MapReduce & Broadcast Optimized) ===
+2026-04-02 13:52:00,167 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:00
+2026-04-02 13:53:50,151 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 13:53:50,153 [INFO] === Bước 3: Silver Cleaning (MapReduce & Broadcast Optimized) ===
+2026-04-02 13:58:19,267 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+2026-04-02 13:58:20,824 [INFO] Closing down clientserver connection
+2026-04-02 13:58:20,853 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-02 13:58:21,011 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o42.sc
+2026-04-02 13:58:21,120 [INFO] Closing down clientserver connection
+2026-04-02 13:58:21,121 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o42.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-02 13:58:21,142 [INFO] Closing down clientserver connection
+2026-04-02 13:58:21,158 [ERROR] Pipeline lỗi: An error occurred while calling o229.parquet
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 163, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 114, in run_steps_3_6
+    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 98, in run
+    .parquet(out_path))
+     ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o229.parquet
+2026-04-02 13:58:21,303 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:04:41
+2026-04-02 13:58:21,529 [INFO] Closing down clientserver connection
+2026-04-02 15:15:06,724 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 15:15:06,726 [INFO] === Bước 3: Silver Cleaning (MapReduce & Distributed Hash Optimized) ===
+2026-04-02 15:15:28,376 [ERROR] Pipeline lỗi: Unknown pattern letter: U
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 164, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 114, in run_steps_3_6
+    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 115, in run
+    .parquet(out_path))
+     ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.IllegalArgumentException: Unknown pattern letter: U
+2026-04-02 15:15:28,434 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:28
+2026-04-02 15:15:28,437 [INFO] Closing down clientserver connection
+2026-04-02 15:20:40,479 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:00
+2026-04-02 15:21:14,071 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 15:21:14,073 [INFO] === Bước 3: Silver Cleaning (MapReduce & Distributed Hash Optimized) ===
+2026-04-02 15:40:21,978 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+2026-04-02 15:40:22,858 [INFO] Closing down clientserver connection
+2026-04-02 15:40:22,909 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-02 15:40:23,172 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o42.sc
+2026-04-02 15:40:23,446 [INFO] Closing down clientserver connection
+2026-04-02 15:40:23,452 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o42.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-02 15:40:23,502 [INFO] Closing down clientserver connection
+2026-04-02 15:40:23,537 [ERROR] Pipeline lỗi: An error occurred while calling o233.parquet
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 164, in main
+    run_steps_3_6(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 114, in run_steps_3_6
+    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/step3.py", line 115, in run
+    .parquet(out_path))
+     ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o233.parquet
+2026-04-02 15:40:24,130 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:19:57
+2026-04-02 15:40:24,600 [INFO] Closing down clientserver connection
+2026-04-02 15:44:18,585 [INFO] === Bắt đầu Bước 3 (Silver) cho config_id=baseline ===
+2026-04-02 15:44:18,587 [INFO] === Bước 3: Silver Cleaning (MapReduce & Distributed Hash Optimized) ===
+2026-04-03 02:08:08,826 [INFO] ⏱ TỔNG THỜI GIAN CHẠY: 0:00:00
+2026-04-03 09:14:59,095 [INFO] === Bắt đầu CHẠY RIÊNG Bước 3 (Silver) cho config_id=baseline ===
+2026-04-03 09:14:59,096 [INFO] === Bước 3: Silver Cleaning (16GB RAM Optimized) ===
+2026-04-03 10:23:08,296 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+2026-04-03 10:23:08,318 [INFO] Closing down clientserver connection
+2026-04-03 10:23:08,321 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-03 10:23:08,334 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o57.sc
+2026-04-03 10:23:08,351 [INFO] Closing down clientserver connection
+2026-04-03 10:23:08,353 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o57.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-03 10:23:08,363 [INFO] Closing down clientserver connection
+2026-04-03 10:23:08,407 [ERROR] Pipeline lỗi: An error occurred while calling o280.parquet
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 189, in main
+    run_step_3(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 112, in run_step_3
+    step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+  File "/app/src/step3.py", line 141, in run
+    .parquet(out_path))
+     ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o280.parquet
+2026-04-03 10:23:08,440 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 1:12:42
+2026-04-03 10:23:08,452 [INFO] Closing down clientserver connection
+2026-04-03 10:23:46,839 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:00:00
+2026-04-03 10:30:14,791 [INFO] === Bắt đầu CHẠY RIÊNG Bước 3 (Silver) cho config_id=baseline ===
+2026-04-03 10:30:14,792 [INFO] === Bước 3: Silver Cleaning (No-Shuffle MapReduce Optimized) ===
+2026-04-03 10:37:35,013 [ERROR] Pipeline lỗi: An error occurred while calling o277.parquet.
+: org.apache.spark.SparkException: Not enough memory to build and broadcast the table to all worker nodes. As a workaround, you can either disable broadcast by setting spark.sql.autoBroadcastJoinThreshold to -1 or increase the spark driver memory by setting spark.driver.memory to a higher value.
+	at org.apache.spark.sql.errors.QueryExecutionErrors$.notEnoughMemoryToBuildAndBroadcastTableError(QueryExecutionErrors.scala:2213)
+	at org.apache.spark.sql.execution.exchange.BroadcastExchangeExec.$anonfun$relationFuture$1(BroadcastExchangeExec.scala:187)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withThreadLocalCaptured$2(SQLExecution.scala:224)
+	at org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:94)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withThreadLocalCaptured$1(SQLExecution.scala:219)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 189, in main
+    run_step_3(spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 112, in run_step_3
+    step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
+  File "/app/src/step3.py", line 134, in run
+    .parquet(out_path))
+     ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 1721, in parquet
+    self._jwrite.parquet(path)
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 326, in get_return_value
+    raise Py4JJavaError(
+py4j.protocol.Py4JJavaError: An error occurred while calling o277.parquet.
+: org.apache.spark.SparkException: Not enough memory to build and broadcast the table to all worker nodes. As a workaround, you can either disable broadcast by setting spark.sql.autoBroadcastJoinThreshold to -1 or increase the spark driver memory by setting spark.driver.memory to a higher value.
+	at org.apache.spark.sql.errors.QueryExecutionErrors$.notEnoughMemoryToBuildAndBroadcastTableError(QueryExecutionErrors.scala:2213)
+	at org.apache.spark.sql.execution.exchange.BroadcastExchangeExec.$anonfun$relationFuture$1(BroadcastExchangeExec.scala:187)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withThreadLocalCaptured$2(SQLExecution.scala:224)
+	at org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:94)
+	at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withThreadLocalCaptured$1(SQLExecution.scala:219)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+2026-04-03 10:37:35,218 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:07:57
+2026-04-03 10:37:35,289 [INFO] Closing down clientserver connection
+2026-04-03 10:42:44,797 [INFO] === Bắt đầu CHẠY RIÊNG Bước 3 (Silver) cho config_id=baseline ===
+2026-04-03 10:42:44,798 [INFO] === Bước 3: Silver Cleaning (No-Shuffle MapReduce Optimized) ===
+2026-04-03 11:03:52,288 [INFO] THỜI GIAN CHẠY BƯỚC 3: 0:22:34
+2026-04-03 11:03:53,105 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:22:42
+2026-04-03 11:03:53,207 [INFO] Closing down clientserver connection
+2026-04-03 12:09:40,231 [INFO] === Bắt đầu CHẠY RIÊNG Bước 3 (Silver) cho config_id=baseline ===
+2026-04-03 12:09:40,232 [INFO] === Bước 3: Silver Cleaning (No-Shuffle MapReduce & Keep Review Text) ===
+2026-04-03 12:42:43,301 [INFO] THỜI GIAN CHẠY BƯỚC 3: 0:35:29
+2026-04-03 12:42:44,227 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:35:37
+2026-04-03 12:42:44,463 [INFO] Closing down clientserver connection
+2026-04-03 13:05:07,159 [INFO] === Bắt đầu CHẠY RIÊNG Bước 4 (Labeling) cho config_id=baseline ===
+2026-04-03 13:05:07,161 [INFO] === Bước 4: Labeling (Memory Optimized) — config_id=baseline ===
+2026-04-03 13:05:09,595 [INFO]   Đọc silver từ disk: s3a://recsys/silver/baseline
+2026-04-03 13:05:35,667 [INFO]   Tính phân phối interaction_type...
+2026-04-03 13:13:52,332 [INFO]     hard_negative: 4,744,630
+2026-04-03 13:13:52,367 [INFO]     medium_negative: 2,005,154
+2026-04-03 13:13:52,367 [INFO]     neutral: 1,029,025
+2026-04-03 13:13:52,368 [INFO]     strong_positive: 30,758,010
+2026-04-03 13:13:52,372 [INFO]     weak_positive: 4,872,087
+2026-04-03 13:13:52,378 [INFO]   Ghi labeled interactions → s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-04-03 13:28:34,444 [INFO]   ✓ Ghi xong labeled: s3a://recsys/silver/labeled_interactions/config_id=baseline
+2026-04-03 13:28:34,598 [INFO]   ✓ Bước 4 xong: config_id=baseline
+2026-04-03 13:28:40,590 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:23:42
+2026-04-03 13:28:40,752 [INFO] Closing down clientserver connection
