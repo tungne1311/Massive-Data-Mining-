@@ -1,9 +1,9 @@
 {
-    "generated_at": "2026-04-02T11:15:14.986679",
+    "generated_at": "2026-04-05T00:31:20.267209",
     "summary_metrics": {
         "num_users": 18286191,
         "num_products": 1610012,
-        "total_reviews_clean": 43408906,
+        "total_reviews_clean": 43408908,
         "avg_rating": 4.1,
         "avg_reviews_per_user": 2.37,
         "avg_reviews_per_item": 26.96,
@@ -17,13 +17,9 @@
                 "parent_asin": 0.0,
                 "rating": 0.0,
                 "review_text": 0.0,
-                "text_len": 0.0,
                 "timestamp": 0.0,
                 "helpful_vote": 0.0,
-                "verified_purchase": 0.0,
-                "ingest_date": 0.0,
-                "source_name": 0.0,
-                "year_month": 0.0
+                "verified_purchase": 0.0
             },
             "rating_distribution": {
                 "0.0": 2,
@@ -31,30 +27,29 @@
                 "2.0": 2232122,
                 "3.0": 2852473,
                 "4.0": 5498530,
-                "5.0": 27533491
+                "5.0": 27533493
             },
             "text_len_quantiles": {
-                "Q1": 40.0,
-                "Median": 120.0,
+                "Q1": 50.0,
+                "Median": 119.0,
                 "Q3": 240.0,
                 "P95": 35208.0
             },
             "verified_purchase_dist": {
                 "True": 40105872,
-                "False": 3303034
+                "False": 3303036
             }
         },
         "meta": {
             "missing_pct": {
                 "parent_asin": 0.0,
-                "item_title": 0.0,
-                "brand": 0.0,
+                "title": 0.0,
                 "main_category": 0.0,
+                "store": 0.0,
+                "price": 0.0,
+                "categories": 0.0,
                 "features": 0.0,
-                "price_bucket": 0.0,
-                "ingest_date": 0.0,
-                "source_name": 0.0,
-                "year_month": 0.0
+                "bought_together": 0.0
             }
         },
         "join": {}

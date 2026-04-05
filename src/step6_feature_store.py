@@ -1,6 +1,5 @@
 import logging
 import time
-import concurrent.futures
 from typing import Optional
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
@@ -15,12 +14,10 @@ def _get_feature_base_path(cfg: dict, config_id: str, table: str) -> str:
 
 def _write_feature_optimized(df: DataFrame, cfg: dict, config_id: str, table: str) -> None:
     out_path = _get_feature_base_path(cfg, config_id, table)
-    partitions = int(cfg["spark"].get("executor_cores", 2)) * 3
+    logger.info(f"    -> Đang ghi xuống MinIO: {out_path}")
     
-    (df.repartition(partitions)
-       .write.mode("overwrite")
+    (df.write.mode("overwrite")
        .option("compression", "zstd")
-       .option("maxRecordsPerFile", 250000)
        .parquet(out_path))
 
 def _top_k_string_optimized(df: DataFrame, group_col: str, value_col: str, k: int, out_col: str) -> DataFrame:
@@ -45,9 +42,9 @@ def build_user_features_optimized(df_train: DataFrame, global_avg_rating: float)
     )
 
     df_fav_cat = _top_k_string_optimized(df_train, "reviewer_id", "main_category", 3, "fav_categories")
-    df_fav_brand = _top_k_string_optimized(df_train, "reviewer_id", "brand", 3, "fav_brands")
-
-    return df_base.join(df_fav_cat, "reviewer_id", "left").join(df_fav_brand, "reviewer_id", "left")
+    
+    # Chỉ join với df_fav_cat, đã bỏ qua df_fav_store
+    return df_base.join(df_fav_cat, "reviewer_id", "left")
 
 def build_item_features_optimized(df_train: DataFrame) -> DataFrame:
     df_item = df_train.groupBy("parent_asin").agg(
@@ -67,37 +64,36 @@ def build_item_features_optimized(df_train: DataFrame) -> DataFrame:
 
 def run(spark: SparkSession, cfg: dict, config_id: str, df_train: Optional[DataFrame] = None) -> dict:
     t_start = time.perf_counter()
-    logger.info(f"=== Bước 6: Feature Store (Memory Optimized) ===")
+    logger.info(f"=== Bước 6: Feature Store (Super Lean Sequential) ===")
 
     if df_train is None:
-        bucket = cfg["minio"]["bucket"].strip("/")
-        train_path = f"s3a://{bucket}/splits_{config_id}/train"
+        splits_base = cfg["paths"]["splits_base"].rstrip("/")
+        train_path = f"{splits_base}/config_id={config_id}/train"
+        
+        logger.info(f"  Đang load tập Train từ: {train_path}")
         df_train = spark.read.parquet(train_path)
 
+
     cols_to_keep = ["reviewer_id", "parent_asin", "rating", "interaction_type", 
-                    "verified_purchase", "is_short_review", "main_category", "brand", "review_time"]
+                    "verified_purchase", "is_short_review", "main_category", "review_time"]
     
     df_train = df_train.select(cols_to_keep)
     df_train.persist(StorageLevel.DISK_ONLY)
     
     global_avg_rating = df_train.select(F.avg("rating")).first()[0]
+    logger.info(f"  Global average rating: {global_avg_rating:.4f}")
 
-    def process_user():
-        df_user = build_user_features_optimized(df_train, global_avg_rating)
-        _write_feature_optimized(df_user, cfg, config_id, "user_features")
-        return _get_feature_base_path(cfg, config_id, "user_features")
+    logger.info("  [1/2] Bắt đầu xử lý User Features...")
+    df_user = build_user_features_optimized(df_train, global_avg_rating)
+    _write_feature_optimized(df_user, cfg, config_id, "user_features")
+    user_path = _get_feature_base_path(cfg, config_id, "user_features")
+    logger.info("  ✓ Xong User Features!")
 
-    def process_item():
-        df_item = build_item_features_optimized(df_train)
-        _write_feature_optimized(df_item, cfg, config_id, "item_features")
-        return _get_feature_base_path(cfg, config_id, "item_features")
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        future_user = executor.submit(process_user)
-        future_item = executor.submit(process_item)
-        
-        user_path = future_user.result()
-        item_path = future_item.result()
+    logger.info("  [2/2] Bắt đầu xử lý Item Features...")
+    df_item = build_item_features_optimized(df_train)
+    _write_feature_optimized(df_item, cfg, config_id, "item_features")
+    item_path = _get_feature_base_path(cfg, config_id, "item_features")
+    logger.info("  ✓ Xong Item Features!")
 
     df_train.unpersist()
 

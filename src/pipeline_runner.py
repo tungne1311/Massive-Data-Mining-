@@ -3,9 +3,12 @@ import logging
 import os
 import sys
 import time
+import gc
 from datetime import timedelta
 from pathlib import Path
 import yaml
+import concurrent.futures
+from py4j.protocol import Py4JJavaError
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -50,8 +53,6 @@ def build_spark(cfg: dict):
     sc = cfg["spark"]
     mn = cfg["minio"]
 
-    cores = int(sc.get("executor_cores", 2))
-    
     # Đã giảm shuffle partitions xuống 24 cho máy Single-Node
     shuffle_parts = "24" 
 
@@ -61,7 +62,6 @@ def build_spark(cfg: dict):
         .master(sc.get("master", "local[*]"))
         .config("spark.driver.memory",    sc["driver_memory"])
         .config("spark.executor.memory",  sc["executor_memory"])
-
         .config("spark.sql.shuffle.partitions",             shuffle_parts)
         .config("spark.sql.adaptive.enabled",               "true")
         .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
@@ -83,17 +83,38 @@ def build_spark(cfg: dict):
     spark.sparkContext.setLogLevel("WARN")
     return spark
 
+
 def run_steps_1_2(cfg: dict, logger: logging.Logger) -> None:
     t_start = time.perf_counter()
-    logger.info("=== Bước 1 & 2: Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone ===")
+    logger.info("=== Bước 1 & 2: Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone (PARALLEL MODE) ===")
     
-    logger.info("  -> Đang xử lý tập Reviews...")
-    for batch in step1.iter_review_batches(cfg):
-        step2.write_review_batch(batch, cfg)
+    max_workers = 4 
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # 1. Tải Metadata
+        logger.info("  -> Đang tải METADATA...")
+        meta_futures = []
+        for batch in step1.iter_metadata_batches(cfg):
+            future = executor.submit(step2.write_metadata_batch, batch, cfg)
+            meta_futures.append(future)
         
-    logger.info("  -> Đang xử lý tập Metadata...")
-    for batch in step1.iter_metadata_batches(cfg):
-        step2.write_metadata_batch(batch, cfg)
+        concurrent.futures.wait(meta_futures)
+        logger.info("  -> Xong METADATA!")
+
+        # 2. Tải Reviews
+        logger.info("  -> Đang tải REVIEWS...")
+        review_futures = []
+        for batch in step1.iter_review_batches(cfg):
+            future = executor.submit(step2.write_review_batch, batch, cfg)
+            review_futures.append(future)
+            
+            # Cân bằng luồng: Tránh nghẽn bộ nhớ
+            active_futures = [f for f in review_futures if not f.done()]
+            if len(active_futures) > 20:
+                time.sleep(1)
+
+        concurrent.futures.wait(review_futures)
+        logger.info("  -> Xong REVIEWS!")
         
     t_end = time.perf_counter()
     elapsed_seconds = t_end - t_start
@@ -102,69 +123,50 @@ def run_steps_1_2(cfg: dict, logger: logging.Logger) -> None:
     logger.info("✓ Bước 1+2 hoàn tất. Dữ liệu đã nằm an toàn trên MinIO (Landing Zone).")
     logger.info(f"⏱ THỜI GIAN CHẠY BƯỚC 1 & 2: {elapsed_formatted} ({elapsed_seconds:.2f} giây)")
 
+
 # ── CÁC HÀM CHẠY TÁCH RỜI ──────────────────────────────────────────────
 
 def run_step_3(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:
     import step3 as step3
     rel_cfg = get_rel_cfg(cfg, config_id)
     logger.info(f"=== Bắt đầu CHẠY RIÊNG Bước 3 (Silver) cho config_id={config_id} ===")
-    # cleanup_landing=False để giữ lại data gốc phục vụ việc test
     step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
 
 def run_step_4(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:
     import step4_labeling as step4
     logger.info(f"=== Bắt đầu CHẠY RIÊNG Bước 4 (Labeling) cho config_id={config_id} ===")
-    # Bỏ trống df_silver để ép hàm tự đọc lại dữ liệu từ MinIO
     step4.run(spark, cfg, config_id, df_silver=None)
 
 def run_step_5(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:
     import step5_temporal_split as step5
     logger.info(f"=== Bắt đầu CHẠY RIÊNG Bước 5 (Temporal Split) cho config_id={config_id} ===")
-    # Bỏ trống df_labeled để ép hàm tự đọc lại dữ liệu từ MinIO
     step5.run(spark, cfg, config_id, df_labeled=None)
 
 def run_step_6(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:
     import step6_feature_store as step6
     logger.info(f"=== Bắt đầu CHẠY RIÊNG Bước 6 (Feature Store) cho config_id={config_id} ===")
-    # Bỏ trống df_train để ép hàm tự đọc lại dữ liệu từ MinIO
     step6.run(spark, cfg, config_id, df_train=None)
 
-# ── HÀM CHẠY GỘP (Giữ nguyên cho tương thích) ─────────────────────────
 
-def run_steps_3_6(spark, cfg: dict, config_id: str, logger: logging.Logger) -> None:
-    import step3 as step3
-    import step4_labeling as step4
-    import step5_temporal_split as step5
-    import step6_feature_store as step6
+# ── HÀM QUẢN LÝ BỘ NHỚ ────────────────────────────────────────────────
 
-    rel_cfg = get_rel_cfg(cfg, config_id)
-    
-    logger.info(f"=== Bắt đầu Chuỗi 3->6 cho config_id={config_id} ===")
-    t3_start = time.perf_counter()
-    df_silver = step3.run(spark, cfg, rel_cfg, config_id, cleanup_landing=False)
-    logger.info(f"⏱ THỜI GIAN BƯỚC 3: {time.perf_counter() - t3_start:.2f}s")
-    
-    df_labeled = step4.run(spark, cfg, config_id, df_silver=df_silver)
-    df_silver.unpersist()
-    
-    step5.run(spark, cfg, config_id, df_labeled=df_labeled)
-    df_labeled.unpersist()
-    
-    t6_start = time.perf_counter()
-    step6.run(spark, cfg, config_id)
-    logger.info(f"⏱ THỜI GIAN BƯỚC 6: {time.perf_counter() - t6_start:.2f}s")
-    
-    logger.info("--- TẤT CẢ CÁC BƯỚC ĐÃ XONG ---")
+def clear_memory(spark, logger: logging.Logger):
+    """Hàm dọn dẹp bộ nhớ chuyên sâu giữa các Step để tránh OOM tích luỹ"""
+    logger.info("  🧹 [Memory Manager] Đang ép giải phóng RAM và Spark Cache...")
+    if spark:
+        spark.catalog.clearCache() 
+    gc.collect() 
+    time.sleep(2) 
 
-# ──────────────────────────────────────────────────────────────────────
+
+# ── HÀM ĐIỀU PHỐI CHÍNH ───────────────────────────────────────────────
 
 def main():
     t_start = time.perf_counter()
     parser = argparse.ArgumentParser(description="RecSys Pipeline Runner")
     parser.add_argument("--config", default="config/config.yaml")
-    
-    # BỔ SUNG CÁC LỰA CHỌN TÁCH RỜI: "3", "4", "5", "6"
-    parser.add_argument("--step", choices=["1_2", "3", "4", "5", "6", "3_6", "all"], default=None)
+    parser.add_argument("--step", choices=["1_2", "3", "4", "5", "6"], default=None)
+    parser.add_argument("--all", action="store_true", help="Chạy tuần tự từ Step 1 đến Step 6")
     parser.add_argument("--config-id", default=None)
     args = parser.parse_args()
 
@@ -178,28 +180,62 @@ def main():
     config_id = args.config_id or cfg["reliability_tuning"]["selected_config_id"]
 
     try:
-        if args.step in ("1_2", "all"):
+        # Bước lấy dữ liệu bằng PyArrow (Không tốn RAM Spark)
+        if args.all or args.step == "1_2":
             run_steps_1_2(cfg, logger)
+            clear_memory(None, logger)
 
-        if args.step in ("3", "4", "5", "6", "3_6", "all"):
+        # Khởi tạo Spark cho các bước xử lý sau
+        if args.all or args.step in ("3", "4", "5", "6"):
             spark = build_spark(cfg)
             
-            # Xử lý rẽ nhánh cho từng bước riêng biệt
-            if args.step == "3":
-                run_step_3(spark, cfg, config_id, logger)
-            elif args.step == "4":
-                run_step_4(spark, cfg, config_id, logger)
-            elif args.step == "5":
-                run_step_5(spark, cfg, config_id, logger)
-            elif args.step == "6":
-                run_step_6(spark, cfg, config_id, logger)
-            elif args.step in ("3_6", "all"):
-                run_steps_3_6(spark, cfg, config_id, logger)
+            try:
+                if args.all:
+                    logger.info(f"=== BẮT ĐẦU CHẠY TOÀN BỘ PIPELINE (3 -> 6) CHO CONFIG: {config_id} ===")
+                    
+                    run_step_3(spark, cfg, config_id, logger)
+                    clear_memory(spark, logger)
+
+                    run_step_4(spark, cfg, config_id, logger)
+                    clear_memory(spark, logger)
+
+                    run_step_5(spark, cfg, config_id, logger)
+                    clear_memory(spark, logger)
+
+                    run_step_6(spark, cfg, config_id, logger)
+                    clear_memory(spark, logger)
+                    
+                else:
+                    if args.step == "3":
+                        run_step_3(spark, cfg, config_id, logger)
+                    elif args.step == "4":
+                        run_step_4(spark, cfg, config_id, logger)
+                    elif args.step == "5":
+                        run_step_5(spark, cfg, config_id, logger)
+                    elif args.step == "6":
+                        run_step_6(spark, cfg, config_id, logger)
+                    
+                    clear_memory(spark, logger)
+
+            except Py4JJavaError as e:
+                err_msg = str(e.java_exception)
+                if "java.lang.OutOfMemoryError" in err_msg or "GC overhead limit exceeded" in err_msg:
+                    logger.error("\n" + "!"*70)
+                    logger.error("🚨 [CRITICAL OOM] HỆ THỐNG SPARK ĐÃ BỊ TRÀN BỘ NHỚ (OUT OF MEMORY)!")
+                    logger.error("💡 Cách khắc phục gợi ý:")
+                    logger.error("  1. Gỡ bỏ F.broadcast() đối với các bảng quá lớn.")
+                    logger.error("  2. Hạ cấu hình --executor-memory nếu RAM vật lý không đủ để gánh.")
+                    logger.error("  3. Check log lịch sử để xem bước nào bị crash do partition quá lớn.")
+                    logger.error("!"*70 + "\n")
+                else:
+                    logger.error(f"❌ Lỗi thực thi Spark (Py4JJavaError): {err_msg}")
+                sys.exit(1)
                 
-            spark.stop()
+            finally:
+                spark.stop()
 
     except Exception as e:
-        logger.error(f"Pipeline lỗi: {e}", exc_info=True)
+        logger.error(f"❌ Pipeline lỗi ngoài dự kiến: {e}", exc_info=True)
         sys.exit(1)
     finally:
         t_end = time.perf_counter()
