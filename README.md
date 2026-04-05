@@ -1,23 +1,33 @@
-# RecSys Pipeline v3 — PySpark Cluster + MinIO
+# RecSys Data Engineering Pipeline v3 — PySpark Cluster + MinIO
 
-Pipeline xử lý Amazon Reviews 2023 (Electronics) → Feature Store cho recommender system.  
-Chạy trên **Spark standalone cluster** (1 master + 2 workers) qua Docker Compose.
+Dự án này tập trung vào Data Engineering (DE) pipeline, xử lý bộ dữ liệu khổng lồ **Amazon Reviews 2023 (Electronics)** và chuyển đổi nó thành **Feature Store** chuẩn bị cho các mô hình Recommender System (RecSys).
+
+Pipeline chạy trên **Spark standalone cluster** (1 master + 2 workers) thông qua Docker Compose, kết hợp **MinIO** làm storage (S3-compatible) đảm bảo xử lý phân tán với hiệu năng cao.
 
 ---
 
-## Kiến trúc tổng thể
+## Kiến trúc Data Engineering Pipeline (Từ 1 đến 6)
 
-```
-HuggingFace (stream)
+Pipeline gồm 6 bước chính (từ Ingestion đến Feature Store), tuân thủ kiến trúc Medallion (Bronze - Silver - Feature Store).
+
+```text
+[HuggingFace Stream] 
         │
-        ▼  [driver-only, single-threaded]
-  [Bước 1+2] Ingestion → Bronze  s3a://recsys/bronze/
+        ▼  [Single-threaded, Pandas/PyArrow]
+  [Bước 1] Ingestion: Stream dữ liệu raw từ HF
+  [Bước 2] Bronze Storage: Đẩy dữ liệu thô (chunked Parquet zstd) → s3a://recsys/landing/
         │
-        ▼  [distributed trên cluster]
-  [Bước 3] Silver Cleaning + Signal Scoring   s3a://recsys/silver/interactions/
-  [Bước 4] Labeling                            s3a://recsys/silver/labeled_interactions/
-  [Bước 5] Temporal Split                      s3a://recsys/splits/
-  [Bước 6] Feature Store                       s3a://recsys/feature_store/
+        ▼  [Distributed, PySpark Cluster]
+  [Bước 3] Silver Cleaning & Computing: Làm sạch, Join Broadcast, Đánh giá độ tin cậy (Reliability Scoring) → s3a://recsys/silver/
+        │
+        ▼  [Distributed, PySpark Cluster]
+  [Bước 4] Labeling: Gán nhãn Interaction, BPR Weights → s3a://recsys/silver/labeled_interactions/
+        │
+        ▼  [Distributed, PySpark Cluster]
+  [Bước 5] Temporal Split: Chia Train/Val/Test theo trục thời gian (Time-based split) → s3a://recsys/splits/
+        │
+        ▼  [Distributed, PySpark Cluster]
+  [Bước 6] Feature Store: Map-Reduce tạo User & Item Features (Wilson Score, Top K) → s3a://recsys/feature_store/
 ```
 
 ### Spark Cluster (Docker Compose)
@@ -141,40 +151,6 @@ s3a://recsys/
 
 ---
 
-## Reliability Grid Search
-
-6 configs cho `reliability_score = w_verified × verified_score + w_text × text_quality + w_helpful × helpful_score`:
-
-| config_id | w_verified | w_text | w_helpful | unverified |
-|-----------|-----------|--------|-----------|------------|
-| baseline  | 0.50      | 0.30   | 0.20      | 0.50       |
-| cfg_2     | 0.60      | 0.25   | 0.15      | 0.50       |
-| cfg_3     | 0.40      | 0.40   | 0.20      | 0.50       |
-| cfg_4     | 0.50      | 0.20   | 0.30      | 0.50       |
-| cfg_5     | 0.55      | 0.25   | 0.20      | 0.40       |
-| cfg_6     | 0.45      | 0.35   | 0.20      | 0.60       |
-
-Kết quả grid search: `data/logs/grid_search_summary_<ts>.json` + `.csv`  
-`downstream_eval_status = "pending_step7_10"` — HR@10/NDCG@10 tính ở bước 7–10.
-
----
-
-## Temporal Split
-
-Mode **auto**: T = max month trong data  
-- train ≤ T-3 | val = T-2..T-1 | test = T
-
-Mode **explicit**: khai báo trong `config/config.yaml`:
-```yaml
-temporal_split:
-  mode: explicit
-  train_months: ["2022-01", "2022-02"]
-  val_months:   ["2022-03"]
-  test_months:  ["2022-04"]
-```
-
----
-
 ## Tùy chỉnh tài nguyên
 
 Trong `.env`:
@@ -190,30 +166,4 @@ Trong `config/config.yaml`:
 spark:
   shuffle_partitions: "200"  # Tăng nếu data lớn
   write_partitions: 0        # 0 = để AQE tự quyết; >0 = repartition về N files
-```
-
----
-
-## Files
-
-```
-src/
-├── pipeline_runner.py         # CLI entry point (spark-submit target)
-├── step1_ingestion.py         # Stream HuggingFace (driver-only)
-├── step2_bronze_storage.py    # Ghi + QC Bronze
-├── step3_silver_cleaning.py   # Silver + signal scores (distributed)
-├── step4_labeling.py          # BPR/ranking labels (distributed)
-├── step5_temporal_split.py    # Temporal split (distributed)
-├── step6_feature_store.py     # Feature store (distributed)
-└── grid_search_reliability.py # Grid search infra
-
-scripts/
-└── run_pipeline.sh            # spark-submit wrapper
-
-config/
-└── config.yaml
-
-docker-compose.yml
-Dockerfile
-.env
 ```
