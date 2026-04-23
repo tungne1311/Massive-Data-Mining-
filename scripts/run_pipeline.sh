@@ -3,9 +3,10 @@
 # run_pipeline.sh — Spark-submit wrapper cho RecSys Pipeline
 #
 # Cách dùng:
-#   scripts/run_pipeline.sh --step 3_6 --config-id baseline
-#   scripts/run_pipeline.sh --step all --config-id baseline
-#   scripts/run_pipeline.sh --run-grid-search
+#   scripts/run_pipeline.sh --step 1_2        # Bronze: Ingestion + Processing
+#   scripts/run_pipeline.sh --step 3_silver   # Silver: Text profiles + Enrichment
+#   scripts/run_pipeline.sh --step 4_gold     # Gold: ID mapping + Embeddings
+#   scripts/run_pipeline.sh --all             # Full: Bronze → Silver → Gold
 #   scripts/run_pipeline.sh --help
 #
 # Tất cả args được pass thẳng vào pipeline_runner.py

@@ -4846,3 +4846,1961 @@ pyspark.errors.exceptions.captured.AnalysisException: [UNRESOLVED_COLUMN.WITH_SU
 2026-04-05 04:49:27,881 [INFO]   🧹 [Memory Manager] Đang ép giải phóng RAM và Spark Cache...
 2026-04-05 04:49:32,617 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:08:02
 2026-04-05 04:49:32,648 [INFO] Closing down clientserver connection
+2026-04-09 09:13:54,206 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-09 09:13:54,208 [INFO] ⏳ [PHASE 1] Kéo dữ liệu (PyArrow) và ghi TRỰC TIẾP xuống Landing Zone (PARALLEL MODE)...
+2026-04-09 09:13:54,209 [INFO]   -> Đang tải METADATA...
+2026-04-09 09:17:57,131 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: module 'ste2' has no attribute 'write_metadata_batch'
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 244, in main
+    run_steps_1_2(cfg, logger)
+  File "/app/src/pipeline_runner.py", line 116, in run_steps_1_2
+    future = executor.submit(step2.write_metadata_batch, batch, cfg)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ste2' has no attribute 'write_metadata_batch'
+2026-04-09 09:17:57,180 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:04:08
+2026-04-09 09:29:19,558 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-09 09:29:19,560 [INFO] ⏳ Đang kéo dữ liệu Metadata...
+2026-04-09 10:02:52,253 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:02:52,259 [WARNING] Retrying in 1s [Retry 1/5].
+2026-04-09 10:02:53,573 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:02:53,574 [WARNING] Retrying in 2s [Retry 2/5].
+2026-04-09 10:03:11,755 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:11,756 [WARNING] Retrying in 1s [Retry 1/5].
+2026-04-09 10:03:12,236 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:12,238 [WARNING] Retrying in 2s [Retry 2/5].
+2026-04-09 10:03:14,513 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:14,514 [WARNING] Retrying in 4s [Retry 3/5].
+2026-04-09 10:03:18,808 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:18,809 [WARNING] Retrying in 8s [Retry 4/5].
+2026-04-09 10:03:27,103 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:27,105 [WARNING] Retrying in 8s [Retry 5/5].
+2026-04-09 10:03:35,399 [WARNING] HTTP Error 503 thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:46,609 [ERROR] Lỗi khi kéo batch 2: 503 Server Error: Service Unavailable for url: https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-09 10:03:46,611 [INFO] Đang thử lại sau 30s... (Còn 5 lần thử)
+2026-04-09 10:05:22,422 [INFO] ✅ Đã lưu 600000 bản ghi vào s3://recsys/bronze/bronze_meta.parquet
+2026-04-09 10:05:22,834 [INFO] ⏳ [PHASE 1 - MAP] Đang kéo các Batch và xả song song xuống Landing Zone...
+2026-04-09 10:05:23,372 [WARNING] Using the latest cached version of the module from /app/.cache/huggingface/modules/datasets_modules/datasets/McAuley-Lab--Amazon-Reviews-2023/16b76e0823d73bb8cff1e9c5e3e37dbc46ae3daee380417ae141f5e67d3ea8e8 (last modified on Thu Apr  9 09:13:58 2026) since it couldn't be found locally at McAuley-Lab/Amazon-Reviews-2023, or remotely on the Hugging Face Hub.
+2026-04-09 10:05:23,818 [ERROR] Lỗi khi kéo batch 0: [Errno 2] No such file or directory: '/app/raw/review_categories/Electronics.jsonl'
+2026-04-09 10:05:23,819 [INFO] Đang thử lại sau 30s... (Còn 5 lần thử)
+2026-04-09 10:05:53,001 [INFO] ✅ Đã ghi toàn bộ dữ liệu thô vào Landing Zone.
+2026-04-09 10:05:53,002 [INFO] ⏳ [PHASE 2 - SHUFFLE & REDUCE] Bắt đầu tính toán bằng Polars Lazy Engine...
+2026-04-09 10:05:53,090 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: recsys/landing/reviews_temp
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 161, in main
+    run_steps_1_2(cfg, logger)
+  File "/app/src/pipeline_runner.py", line 93, in run_steps_1_2
+    step2.run_bronze_pipeline(cfg)
+  File "/app/src/ste2.py", line 108, in run_bronze_pipeline
+    process_bronze_reviews_and_split(cfg)
+  File "/app/src/ste2.py", line 66, in process_bronze_reviews_and_split
+    dataset = ds.dataset(landing_dir, filesystem=fs, format="parquet")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 790, in dataset
+    return _filesystem_dataset(source, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 472, in _filesystem_dataset
+    fs, paths_or_selector = _ensure_single_source(source, filesystem)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 437, in _ensure_single_source
+    raise FileNotFoundError(path)
+FileNotFoundError: recsys/landing/reviews_temp
+2026-04-09 10:05:53,146 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:37:31
+2026-04-09 10:32:02,130 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-09 10:32:02,131 [INFO] ⏳ Đang kéo dữ liệu Metadata...
+2026-04-09 10:32:50,668 [ERROR] Lỗi khi kéo batch 0: 500 Server Error: Internal Server Error for url: https://huggingface.co/api/datasets/McAuley-Lab/Amazon-Reviews-2023/paths-info/main (Request ID: Root=1-69d78026-62253fee72e390776378ecb0;088efec4-dcba-4e2d-b4a6-e08e881475bb)
+
+Internal Error - We're working hard to fix this as soon as possible!
+2026-04-09 10:32:50,670 [INFO] Đang thử lại sau 30s... (Còn 5 lần thử)
+2026-04-09 10:33:19,790 [WARNING] Không có dữ liệu metadata!
+2026-04-09 10:33:19,796 [INFO] ⏳ [PHASE 1 - MAP] Đang kéo các Batch và xả song song xuống Landing Zone...
+2026-04-09 10:33:20,068 [WARNING] Using the latest cached version of the module from /app/.cache/huggingface/modules/datasets_modules/datasets/McAuley-Lab--Amazon-Reviews-2023/16b76e0823d73bb8cff1e9c5e3e37dbc46ae3daee380417ae141f5e67d3ea8e8 (last modified on Thu Apr  9 09:13:58 2026) since it couldn't be found locally at McAuley-Lab/Amazon-Reviews-2023, or remotely on the Hugging Face Hub.
+2026-04-09 10:33:20,327 [ERROR] Lỗi khi kéo batch 0: [Errno 2] No such file or directory: '/app/raw/review_categories/Electronics.jsonl'
+2026-04-09 10:33:20,328 [INFO] Đang thử lại sau 30s... (Còn 5 lần thử)
+2026-04-09 10:33:49,377 [INFO] ✅ Đã ghi toàn bộ dữ liệu thô vào Landing Zone.
+2026-04-09 10:33:49,379 [INFO] ⏳ [PHASE 2 - SHUFFLE & REDUCE] Bắt đầu tính toán bằng Polars Lazy Engine...
+2026-04-09 10:33:49,950 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: recsys/landing/reviews_temp
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 161, in main
+    run_steps_1_2(cfg, logger)
+  File "/app/src/pipeline_runner.py", line 93, in run_steps_1_2
+    step2.run_bronze_pipeline(cfg)
+  File "/app/src/ste2.py", line 111, in run_bronze_pipeline
+    process_bronze_reviews_and_split(cfg)
+  File "/app/src/ste2.py", line 69, in process_bronze_reviews_and_split
+    dataset = ds.dataset(landing_dir, filesystem=fs, format="parquet")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 790, in dataset
+    return _filesystem_dataset(source, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 472, in _filesystem_dataset
+    fs, paths_or_selector = _ensure_single_source(source, filesystem)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pyarrow/dataset.py", line 437, in _ensure_single_source
+    raise FileNotFoundError(path)
+FileNotFoundError: recsys/landing/reviews_temp
+2026-04-09 10:33:49,972 [INFO] ⏱ TỔNG THỜI GIAN CHẠY MÔ ĐUN NÀY: 0:01:51
+2026-04-09 10:59:16,572 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-09 10:59:16,583 [INFO] ⏳ [Metadata] Bắt đầu kéo dữ liệu metadata...
+2026-04-09 13:40:35,499 [INFO] Worker hoàn tất: đã xử lý 1,610,012 bản ghi từ 6 batch.
+2026-04-09 13:42:54,676 [INFO]   → s3://recsys/bronze/bronze_meta.parquet  [1,610,012 dòng]
+2026-04-09 13:42:54,679 [INFO] ✅ [Metadata] Hoàn tất: 1,610,012 sản phẩm.
+2026-04-09 13:42:56,917 [INFO] ⏳ [Phase 1 – MAP] Streaming batches → Landing Zone...
+2026-04-09 15:00:47,282 [INFO] Worker hoàn tất: đã xử lý 43,886,944 bản ghi từ 147 batch.
+2026-04-09 15:00:48,753 [INFO] ✅ [Phase 1] Đã ghi 147 batch vào Landing Zone.
+2026-04-09 15:00:48,754 [INFO] ⏳ [Phase 2 – REDUCE] Xây dựng Lazy plan: dedup → filter → rank...
+2026-04-09 15:00:49,307 [INFO] ⏳ [Phase 3 – SINK] Ghi Test / Val / Train ra Bronze...
+2026-04-09 15:00:49,308 [INFO]   Đang collect Test set (rank=1)...
+2026-04-11 03:32:48,312 [INFO] === Bước 3 (Silver Pipeline) ===
+2026-04-11 03:32:48,314 [INFO] ============================================================
+2026-04-11 03:32:48,315 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE
+2026-04-11 03:32:48,317 [INFO] ============================================================
+2026-04-11 03:32:48,318 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-11 03:32:48,319 [INFO] ⬇ Đọc bronze_train từ HuggingFace: hf://datasets/chuongdo1104/amazon-2023-bronze/bronze/bronze_train.parquet
+2026-04-11 03:32:48,814 [WARNING] ⚠ Không đọc được từ HF (404 Client Error. (Request ID: Root=1-69d9c0e0-7d4df59f374749de3806e1f5;9d9e9acc-5c72-46d1-8e5e-c7a53970194b)
+
+Entry Not Found for url: https://huggingface.co/datasets/chuongdo1104/amazon-2023-bronze/resolve/main/bronze/bronze_train.parquet.), thử MinIO...
+2026-04-11 03:32:57,263 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 225, in main
+    step_map[args.step](spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 219, in <lambda>
+    "3_silver": lambda s, c, cid, l: run_step_3_silver(s, c, l),
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 133, in run_step_3_silver
+    step3_silver.run_silver_pipeline(spark, cfg)
+  File "/app/src/silver/ste3_silver.py", line 84, in run_silver_pipeline
+    df_popularity = step1.run(spark, cfg)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 233, in run
+    df_train = _read_bronze_train(spark, cfg)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 86, in _read_bronze_train
+    return spark.read.parquet(minio_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+2026-04-11 03:32:57,702 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:17
+2026-04-11 03:32:57,706 [INFO] Closing down clientserver connection
+2026-04-11 03:44:19,177 [INFO] === Bước 3 (Silver Pipeline) ===
+2026-04-11 03:44:19,179 [INFO] ============================================================
+2026-04-11 03:44:19,180 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE
+2026-04-11 03:44:19,182 [INFO] ============================================================
+2026-04-11 03:44:19,183 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-11 03:44:19,185 [INFO] ⬇ Đang tải bronze_train từ HuggingFace repo: chuongdo1104/amazon-2023-bronze
+2026-04-11 03:44:19,676 [INFO] ✅ Đã tải về local: /tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet
+2026-04-11 03:44:24,086 [WARNING] ⚠ Không đọc được từ HF ([PATH_NOT_FOUND] Path does not exist: file:/tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet.), thử MinIO...
+2026-04-11 03:44:27,460 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 225, in main
+    step_map[args.step](spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 219, in <lambda>
+    "3_silver": lambda s, c, cid, l: run_step_3_silver(s, c, l),
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 133, in run_step_3_silver
+    step3_silver.run_silver_pipeline(spark, cfg)
+  File "/app/src/silver/ste3_silver.py", line 84, in run_silver_pipeline
+    df_popularity = step1.run(spark, cfg)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 230, in run
+    df_train = _read_bronze_train(spark, cfg)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 83, in _read_bronze_train
+    return spark.read.parquet(minio_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+2026-04-11 03:44:28,069 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:15
+2026-04-11 03:44:28,075 [INFO] Closing down clientserver connection
+2026-04-11 03:47:12,614 [INFO] === Bước 3 (Silver Pipeline) ===
+2026-04-11 03:47:12,616 [INFO] ============================================================
+2026-04-11 03:47:12,617 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE
+2026-04-11 03:47:12,619 [INFO] ============================================================
+2026-04-11 03:47:12,620 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-11 03:47:12,622 [INFO] ⬇ Đang tải bronze_train từ HuggingFace repo: chuongdo1104/amazon-2023-bronze
+2026-04-11 03:47:13,047 [INFO] ✅ Đã tải về local: /tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet
+2026-04-11 03:47:17,542 [WARNING] ⚠ Không đọc được từ HF ([PATH_NOT_FOUND] Path does not exist: file:/tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet.), thử MinIO...
+2026-04-11 03:47:20,453 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 225, in main
+    step_map[args.step](spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 219, in <lambda>
+    "3_silver": lambda s, c, cid, l: run_step_3_silver(s, c, l),
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 133, in run_step_3_silver
+    step3_silver.run_silver_pipeline(spark, cfg)
+  File "/app/src/silver/ste3_silver.py", line 84, in run_silver_pipeline
+    df_popularity = step1.run(spark, cfg)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 230, in run
+    df_train = _read_bronze_train(spark, cfg)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 83, in _read_bronze_train
+    return spark.read.parquet(minio_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+2026-04-11 03:47:21,063 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:14
+2026-04-11 03:47:21,068 [INFO] Closing down clientserver connection
+2026-04-11 04:35:13,493 [INFO] === Bước 3 (Silver Pipeline) ===
+2026-04-11 04:35:13,494 [INFO] ============================================================
+2026-04-11 04:35:13,495 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE
+2026-04-11 04:35:13,547 [INFO] ============================================================
+2026-04-11 04:35:13,548 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-11 04:35:13,549 [INFO] ⬇ Đang tải bronze_train từ HuggingFace repo: chuongdo1104/amazon-2023-bronze
+2026-04-11 04:35:13,994 [INFO] ✅ Đã tải về local: /tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet
+2026-04-11 04:35:18,392 [WARNING] ⚠ Không đọc được từ HF ([PATH_NOT_FOUND] Path does not exist: file:/tmp/hf_bronze_cache/datasets--chuongdo1104--amazon-2023-bronze/snapshots/f191db192096700107d5b887957b4918dbe6ba8e/recsys/bronze/bronze_train.parquet.), thử MinIO...
+2026-04-11 04:35:22,199 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 225, in main
+    step_map[args.step](spark, cfg, config_id, logger)
+  File "/app/src/pipeline_runner.py", line 219, in <lambda>
+    "3_silver": lambda s, c, cid, l: run_step_3_silver(s, c, l),
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/pipeline_runner.py", line 133, in run_step_3_silver
+    step3_silver.run_silver_pipeline(spark, cfg)
+  File "/app/src/silver/ste3_silver.py", line 84, in run_silver_pipeline
+    df_popularity = step1.run(spark, cfg)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 230, in run
+    df_train = _read_bronze_train(spark, cfg)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/silver/silver_step1_popularity.py", line 83, in _read_bronze_train
+    return spark.read.parquet(minio_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/bronze/bronze_train.parquet.
+2026-04-11 04:35:22,480 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:15
+2026-04-11 04:35:22,486 [INFO] Closing down clientserver connection
+2026-04-11 04:36:02,000 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-11 04:36:02,003 [INFO] ⏳ [Metadata] Bắt đầu kéo dữ liệu metadata (streaming write)...
+2026-04-11 05:35:59,958 [WARNING] 'HTTPSConnectionPool(host='cas-bridge.xethub.hf.co', port=443): Read timed out.' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:00,308 [WARNING] Retrying in 1s [Retry 1/5].
+2026-04-11 05:36:11,240 [WARNING] '(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 1ff19234-a938-44d1-95ed-17929b7dd6f3)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:11,241 [WARNING] Retrying in 2s [Retry 2/5].
+2026-04-11 05:36:21,274 [WARNING] '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -3] Temporary failure in name resolution)"))'), '(Request ID: 47e9646b-27b5-4300-bdcf-de82668003f2)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:21,277 [WARNING] Retrying in 4s [Retry 3/5].
+2026-04-11 05:36:25,287 [WARNING] '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: a1c1207b-ad58-4377-9c4f-5ba1a6bf49b0)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:25,289 [WARNING] Retrying in 8s [Retry 4/5].
+2026-04-11 05:36:33,311 [WARNING] '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 0481268d-07ac-4444-919d-b106005ebbc6)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:33,312 [WARNING] Retrying in 8s [Retry 5/5].
+2026-04-11 05:36:40,957 [WARNING] '(MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 4c3927a2-0354-4a97-acd9-efe75defe562)')' thrown while requesting GET https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl
+2026-04-11 05:36:41,528 [ERROR] Lỗi khi kéo batch 3: (MaxRetryError('HTTPSConnectionPool(host=\'huggingface.co\', port=443): Max retries exceeded with url: /datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main/raw/meta_categories/meta_Electronics.jsonl (Caused by NameResolutionError("HTTPSConnection(host=\'huggingface.co\', port=443): Failed to resolve \'huggingface.co\' ([Errno -2] Name or service not known)"))'), '(Request ID: 4c3927a2-0354-4a97-acd9-efe75defe562)')
+2026-04-11 05:36:41,534 [INFO] Exponential backoff: chờ 10s... (còn 5 lần thử)
+2026-04-11 05:36:51,542 [INFO] Worker hoàn tất: đã xử lý 900,000 bản ghi từ 3 batch.
+2026-04-11 05:36:52,014 [INFO] ✅ [Metadata] Hoàn tất: 900,000 sản phẩm → s3://recsys/bronze/bronze_meta.parquet
+2026-04-11 05:36:52,032 [INFO] ⏳ [Phase 1 – MAP] Streaming batches → Landing Zone (parallel upload)...
+2026-04-11 05:36:52,128 [WARNING] Using the latest cached version of the module from /app/.cache/huggingface/modules/datasets_modules/datasets/McAuley-Lab--Amazon-Reviews-2023/16b76e0823d73bb8cff1e9c5e3e37dbc46ae3daee380417ae141f5e67d3ea8e8 (last modified on Thu Apr  9 09:13:58 2026) since it couldn't be found locally at McAuley-Lab/Amazon-Reviews-2023, or remotely on the Hugging Face Hub.
+2026-04-11 05:37:48,389 [ERROR] Lỗi khi kéo batch 0: [Errno 2] No such file or directory: '/app/raw/review_categories/Electronics.jsonl'
+2026-04-11 05:37:48,390 [INFO] Exponential backoff: chờ 10s... (còn 5 lần thử)
+2026-04-11 05:37:57,815 [INFO] Worker hoàn tất: đã xử lý 0 bản ghi từ 0 batch.
+2026-04-11 05:37:57,847 [INFO] ✅ [Phase 1] Đã ghi 0 batch (0 dòng) vào Landing Zone.
+2026-04-11 05:37:57,848 [INFO] ⏳ [Phase 2 – REDUCE] Chạy thuật toán Spark Native (tối ưu Shuffle)...
+2026-04-11 05:38:10,230 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/landing/reviews_temp.
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 199, in main
+    run_steps_1_2(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 125, in run_steps_1_2
+    step2.run_bronze_pipeline(spark, cfg)
+  File "/app/src/ste2.py", line 228, in run_bronze_pipeline
+    process_bronze_reviews_and_split(
+  File "/app/src/ste2.py", line 145, in process_bronze_reviews_and_split
+    raw_df = spark.read.parquet(landing_s3a)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/readwriter.py", line 544, in parquet
+    return self._df(self._jreader.parquet(_to_seq(self._spark._sc, paths)))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [PATH_NOT_FOUND] Path does not exist: s3a://recsys/landing/reviews_temp.
+2026-04-11 05:38:11,140 [INFO] ⏱ TỔNG THỜI GIAN: 1:02:27
+2026-04-11 05:38:11,245 [INFO] Closing down clientserver connection
+2026-04-11 06:23:41,343 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-11 06:23:41,345 [INFO] ⏳ [Metadata] Bắt đầu kéo dữ liệu metadata (streaming write)...
+2026-04-11 08:00:06,215 [INFO]   📦 Metadata: 1,500,000 dòng (5 batches)
+2026-04-11 08:02:09,398 [INFO] Worker hoàn tất: đã xử lý 1,610,012 bản ghi từ 6 batch.
+2026-04-11 08:02:15,679 [INFO] ✅ [Metadata] Hoàn tất: 1,610,012 sản phẩm → s3://recsys/bronze/bronze_meta.parquet
+2026-04-11 08:02:15,803 [INFO] ⏳ [Phase 1 – MAP] Streaming batches → Landing Zone (parallel upload)...
+2026-04-11 09:09:47,371 [INFO] Worker hoàn tất: đã xử lý 43,886,944 bản ghi từ 147 batch.
+2026-04-11 09:09:48,450 [INFO] ✅ [Phase 1] Đã ghi 147 batch (43,886,944 dòng) vào Landing Zone.
+2026-04-11 09:09:48,453 [INFO] ⏳ [Phase 2 – REDUCE] Chạy thuật toán Spark Native (tối ưu Shuffle)...
+2026-04-11 09:18:42,229 [INFO]   📦 Core-5: 17,659,605 interactions
+2026-04-11 09:18:42,446 [INFO] ⏳ Đang chia tập Test / Val / Train bằng Double Max Join...
+2026-04-11 09:18:45,949 [INFO] ⏳ [Phase 3 – SINK] Ghi ra MinIO (ZSTD, coalesce)...
+2026-04-11 09:23:22,074 [INFO] ✅ Ghi thành công bronze_test.
+2026-04-11 09:38:13,620 [INFO] ✅ Ghi thành công bronze_val.
+2026-04-11 09:56:46,480 [INFO] ✅ Ghi thành công bronze_train.
+2026-04-11 09:56:54,332 [INFO] 🗑 Đã xóa landing zone: s3://recsys/landing/reviews_temp
+2026-04-11 09:56:54,348 [INFO] 🎉 Bronze Pipeline hoàn tất!
+2026-04-11 09:56:54,761 [INFO] ✓ Bước 1+2 hoàn tất.  ⏱ 3:39:11
+2026-04-11 09:56:54,778 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-04-11 09:57:07,725 [INFO] ⏱ TỔNG THỜI GIAN: 3:39:32
+2026-04-11 09:57:16,190 [INFO] Closing down clientserver connection
+2026-04-11 10:14:06,107 [INFO] === Bước 3 (Silver Pipeline) ===
+2026-04-11 10:14:06,109 [INFO] ============================================================
+2026-04-11 10:14:06,110 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-11 10:14:06,112 [INFO] ============================================================
+2026-04-11 10:14:08,920 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-11 10:15:49,220 [INFO]   📦 bronze_train: 13,964,281 rows
+2026-04-11 10:15:49,330 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-11 10:15:50,689 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-11 10:15:50,700 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-11 10:16:51,609 [INFO]   📊 Tổng items: 1,042,121
+2026-04-11 10:16:51,611 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-11 10:17:22,025 [INFO]   📊 Tổng interactions train: 13,964,281
+2026-04-11 10:17:22,327 [INFO]   🔴 HEAD: 134,979 items | train_freq ≥ 15
+2026-04-11 10:17:22,329 [INFO]   🟡 MID : 453,571 items
+2026-04-11 10:17:22,330 [INFO]   🟢 TAIL: 453,571 items
+2026-04-11 10:17:23,318 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-11 10:18:15,055 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-04-11 10:18:19,617 [INFO] ⏱ Step 1 hoàn tất: 0:02:35
+2026-04-11 10:18:19,619 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-11 10:18:19,620 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-11 10:18:20,010 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-11 10:18:21,045 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-11 10:18:21,615 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-11 10:21:34,558 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-11 10:21:35,894 [INFO] ⏱ Step 2 hoàn tất: 0:03:24
+2026-04-11 10:21:35,895 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-11 10:21:35,954 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-11 10:21:36,501 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-11 10:23:18,777 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-11 10:23:18,843 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-11 10:23:18,661 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-11 10:23:37,605 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-11 10:23:37,608 [INFO] ⏱ Step 4 hoàn tất: 0:02:06
+2026-04-11 10:23:37,618 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-11 10:23:40,891 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-11 10:23:41,276 [INFO] ⏳ [Step3] Tính review weights...
+2026-04-11 10:25:42,876 [INFO]   📦 Reviews có text hợp lệ: 13,964,281
+2026-04-11 10:25:42,885 [INFO] ⏳ [Step3] groupBy + collect_list + top-5 + join text (1 pass)...
+2026-04-11 10:25:42,695 [INFO] ⏳ [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-11 10:28:49,300 [INFO] ✅ [Step3] silver_user_text_profile: 1,847,662 users
+2026-04-11 10:28:49,312 [INFO] ⏳ [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-11 10:28:49,314 [INFO] ⏳ [Step3] Xây dựng val ground truth...
+2026-04-11 10:29:04,410 [INFO] ✅ [Step3] silver_val_ground_truth ghi xong.
+2026-04-11 10:29:04,417 [INFO] ⏱ Step 3 hoàn tất: 0:05:38
+2026-04-11 10:29:04,420 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-11 10:29:06,958 [INFO] ============================================================
+2026-04-11 10:29:06,959 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:15:40
+2026-04-11 10:29:06,960 [INFO] ============================================================
+2026-04-11 10:29:06,962 [INFO] OUTPUT:
+2026-04-11 10:29:06,964 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-11 10:29:06,965 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-11 10:29:06,967 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-11 10:29:06,969 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-11 10:29:06,971 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-11 10:29:06,972 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-11 10:29:06,974 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 0:15:40
+2026-04-11 10:29:06,976 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-04-11 10:29:10,482 [INFO] ⏱ TỔNG THỜI GIAN: 0:15:51
+2026-04-11 10:29:10,524 [INFO] Closing down clientserver connection
+2026-04-11 11:09:55,626 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-11 11:09:55,629 [INFO] ============================================================
+2026-04-11 11:09:55,630 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-11 11:09:55,632 [INFO] ============================================================
+2026-04-11 11:09:55,633 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-11 11:09:55,635 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-11 11:09:55,636 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-11 11:09:55,638 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-11 11:09:55,639 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-11 11:10:14,052 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-11 11:10:14,056 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-11 11:11:11,482 [INFO]   📊 Total unique items: 1,610,012
+2026-04-11 11:11:10,694 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-11 11:11:49,356 [INFO]   📊 Total unique users: 1,847,662
+2026-04-11 11:11:49,357 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-11 11:11:49,358 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-11 11:12:32,143 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-11 11:12:49,127 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-11 11:12:52,002 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-11 11:12:54,010 [INFO] ⏱ Step 1 hoàn tất: 0:02:47
+2026-04-11 11:12:54,012 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-11 11:12:54,020 [INFO] ⏳ [Gold Step 2] Collecting train interactions...
+2026-04-11 11:43:49,675 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-11 11:43:49,677 [INFO] ============================================================
+2026-04-11 11:43:49,678 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-11 11:43:49,679 [INFO] ============================================================
+2026-04-11 11:43:49,681 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-11 11:43:49,682 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-11 11:43:49,684 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-11 11:43:49,686 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-11 11:43:49,688 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-11 11:44:06,047 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-11 11:44:06,052 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-11 11:45:04,378 [INFO]   📊 Total unique items: 1,610,012
+2026-04-11 11:45:04,380 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-11 11:45:41,634 [INFO]   📊 Total unique users: 1,847,662
+2026-04-11 11:45:41,636 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-11 11:45:41,637 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-11 11:46:23,959 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-11 11:46:40,836 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-11 11:46:43,726 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-11 11:46:45,612 [INFO] ⏱ Step 1 hoàn tất: 0:02:46
+2026-04-11 11:46:45,613 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-11 11:46:46,335 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-11 11:46:46,672 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-11 11:47:08,609 [INFO]   📊 T_range: 998,705,718,872s (11559094 days)
+2026-04-11 11:47:08,611 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-11 11:47:08,815 [INFO] ⏳ [Gold Step 2] Collecting numeric results to Driver using toPandas()...
+2026-04-11 12:46:48,619 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-11 12:46:48,621 [INFO] ============================================================
+2026-04-11 12:46:48,622 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-11 12:46:48,625 [INFO] ============================================================
+2026-04-11 12:46:48,628 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-11 12:46:48,689 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-11 12:46:48,729 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-11 12:46:48,735 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-11 12:46:48,740 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-11 12:47:08,173 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-11 12:47:08,195 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-11 12:48:09,871 [INFO]   📊 Total unique items: 1,610,012
+2026-04-11 12:48:09,872 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-11 12:48:50,969 [INFO]   📊 Total unique users: 1,847,662
+2026-04-11 12:48:50,970 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-11 12:48:50,971 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-11 12:49:36,555 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-11 12:49:55,248 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-11 12:49:56,567 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-11 12:49:58,470 [INFO] ⏱ Step 1 hoàn tất: 0:03:00
+2026-04-11 12:49:58,471 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-11 12:49:59,382 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-11 12:49:59,742 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-11 12:50:25,617 [INFO]   📊 T_range: 998,705,718,872 (Ratio range check)
+2026-04-11 12:50:25,618 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-11 12:50:25,981 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-11 12:51:10,417 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow/Pandas...
+2026-04-11 12:51:10,551 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: Pandas requires version '2024.10.0' or newer of 'fsspec' (version '2024.3.1' currently installed).
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 210, in main
+    run_step_4_gold(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 145, in run_step_4_gold
+    step4_gold.run_gold_pipeline(spark, cfg)
+  File "/app/src/gold/ste4_gold.py", line 111, in run_gold_pipeline
+    edge_info = step2.run(
+                ^^^^^^^^^^
+  File "/app/src/gold/gold_step2_edge_list.py", line 135, in run
+    pandas_df = pd.read_parquet(pandas_path, engine="pyarrow", storage_options=storage_opts)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pandas/io/parquet.py", line 671, in read_parquet
+    return impl.read(
+           ^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pandas/io/parquet.py", line 253, in read
+    path_or_handle, handles, filesystem = _get_path_or_handle(
+                                          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pandas/io/parquet.py", line 122, in _get_path_or_handle
+    fsspec = import_optional_dependency("fsspec")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/site-packages/pandas/compat/_optional.py", line 187, in import_optional_dependency
+    raise ImportError(msg)
+ImportError: Pandas requires version '2024.10.0' or newer of 'fsspec' (version '2024.3.1' currently installed).
+2026-04-11 12:51:11,897 [INFO] ⏱ TỔNG THỜI GIAN: 0:04:47
+2026-04-11 12:51:23,694 [INFO] Closing down clientserver connection
+2026-04-11 12:54:58,761 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-11 12:54:58,763 [INFO] ============================================================
+2026-04-11 12:54:58,764 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-11 12:54:58,766 [INFO] ============================================================
+2026-04-11 12:54:58,767 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-11 12:54:58,769 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-11 12:54:58,770 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-11 12:54:58,771 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-11 12:54:58,773 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-11 12:55:18,279 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-11 12:55:18,332 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-11 12:56:24,106 [INFO]   📊 Total unique items: 1,610,012
+2026-04-11 12:56:24,108 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-11 12:57:06,346 [INFO]   📊 Total unique users: 1,847,662
+2026-04-11 12:57:06,348 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-11 12:57:06,349 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-11 12:57:48,822 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-11 12:58:06,669 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-11 12:58:09,481 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-11 12:58:11,457 [INFO] ⏱ Step 1 hoàn tất: 0:03:02
+2026-04-11 12:58:11,458 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-11 12:58:12,230 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-11 12:58:11,028 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-11 12:58:39,041 [INFO]   📊 T_range: 998,705,718,872 (Ratio range check)
+2026-04-11 12:58:39,043 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-11 12:58:39,372 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-11 12:59:18,920 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-11 12:59:31,383 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-11 12:59:38,886 [INFO]   📊 Total edges: 13,964,281
+2026-04-11 12:59:40,772 [INFO]   📊 Edge weight range: [0.0736, 1.0000]
+2026-04-11 12:59:40,774 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-11 12:59:47,291 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-04-11 12:59:49,288 [INFO]   📤 gold_edge_weight.npy → s3://recsys/gold/gold_edge_weight.npy (53.3 MB)
+2026-04-11 12:59:49,371 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-04-11 12:59:49,382 [INFO] ⏱ Step 2 hoàn tất: 0:01:44
+2026-04-11 12:59:49,383 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-11 12:59:50,980 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-11 12:59:50,982 [INFO] ⏳ [Gold Step 5] Collecting popularity data...
+2026-04-11 13:00:28,115 [INFO]   📦 Collected 1,042,121 item popularity records
+2026-04-11 13:00:39,643 [INFO]   📊 HEAD: 138,893 items (8.6%)
+2026-04-11 13:00:39,646 [INFO]   📊 MID: 331,278 items (20.6%)
+2026-04-11 13:00:39,649 [INFO]   📊 TAIL: 571,950 items (35.5%)
+2026-04-11 13:00:39,653 [INFO]   📊 COLD_START: 567,891 items (35.3%)
+2026-04-11 13:00:39,654 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-11 13:00:39,828 [INFO]   📊 Sampling prob range: [9.95e-08, 8.38e-07]
+2026-04-11 13:00:39,831 [INFO]   📊 Top-1 head item prob: 9.95e-08 (thấp → ít bị chọn làm negative)
+2026-04-11 13:00:39,879 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-11 13:00:40,255 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-11 13:00:40,375 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-11 13:00:40,594 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-11 13:00:40,622 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-11 13:00:40,623 [INFO] 📊 Dataset Statistics:
+2026-04-11 13:00:40,625 [INFO]   n_users: 1847662
+2026-04-11 13:00:40,626 [INFO]   n_items: 1610012
+2026-04-11 13:00:40,627 [INFO]   n_edges_train: 13964281
+2026-04-11 13:00:40,629 [INFO]   sparsity: 0.99999531
+2026-04-11 13:00:40,630 [INFO]   sparsity_pct: 99.9995%
+2026-04-11 13:00:40,631 [INFO]   n_head_items: 138893
+2026-04-11 13:00:40,632 [INFO]   n_mid_items: 331278
+2026-04-11 13:00:40,633 [INFO]   n_tail_items: 571950
+2026-04-11 13:00:40,635 [INFO]   n_cold_items: 567891
+2026-04-11 13:00:40,636 [INFO]   tail_ratio: 0.3552
+2026-04-11 13:00:40,637 [INFO]   cold_ratio: 0.3527
+2026-04-11 13:00:40,639 [INFO]   avg_degree_user: 7.56
+2026-04-11 13:00:40,641 [INFO]   avg_degree_item: 8.67
+2026-04-11 13:00:40,642 [INFO]   max_train_freq: 41183
+2026-04-11 13:00:40,643 [INFO]   median_train_freq: 2
+2026-04-11 13:00:40,645 [INFO]   embedding_dim: 384
+2026-04-11 13:00:40,646 [INFO]   negative_sampling_beta: 0.75
+2026-04-11 13:00:40,647 [INFO]   temporal_decay_lambda: 1.0
+2026-04-11 13:00:40,649 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-11 13:00:40,650 [INFO] ⏱ Step 5 hoàn tất: 0:00:52
+2026-04-11 13:00:40,652 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-11 13:00:42,119 [INFO] 
+📌 GOLD STEP 3+4: LLM Embeddings (heavy step)
+2026-04-11 13:00:42,127 [ERROR] ❌ sentence-transformers chưa được cài đặt!
+   Cài đặt: pip install sentence-transformers
+   Hoặc thêm vào requirements.txt
+2026-04-11 13:00:42,128 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: sentence-transformers is required for Gold Step 3+4. Install with: pip install sentence-transformers
+Traceback (most recent call last):
+  File "/app/src/gold/gold_step34_embeddings.py", line 76, in _load_model
+    from sentence_transformers import SentenceTransformer
+ModuleNotFoundError: No module named 'sentence_transformers'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 210, in main
+    run_step_4_gold(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 145, in run_step_4_gold
+    step4_gold.run_gold_pipeline(spark, cfg)
+  File "/app/src/gold/ste4_gold.py", line 146, in run_gold_pipeline
+    step34.run(spark, cfg, id_maps=id_maps)
+  File "/app/src/gold/gold_step34_embeddings.py", line 322, in run
+    model = _load_model(model_name)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/gold/gold_step34_embeddings.py", line 83, in _load_model
+    raise ImportError(
+ImportError: sentence-transformers is required for Gold Step 3+4. Install with: pip install sentence-transformers
+2026-04-11 13:00:43,150 [INFO] ⏱ TỔNG THỜI GIAN: 0:06:11
+2026-04-11 13:00:48,284 [INFO] Closing down clientserver connection
+2026-04-14 10:34:17,901 [INFO] Vui lòng chọn --step hoặc --all.
+2026-04-14 10:34:18,604 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:09
+2026-04-14 10:34:18,608 [INFO] Closing down clientserver connection
+2026-04-14 12:52:04,663 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-14 12:52:04,665 [INFO] ============================================================
+2026-04-14 12:52:04,666 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-14 12:52:04,668 [INFO] ============================================================
+2026-04-14 12:52:07,633 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-14 12:54:01,088 [INFO]   📦 bronze_train: 13,964,281 rows
+2026-04-14 12:54:01,180 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-14 12:54:02,464 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-14 12:54:02,475 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-14 12:55:04,672 [INFO]   📊 Tổng items: 1,042,121
+2026-04-14 12:55:04,675 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-14 12:55:37,805 [INFO]   📊 Tổng interactions train: 13,964,281
+2026-04-14 12:55:38,135 [INFO]   🔴 HEAD: 134,979 items | train_freq ≥ 15
+2026-04-14 12:55:38,136 [INFO]   🟡 MID : 453,571 items
+2026-04-14 12:55:38,137 [INFO]   🟢 TAIL: 453,571 items
+2026-04-14 12:55:39,236 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-14 12:56:47,862 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-04-14 12:56:52,478 [INFO] ⏱ Step 1 hoàn tất: 0:02:50
+2026-04-14 12:56:52,480 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-14 12:56:52,481 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-14 12:56:52,873 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-14 12:56:54,112 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-14 12:56:54,576 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-14 12:57:17,435 [ERROR] ❌ Py4JJavaError: org.apache.spark.SparkException: Job aborted due to stage failure: Task 3 in stage 34.0 failed 4 times, most recent failure: Lost task 3.3 in stage 34.0 (TID 919) (172.18.0.5 executor 0): org.apache.spark.SparkRuntimeException: [INVALID_PARAMETER_VALUE.PATTERN] The value of parameter(s) `regexp` in `regexp_replace` is invalid: '[\\U00010000-\\U0010ffff]'.
+	at org.apache.spark.sql.errors.QueryExecutionErrors$.invalidPatternError(QueryExecutionErrors.scala:2620)
+	at org.apache.spark.sql.errors.QueryExecutionErrors.invalidPatternError(QueryExecutionErrors.scala)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage2.sort_addToSorter_0$(Unknown Source)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage2.processNext(Unknown Source)
+	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
+	at org.apache.spark.sql.execution.datasources.FileFormatWriter$.executeTask(FileFormatWriter.scala:385)
+	at org.apache.spark.sql.execution.datasources.WriteFilesExec.$anonfun$doExecuteWrite$1(WriteFiles.scala:100)
+	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2(RDD.scala:893)
+	at org.apache.spark.rdd.RDD.$anonfun$mapPartitionsInternal$2$adapted(RDD.scala:893)
+	at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+	at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:367)
+	at org.apache.spark.rdd.RDD.iterator(RDD.scala:331)
+	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
+	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+	at org.apache.spark.scheduler.Task.run(Task.scala:141)
+	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
+	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.util.regex.PatternSyntaxException: Illegal/unsupported escape sequence near index 2
+[\U00010000-\U0010ffff]
+  ^
+	at java.base/java.util.regex.Pattern.error(Pattern.java:2028)
+	at java.base/java.util.regex.Pattern.escape(Pattern.java:2608)
+	at java.base/java.util.regex.Pattern.range(Pattern.java:2798)
+	at java.base/java.util.regex.Pattern.clazz(Pattern.java:2708)
+	at java.base/java.util.regex.Pattern.sequence(Pattern.java:2139)
+	at java.base/java.util.regex.Pattern.expr(Pattern.java:2069)
+	at java.base/java.util.regex.Pattern.compile(Pattern.java:1783)
+	at java.base/java.util.regex.Pattern.<init>(Pattern.java:1430)
+	at java.base/java.util.regex.Pattern.compile(Pattern.java:1069)
+	... 22 more
+
+Driver stacktrace:
+2026-04-14 12:57:18,325 [INFO] ⏱ TỔNG THỜI GIAN: 0:05:20
+2026-04-14 12:57:18,363 [INFO] Closing down clientserver connection
+2026-04-14 13:06:25,364 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-14 13:06:25,366 [INFO] ============================================================
+2026-04-14 13:06:25,367 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-14 13:06:25,369 [INFO] ============================================================
+2026-04-14 13:06:27,947 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-14 13:08:04,825 [INFO]   📦 bronze_train: 13,964,281 rows
+2026-04-14 13:08:04,840 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-14 13:08:05,563 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-14 13:08:05,565 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-14 13:09:03,021 [INFO]   📊 Tổng items: 1,042,121
+2026-04-14 13:09:03,027 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-14 13:09:35,673 [INFO]   📊 Tổng interactions train: 13,964,281
+2026-04-14 13:09:36,020 [INFO]   🔴 HEAD: 134,979 items | train_freq ≥ 15
+2026-04-14 13:09:36,021 [INFO]   🟡 MID : 453,571 items
+2026-04-14 13:09:36,023 [INFO]   🟢 TAIL: 453,571 items
+2026-04-14 13:09:37,153 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-14 13:10:25,259 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-04-14 13:10:31,222 [INFO] ⏱ Step 1 hoàn tất: 0:02:25
+2026-04-14 13:10:31,224 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-14 13:10:31,225 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-14 13:10:31,644 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-14 13:10:32,863 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-14 13:10:33,351 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-14 13:15:40,126 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-14 13:15:42,621 [INFO] ⏱ Step 2 hoàn tất: 0:05:11
+2026-04-14 13:15:42,622 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-14 13:15:42,630 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-14 13:15:43,537 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-14 13:17:25,996 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-14 13:17:26,071 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-14 13:17:27,003 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-14 13:17:48,293 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-14 13:17:48,304 [INFO] ⏱ Step 4 hoàn tất: 0:02:05
+2026-04-14 13:17:48,316 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-14 13:17:52,139 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-14 13:17:52,426 [INFO] [Step3] Tính review weights...
+2026-04-14 13:18:10,713 [ERROR] ❌ Py4JJavaError: org.apache.spark.SparkException: Job aborted due to stage failure: Task 1 in stage 48.0 failed 4 times, most recent failure: Lost task 1.3 in stage 48.0 (TID 976) (172.18.0.5 executor 0): org.apache.spark.SparkRuntimeException: [INVALID_PARAMETER_VALUE.PATTERN] The value of parameter(s) `regexp` in `regexp_replace` is invalid: '[\\U00010000-\\U0010ffff]'.
+	at org.apache.spark.sql.errors.QueryExecutionErrors$.invalidPatternError(QueryExecutionErrors.scala:2620)
+	at org.apache.spark.sql.errors.QueryExecutionErrors.invalidPatternError(QueryExecutionErrors.scala)
+	at org.apache.spark.sql.catalyst.expressions.GeneratedClass$GeneratedIteratorForCodegenStage1.processNext(Unknown Source)
+	at org.apache.spark.sql.execution.BufferedRowIterator.hasNext(BufferedRowIterator.java:43)
+	at org.apache.spark.sql.execution.WholeStageCodegenEvaluatorFactory$WholeStageCodegenPartitionEvaluator$$anon$1.hasNext(WholeStageCodegenEvaluatorFactory.scala:43)
+	at org.apache.spark.sql.execution.columnar.DefaultCachedBatchSerializer$$anon$1.hasNext(InMemoryRelation.scala:119)
+	at org.apache.spark.sql.execution.columnar.CachedRDDBuilder$$anon$2.hasNext(InMemoryRelation.scala:288)
+	at org.apache.spark.storage.memory.MemoryStore.putIterator(MemoryStore.scala:223)
+	at org.apache.spark.storage.memory.MemoryStore.putIteratorAsValues(MemoryStore.scala:302)
+	at org.apache.spark.storage.BlockManager.$anonfun$doPutIterator$1(BlockManager.scala:1597)
+	at org.apache.spark.storage.BlockManager.org$apache$spark$storage$BlockManager$$doPut(BlockManager.scala:1524)
+	at org.apache.spark.storage.BlockManager.doPutIterator(BlockManager.scala:1588)
+	at org.apache.spark.storage.BlockManager.getOrElseUpdate(BlockManager.scala:1389)
+	at org.apache.spark.storage.BlockManager.getOrElseUpdateRDDBlock(BlockManager.scala:1343)
+	at org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:379)
+	at org.apache.spark.rdd.RDD.iterator(RDD.scala:329)
+	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:93)
+	at org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:166)
+	at org.apache.spark.scheduler.Task.run(Task.scala:141)
+	at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)
+	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)
+	at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)
+	at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)
+	at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.util.regex.PatternSyntaxException: Illegal/unsupported escape sequence near index 2
+[\U00010000-\U0010ffff]
+  ^
+	at java.base/java.util.regex.Pattern.error(Pattern.java:2028)
+	at java.base/java.util.regex.Pattern.escape(Pattern.java:2608)
+	at java.base/java.util.regex.Pattern.range(Pattern.java:2798)
+	at java.base/java.util.regex.Pattern.clazz(Pattern.java:2708)
+	at java.base/java.util.regex.Pattern.sequence(Pattern.java:2139)
+	at java.base/java.util.regex.Pattern.expr(Pattern.java:2069)
+	at java.base/java.util.regex.Pattern.compile(Pattern.java:1783)
+	at java.base/java.util.regex.Pattern.<init>(Pattern.java:1430)
+	at java.base/java.util.regex.Pattern.compile(Pattern.java:1069)
+	... 25 more
+
+Driver stacktrace:
+2026-04-14 13:18:11,681 [INFO] ⏱ TỔNG THỜI GIAN: 0:11:54
+2026-04-14 13:18:11,718 [INFO] Closing down clientserver connection
+2026-04-14 13:37:58,732 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-14 13:37:58,733 [INFO] ============================================================
+2026-04-14 13:37:58,736 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-14 13:37:58,738 [INFO] ============================================================
+2026-04-14 13:38:01,742 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-14 13:39:44,806 [INFO]   📦 bronze_train: 13,964,281 rows
+2026-04-14 13:39:44,920 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-14 13:39:46,452 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-14 13:39:46,498 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-14 13:41:13,937 [INFO]   📊 Tổng items: 1,042,121
+2026-04-14 13:41:13,968 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-14 13:41:48,771 [INFO]   📊 Tổng interactions train: 13,964,281
+2026-04-14 13:41:49,058 [INFO]   🔴 HEAD: 134,979 items | train_freq ≥ 15
+2026-04-14 13:41:49,059 [INFO]   🟡 MID : 453,571 items
+2026-04-14 13:41:49,061 [INFO]   🟢 TAIL: 453,571 items
+2026-04-14 13:41:50,097 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-14 13:42:31,718 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-04-14 13:42:35,992 [INFO] ⏱ Step 1 hoàn tất: 0:02:49
+2026-04-14 13:42:35,993 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-14 13:42:35,994 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-14 13:42:36,323 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-14 13:42:37,579 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-14 13:42:38,006 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-14 13:47:58,517 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-14 13:48:00,304 [INFO] ⏱ Step 2 hoàn tất: 0:05:24
+2026-04-14 13:48:00,306 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-14 13:48:00,310 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-14 13:48:01,111 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-14 13:49:37,147 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-14 13:49:37,156 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-14 13:49:37,815 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-14 13:49:58,210 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-14 13:49:58,213 [INFO] ⏱ Step 4 hoàn tất: 0:01:58
+2026-04-14 13:49:58,223 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-14 13:50:01,314 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-14 13:50:01,631 [INFO] [Step3] Tính review weights...
+2026-04-14 14:32:40,797 [INFO]   Reviews có text hợp lệ: 13,959,251
+2026-04-14 14:32:40,881 [INFO] [Step3] groupBy + collect_list + top-5 + join text (1 pass)...
+2026-04-14 14:32:42,780 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-14 15:16:46,103 [INFO] [Step3] silver_user_text_profile: 1,847,484 users
+2026-04-14 15:16:46,182 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-14 15:16:46,186 [INFO] [Step3] Xây dựng val ground truth...
+2026-04-14 15:17:01,731 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-04-14 15:17:01,745 [INFO] ⏱ Step 3 hoàn tất: 1:27:17
+2026-04-14 15:17:01,751 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-14 15:17:04,730 [INFO] ============================================================
+2026-04-14 15:17:04,733 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 1:39:24
+2026-04-14 15:17:04,736 [INFO] ============================================================
+2026-04-14 15:17:04,737 [INFO] OUTPUT:
+2026-04-14 15:17:04,740 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-14 15:17:04,742 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-14 15:17:04,744 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-14 15:17:04,746 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-14 15:17:04,748 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-14 15:17:04,749 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-14 15:17:04,751 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 1:39:24
+2026-04-14 15:17:05,755 [INFO] ⏱ TỔNG THỜI GIAN: 1:39:32
+2026-04-14 15:17:05,791 [INFO] Closing down clientserver connection
+2026-04-14 15:44:30,775 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-14 15:44:30,776 [INFO] ============================================================
+2026-04-14 15:44:30,778 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-14 15:44:30,779 [INFO] ============================================================
+2026-04-14 15:44:30,780 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-14 15:44:30,782 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-14 15:44:30,784 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-14 15:44:30,785 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-14 15:44:30,786 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-14 15:44:48,211 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-14 15:44:48,218 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-14 15:45:48,158 [INFO]   📊 Total unique items: 1,610,012
+2026-04-14 15:45:48,159 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-14 15:46:28,626 [INFO]   📊 Total unique users: 1,847,662
+2026-04-14 15:46:28,628 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-14 15:46:28,629 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-14 15:47:10,798 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-14 15:47:28,495 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-14 15:47:31,291 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-14 15:47:33,141 [INFO] ⏱ Step 1 hoàn tất: 0:02:46
+2026-04-14 15:47:33,144 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-14 15:47:33,918 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-14 15:47:34,331 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-14 15:47:57,832 [INFO]   📊 T_range: 998,705,718,872 (Ratio range check)
+2026-04-14 15:47:57,834 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-14 15:47:58,068 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-14 15:48:38,423 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-14 15:48:43,129 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-14 15:48:47,739 [INFO]   📊 Total edges: 13,964,281
+2026-04-14 15:48:48,610 [INFO]   📊 Edge weight range: [0.0736, 1.0000]
+2026-04-14 15:48:48,612 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-14 15:48:54,820 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-04-14 15:48:56,315 [INFO]   📤 gold_edge_weight.npy → s3://recsys/gold/gold_edge_weight.npy (53.3 MB)
+2026-04-14 15:48:56,396 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-04-14 15:48:56,402 [INFO] ⏱ Step 2 hoàn tất: 0:01:23
+2026-04-14 15:48:56,404 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-14 15:48:57,897 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-14 15:48:57,899 [INFO] ⏳ [Gold Step 5] Collecting popularity data...
+2026-04-14 15:49:22,983 [INFO]   📦 Collected 1,042,121 item popularity records
+2026-04-14 15:49:34,075 [INFO]   📊 HEAD: 138,893 items (8.6%)
+2026-04-14 15:49:34,078 [INFO]   📊 MID: 331,278 items (20.6%)
+2026-04-14 15:49:34,082 [INFO]   📊 TAIL: 571,950 items (35.5%)
+2026-04-14 15:49:34,084 [INFO]   📊 COLD_START: 567,891 items (35.3%)
+2026-04-14 15:49:34,086 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-14 15:49:34,266 [INFO]   📊 Sampling prob range: [9.95e-08, 8.38e-07]
+2026-04-14 15:49:34,269 [INFO]   📊 Top-1 head item prob: 9.95e-08 (thấp → ít bị chọn làm negative)
+2026-04-14 15:49:34,325 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-14 15:49:34,832 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-14 15:49:34,931 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-14 15:49:35,143 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-14 15:49:35,169 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-14 15:49:35,170 [INFO] 📊 Dataset Statistics:
+2026-04-14 15:49:35,171 [INFO]   n_users: 1847662
+2026-04-14 15:49:35,172 [INFO]   n_items: 1610012
+2026-04-14 15:49:35,174 [INFO]   n_edges_train: 13964281
+2026-04-14 15:49:35,175 [INFO]   sparsity: 0.99999531
+2026-04-14 15:49:35,176 [INFO]   sparsity_pct: 99.9995%
+2026-04-14 15:49:35,178 [INFO]   n_head_items: 138893
+2026-04-14 15:49:35,179 [INFO]   n_mid_items: 331278
+2026-04-14 15:49:35,180 [INFO]   n_tail_items: 571950
+2026-04-14 15:49:35,182 [INFO]   n_cold_items: 567891
+2026-04-14 15:49:35,183 [INFO]   tail_ratio: 0.3552
+2026-04-14 15:49:35,185 [INFO]   cold_ratio: 0.3527
+2026-04-14 15:49:35,186 [INFO]   avg_degree_user: 7.56
+2026-04-14 15:49:35,187 [INFO]   avg_degree_item: 8.67
+2026-04-14 15:49:35,189 [INFO]   max_train_freq: 41183
+2026-04-14 15:49:35,190 [INFO]   median_train_freq: 2
+2026-04-14 15:49:35,191 [INFO]   embedding_dim: 384
+2026-04-14 15:49:35,193 [INFO]   negative_sampling_beta: 0.75
+2026-04-14 15:49:35,194 [INFO]   temporal_decay_lambda: 1.0
+2026-04-14 15:49:35,195 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-14 15:49:35,197 [INFO] ⏱ Step 5 hoàn tất: 0:00:37
+2026-04-14 15:49:35,199 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-14 15:49:36,685 [INFO] 
+📌 GOLD STEP 3+4: LLM Embeddings (heavy step)
+2026-04-14 15:49:36,693 [ERROR] ❌ sentence-transformers chưa được cài đặt!
+   Cài đặt: pip install sentence-transformers
+   Hoặc thêm vào requirements.txt
+2026-04-14 15:49:36,694 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: sentence-transformers is required for Gold Step 3+4. Install with: pip install sentence-transformers
+Traceback (most recent call last):
+  File "/app/src/gold/gold_step34_embeddings.py", line 76, in _load_model
+    from sentence_transformers import SentenceTransformer
+ModuleNotFoundError: No module named 'sentence_transformers'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 210, in main
+    run_step_4_gold(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 145, in run_step_4_gold
+    step4_gold.run_gold_pipeline(spark, cfg)
+  File "/app/src/gold/ste4_gold.py", line 146, in run_gold_pipeline
+    step34.run(spark, cfg, id_maps=id_maps)
+  File "/app/src/gold/gold_step34_embeddings.py", line 322, in run
+    model = _load_model(model_name)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/gold/gold_step34_embeddings.py", line 83, in _load_model
+    raise ImportError(
+ImportError: sentence-transformers is required for Gold Step 3+4. Install with: pip install sentence-transformers
+2026-04-14 15:49:37,698 [INFO] ⏱ TỔNG THỜI GIAN: 0:05:15
+2026-04-14 15:49:43,306 [INFO] Closing down clientserver connection
+2026-04-14 16:20:17,742 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-14 16:20:17,745 [INFO] ============================================================
+2026-04-14 16:20:17,746 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-14 16:20:17,747 [INFO] ============================================================
+2026-04-14 16:20:17,748 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-14 16:20:17,750 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-14 16:20:17,751 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-14 16:20:17,752 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-14 16:20:17,754 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-14 16:20:34,757 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-14 16:20:34,762 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-14 16:22:05,317 [INFO]   📊 Total unique items: 1,610,012
+2026-04-14 16:22:05,327 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-14 16:23:00,512 [INFO]   📊 Total unique users: 1,847,662
+2026-04-14 16:23:00,514 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-14 16:23:00,515 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-14 16:23:57,513 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-14 16:24:21,765 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-14 16:24:26,411 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-14 16:24:28,447 [INFO] ⏱ Step 1 hoàn tất: 0:03:57
+2026-04-14 16:24:28,448 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-14 16:24:29,301 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-14 16:24:29,737 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-14 16:25:07,856 [INFO]   📊 T_range: 998,705,718,872 (Ratio range check)
+2026-04-14 16:25:07,859 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-14 16:25:08,253 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-14 16:26:13,769 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-14 16:26:37,481 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-14 16:27:17,229 [INFO]   📊 Total edges: 13,964,281
+2026-04-14 16:27:21,273 [INFO]   📊 Edge weight range: [0.0736, 1.0000]
+2026-04-14 16:27:21,274 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-14 16:27:27,947 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-04-14 16:27:30,164 [INFO]   📤 gold_edge_weight.npy → s3://recsys/gold/gold_edge_weight.npy (53.3 MB)
+2026-04-14 16:27:30,259 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-04-14 16:27:30,311 [INFO] ⏱ Step 2 hoàn tất: 0:03:04
+2026-04-14 16:27:30,312 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-14 16:27:32,496 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-14 16:27:32,502 [INFO] ⏳ [Gold Step 5] Collecting popularity data...
+2026-04-14 16:28:23,834 [INFO]   📦 Collected 1,042,121 item popularity records
+2026-04-14 16:28:35,978 [INFO]   📊 HEAD: 138,893 items (8.6%)
+2026-04-14 16:28:35,981 [INFO]   📊 MID: 331,278 items (20.6%)
+2026-04-14 16:28:35,984 [INFO]   📊 TAIL: 571,950 items (35.5%)
+2026-04-14 16:28:35,988 [INFO]   📊 COLD_START: 567,891 items (35.3%)
+2026-04-14 16:28:35,993 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-14 16:28:36,275 [INFO]   📊 Sampling prob range: [9.95e-08, 8.38e-07]
+2026-04-14 16:28:36,277 [INFO]   📊 Top-1 head item prob: 9.95e-08 (thấp → ít bị chọn làm negative)
+2026-04-14 16:28:36,328 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-14 16:28:36,810 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-14 16:28:36,933 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-14 16:28:37,123 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-14 16:28:37,156 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-14 16:28:37,157 [INFO] 📊 Dataset Statistics:
+2026-04-14 16:28:37,158 [INFO]   n_users: 1847662
+2026-04-14 16:28:37,159 [INFO]   n_items: 1610012
+2026-04-14 16:28:37,160 [INFO]   n_edges_train: 13964281
+2026-04-14 16:28:37,161 [INFO]   sparsity: 0.99999531
+2026-04-14 16:28:37,162 [INFO]   sparsity_pct: 99.9995%
+2026-04-14 16:28:37,164 [INFO]   n_head_items: 138893
+2026-04-14 16:28:37,165 [INFO]   n_mid_items: 331278
+2026-04-14 16:28:37,166 [INFO]   n_tail_items: 571950
+2026-04-14 16:28:37,167 [INFO]   n_cold_items: 567891
+2026-04-14 16:28:37,168 [INFO]   tail_ratio: 0.3552
+2026-04-14 16:28:37,170 [INFO]   cold_ratio: 0.3527
+2026-04-14 16:28:37,171 [INFO]   avg_degree_user: 7.56
+2026-04-14 16:28:37,172 [INFO]   avg_degree_item: 8.67
+2026-04-14 16:28:37,173 [INFO]   max_train_freq: 41183
+2026-04-14 16:28:37,174 [INFO]   median_train_freq: 2
+2026-04-14 16:28:37,176 [INFO]   embedding_dim: 384
+2026-04-14 16:28:37,177 [INFO]   negative_sampling_beta: 0.75
+2026-04-14 16:28:37,178 [INFO]   temporal_decay_lambda: 1.0
+2026-04-14 16:28:37,179 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-14 16:28:37,188 [INFO] ⏱ Step 5 hoàn tất: 0:01:05
+2026-04-14 16:28:37,190 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-14 16:28:38,582 [INFO] 
+📌 GOLD STEP 3+4: LLM Embeddings (heavy step)
+2026-04-14 16:28:53,721 [INFO] ⏳ Loading model: all-MiniLM-L6-v2
+2026-04-14 16:28:53,725 [INFO]   💻 Running on CPU (no GPU detected)
+2026-04-14 16:28:54,622 [INFO] Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-04-14 16:29:09,642 [INFO]   ✅ Model loaded: all-MiniLM-L6-v2 (dim=384)
+2026-04-14 16:29:09,644 [INFO] ⏳ [Gold Step 3] Collecting item texts (1,610,012 items)...
+2026-04-14 16:31:50,031 [INFO]   📦 Collected 1,610,012 item text profiles
+2026-04-14 16:32:08,877 [INFO] ⏳ [Gold Step 3] Encoding item embeddings (dim=384)...
+2026-04-15 05:18:49,426 [INFO] Vui lòng chọn --step hoặc --all.
+2026-04-15 05:18:50,149 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:09
+2026-04-15 05:18:50,152 [INFO] Closing down clientserver connection
+2026-04-15 05:19:02,704 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-15 05:19:02,708 [INFO] ============================================================
+2026-04-15 05:19:02,710 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-15 05:19:02,711 [INFO] ============================================================
+2026-04-15 05:19:02,713 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-15 05:19:02,715 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-15 05:19:02,717 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-15 05:19:02,718 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-15 05:19:02,720 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-15 05:19:24,658 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-15 05:19:24,663 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-15 05:20:07,942 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+2026-04-15 05:20:07,957 [INFO] Closing down clientserver connection
+2026-04-15 05:20:07,959 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: reentrant call inside <_io.BufferedReader name=7>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-15 05:20:07,964 [INFO] Error while receiving.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o50.sc
+2026-04-15 05:20:07,972 [INFO] Closing down clientserver connection
+2026-04-15 05:20:07,973 [ERROR] Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+                          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 381, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/context.py", line 2446, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+    ^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o50.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+2026-04-15 05:20:07,976 [INFO] Closing down clientserver connection
+2026-04-15 05:20:08,328 [ERROR] ❌ Pipeline lỗi ngoài dự kiến: An error occurred while calling o95.collectToPython
+Traceback (most recent call last):
+  File "/app/src/pipeline_runner.py", line 210, in main
+    run_step_4_gold(spark, cfg, logger)
+  File "/app/src/pipeline_runner.py", line 145, in run_step_4_gold
+    step4_gold.run_gold_pipeline(spark, cfg)
+  File "/app/src/gold/ste4_gold.py", line 97, in run_gold_pipeline
+    id_maps = step1.run(
+              ^^^^^^^^^^
+  File "/app/src/gold/gold_step1_id_mapping.py", line 86, in run
+    item_list = sorted([row["parent_asin"] for row in all_items.collect()])
+                                                      ^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/sql/dataframe.py", line 1263, in collect
+    sock_info = self._jdf.collectToPython()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/pyspark.zip/pyspark/errors/exceptions/captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "/opt/bitnami/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o95.collectToPython
+2026-04-15 05:20:09,058 [INFO] ⏱ TỔNG THỜI GIAN: 0:01:16
+2026-04-15 05:20:09,184 [INFO] Closing down clientserver connection
+2026-04-15 05:24:18,268 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-15 05:24:18,270 [INFO] ============================================================
+2026-04-15 05:24:18,273 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-15 05:24:18,274 [INFO] ============================================================
+2026-04-15 05:24:18,276 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-15 05:24:18,277 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-15 05:24:18,279 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-15 05:24:18,280 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-15 05:24:18,282 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-15 05:24:37,165 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-15 05:24:37,236 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-15 05:25:39,619 [INFO]   📊 Total unique items: 1,610,012
+2026-04-15 05:25:39,620 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-15 05:26:23,588 [INFO]   📊 Total unique users: 1,847,662
+2026-04-15 05:26:23,590 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-15 05:26:23,591 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata...
+2026-04-15 05:27:08,630 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-15 05:27:31,618 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-15 05:27:35,506 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-15 05:27:37,938 [INFO] ⏱ Step 1 hoàn tất: 0:03:00
+2026-04-15 05:27:37,939 [INFO] 
+📌 GOLD STEP 2: Edge List + Temporal Decay
+2026-04-15 05:27:39,477 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-15 05:27:40,088 [INFO] ⏳ [Gold Step 2] Computing T_max and T_min...
+2026-04-15 05:28:12,451 [INFO]   📊 T_range: 998,705,718,872 (Ratio range check)
+2026-04-15 05:28:12,455 [INFO] ⏳ [Gold Step 2] Computing temporal decay (λ=1.0) distributedly...
+2026-04-15 05:28:12,827 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-15 05:28:53,588 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-15 05:29:07,389 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-15 05:29:35,874 [INFO]   📊 Total edges: 13,964,281
+2026-04-15 05:29:37,547 [INFO]   📊 Edge weight range: [0.0736, 1.0000]
+2026-04-15 05:29:37,548 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-15 05:29:45,232 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-04-15 05:29:47,719 [INFO]   📤 gold_edge_weight.npy → s3://recsys/gold/gold_edge_weight.npy (53.3 MB)
+2026-04-15 05:29:47,819 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-04-15 05:29:47,874 [INFO] ⏱ Step 2 hoàn tất: 0:02:10
+2026-04-15 05:29:47,876 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-15 05:29:49,453 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-15 05:29:49,455 [INFO] ⏳ [Gold Step 5] Collecting popularity data...
+2026-04-15 05:30:19,932 [INFO]   📦 Collected 1,042,121 item popularity records
+2026-04-15 05:30:37,437 [INFO]   📊 HEAD: 138,893 items (8.6%)
+2026-04-15 05:30:37,440 [INFO]   📊 MID: 331,278 items (20.6%)
+2026-04-15 05:30:37,443 [INFO]   📊 TAIL: 571,950 items (35.5%)
+2026-04-15 05:30:37,446 [INFO]   📊 COLD_START: 567,891 items (35.3%)
+2026-04-15 05:30:37,447 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-15 05:30:37,648 [INFO]   📊 Sampling prob range: [9.95e-08, 8.38e-07]
+2026-04-15 05:30:37,653 [INFO]   📊 Top-1 head item prob: 9.95e-08 (thấp → ít bị chọn làm negative)
+2026-04-15 05:30:37,712 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-15 05:30:38,073 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-15 05:30:38,170 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-15 05:30:38,378 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-15 05:30:38,409 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-15 05:30:38,410 [INFO] 📊 Dataset Statistics:
+2026-04-15 05:30:38,411 [INFO]   n_users: 1847662
+2026-04-15 05:30:38,412 [INFO]   n_items: 1610012
+2026-04-15 05:30:38,414 [INFO]   n_edges_train: 13964281
+2026-04-15 05:30:38,416 [INFO]   sparsity: 0.99999531
+2026-04-15 05:30:38,417 [INFO]   sparsity_pct: 99.9995%
+2026-04-15 05:30:38,418 [INFO]   n_head_items: 138893
+2026-04-15 05:30:38,420 [INFO]   n_mid_items: 331278
+2026-04-15 05:30:38,422 [INFO]   n_tail_items: 571950
+2026-04-15 05:30:38,423 [INFO]   n_cold_items: 567891
+2026-04-15 05:30:38,425 [INFO]   tail_ratio: 0.3552
+2026-04-15 05:30:38,426 [INFO]   cold_ratio: 0.3527
+2026-04-15 05:30:38,428 [INFO]   avg_degree_user: 7.56
+2026-04-15 05:30:38,430 [INFO]   avg_degree_item: 8.67
+2026-04-15 05:30:38,431 [INFO]   max_train_freq: 41183
+2026-04-15 05:30:38,433 [INFO]   median_train_freq: 2
+2026-04-15 05:30:38,434 [INFO]   embedding_dim: 384
+2026-04-15 05:30:38,435 [INFO]   negative_sampling_beta: 0.75
+2026-04-15 05:30:38,437 [INFO]   temporal_decay_lambda: 1.0
+2026-04-15 05:30:38,438 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-15 05:30:38,448 [INFO] ⏱ Step 5 hoàn tất: 0:00:49
+2026-04-15 05:30:38,450 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-15 05:30:39,984 [INFO] 
+📌 GOLD STEP 3+4: LLM Embeddings (BỎ QUA TRÊN DOCKER - CHẠY TRÊN COLAB)
+2026-04-15 05:30:39,986 [INFO] ⏱ Step 3+4 hoàn tất: 0:00:00
+2026-04-15 05:30:46,814 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Gold pipeline...
+2026-04-15 05:30:47,927 [INFO] ============================================================
+2026-04-15 05:30:47,928 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:06:30
+2026-04-15 05:30:47,930 [INFO] ============================================================
+2026-04-15 05:30:47,933 [INFO] OUTPUT:
+2026-04-15 05:30:47,935 [INFO]   ✅ gold_item_id_map.parquet
+2026-04-15 05:30:47,936 [INFO]   ✅ gold_user_id_map.parquet
+2026-04-15 05:30:47,939 [INFO]   ✅ gold_edge_index.npy
+2026-04-15 05:30:47,940 [INFO]   ✅ gold_edge_weight.npy
+2026-04-15 05:30:47,942 [INFO]   ✅ gold_item_embeddings.npy
+2026-04-15 05:30:47,943 [INFO]   ✅ gold_user_embeddings.npy
+2026-04-15 05:30:47,946 [INFO]   ✅ gold_item_train_freq.npy
+2026-04-15 05:30:47,947 [INFO]   ✅ gold_item_popularity_group.npy
+2026-04-15 05:30:47,949 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-04-15 05:30:47,950 [INFO]   ✅ gold_dataset_stats.json
+2026-04-15 05:30:47,952 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:06:30
+2026-04-15 05:30:48,868 [INFO] ⏱ TỔNG THỜI GIAN: 0:06:37
+2026-04-15 05:30:48,904 [INFO] Closing down clientserver connection
+2026-04-18 16:35:58,913 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-18 16:35:58,915 [INFO] ============================================================
+2026-04-18 16:35:58,916 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-18 16:35:58,917 [INFO] ============================================================
+2026-04-18 16:36:01,921 [INFO] 📂 Đọc bronze_train (light) từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-18 16:36:50,374 [INFO]   📦 bronze_train (light): 13,964,281 rows
+2026-04-18 16:36:50,376 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-18 16:36:50,995 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-18 16:36:50,997 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-18 16:37:11,768 [INFO]   📊 Tổng items: 1,042,121
+2026-04-18 16:37:11,770 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-18 16:37:38,646 [INFO]   🔴 HEAD : 210,925 items | train_freq ≥ 9 | ~20.2%
+2026-04-18 16:37:38,647 [INFO]   🟡 MID  : 116,282 items | 5 ≤ train_freq < 9 | ~11.2%
+2026-04-18 16:37:38,648 [INFO]   🟢 TAIL : 714,914 items | train_freq < 5 | ~68.6%
+2026-04-18 16:37:39,409 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-18 16:37:54,385 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-04-18 16:37:59,289 [INFO] ⏱ Step 1 hoàn tất: 0:01:08
+2026-04-18 16:37:59,291 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-18 16:37:59,293 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-18 16:38:00,085 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-18 16:38:02,381 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-18 16:38:02,799 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-18 16:45:44,100 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-18 16:45:46,399 [INFO] ⏱ Step 2 hoàn tất: 0:07:47
+2026-04-18 16:45:46,400 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-18 16:45:46,409 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-18 16:45:47,628 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-18 16:46:41,040 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-18 16:46:41,042 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-18 16:46:41,308 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-18 16:46:52,613 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-18 16:46:52,614 [INFO] ⏱ Step 4 hoàn tất: 0:01:06
+2026-04-18 16:46:52,619 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-18 16:46:55,303 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-18 16:46:55,905 [INFO] [Step3] Tính review weights...
+2026-04-18 17:05:42,260 [INFO]   Reviews có text hợp lệ: 13,964,235
+2026-04-18 17:05:42,286 [INFO] [Step3] groupBy + collect_list + top-5 + join text (1 pass)...
+2026-04-18 17:05:43,586 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-18 17:25:15,308 [INFO] [Step3] silver_user_text_profile: 1,847,661 users
+2026-04-18 17:25:15,312 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-18 17:25:15,314 [INFO] [Step3] Xây dựng val ground truth...
+2026-04-18 17:25:28,040 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-04-18 17:25:28,045 [INFO] ⏱ Step 3 hoàn tất: 0:38:34
+2026-04-18 17:25:28,048 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-18 17:25:30,647 [INFO] ============================================================
+2026-04-18 17:25:30,650 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:49:33
+2026-04-18 17:25:30,651 [INFO] ============================================================
+2026-04-18 17:25:30,652 [INFO] OUTPUT:
+2026-04-18 17:25:30,653 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-18 17:25:30,655 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-18 17:25:30,656 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-18 17:25:30,657 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-18 17:25:30,658 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-18 17:25:30,659 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-18 17:25:30,660 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 0:49:33
+2026-04-18 17:25:32,664 [INFO] ⏱ TỔNG THỜI GIAN: 0:49:42
+2026-04-18 17:25:32,693 [INFO] Closing down clientserver connection
+2026-04-18 17:28:24,864 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-18 17:28:24,868 [INFO] ============================================================
+2026-04-18 17:28:24,869 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-18 17:28:24,870 [INFO] ============================================================
+2026-04-18 17:28:24,872 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-18 17:28:24,876 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-18 17:28:24,878 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-18 17:28:24,879 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-18 17:28:24,880 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-18 17:28:40,508 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-18 17:28:40,512 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-18 17:29:40,404 [INFO]   📊 Total unique items: 1,610,012
+2026-04-18 17:29:40,406 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-18 17:30:18,065 [INFO]   📊 Total unique users: 1,847,662
+2026-04-18 17:30:18,067 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-18 17:30:18,068 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-04-18 17:31:11,879 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-18 17:31:35,384 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-18 17:31:38,093 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-18 17:31:41,447 [INFO] ⏱ Step 1 hoàn tất: 0:03:01
+2026-04-18 17:31:41,462 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-04-18 17:31:42,555 [INFO] 
+📌 GOLD STEP 3+4: LLM Embeddings
+2026-04-18 17:31:54,619 [INFO] ⏳ Loading model: all-MiniLM-L6-v2
+2026-04-18 17:31:54,623 [INFO]   💻 Running on CPU (no GPU detected)
+2026-04-18 17:31:55,404 [INFO] Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-04-18 17:32:00,881 [INFO]   ✅ Model loaded: all-MiniLM-L6-v2 (dim=384)
+2026-04-18 17:32:51,281 [INFO] ⏳ [Gold Step 3] Collecting item texts (1,610,012 items)...
+2026-04-18 17:34:22,379 [INFO]   📦 Collected 1,610,012 item text profiles
+2026-04-18 17:34:38,901 [INFO] ⏳ [Gold Step 3] Encoding item embeddings (dim=384)...
+2026-04-18 18:14:43,144 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-18 18:14:43,146 [INFO] ============================================================
+2026-04-18 18:14:43,147 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-18 18:14:43,148 [INFO] ============================================================
+2026-04-18 18:14:43,149 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-18 18:14:43,150 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-18 18:14:43,151 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-18 18:14:43,153 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-18 18:14:43,155 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-18 18:14:59,828 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-18 18:14:59,833 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-18 18:15:58,183 [INFO]   📊 Total unique items: 1,610,012
+2026-04-18 18:15:58,185 [INFO] ⏳ [Gold Step 1] Collecting all unique users...
+2026-04-18 18:16:37,994 [INFO]   📊 Total unique users: 1,847,662
+2026-04-18 18:16:37,996 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-04-18 18:16:37,998 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-04-18 18:17:34,281 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-18 18:17:58,225 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-18 18:18:00,661 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-04-18 18:18:04,296 [INFO] ⏱ Step 1 hoàn tất: 0:03:04
+2026-04-18 18:18:04,298 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-04-18 18:18:05,406 [INFO] 
+📌 GOLD STEP 2: Edge List + Semantic Edges
+2026-04-18 18:18:06,094 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-18 18:18:06,426 [INFO] ⏳ [Gold Step 2] Assigning binary weight (1.0) to edges...
+2026-04-18 18:18:06,616 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-18 18:18:42,718 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-18 18:18:44,920 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-18 18:18:45,833 [INFO]   📊 Total edges: 13,964,281
+2026-04-18 18:18:46,148 [INFO]   📊 Edge weight range: [1.0000, 1.0000]
+2026-04-18 18:18:46,149 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-18 18:18:53,346 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-04-18 18:18:55,034 [INFO]   📤 gold_edge_weight.npy → s3://recsys/gold/gold_edge_weight.npy (53.3 MB)
+2026-04-18 18:18:55,113 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-04-18 18:18:55,118 [INFO] ⏱ Step 2 hoàn tất: 0:00:49
+2026-04-18 18:18:55,119 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-18 18:18:56,202 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-18 18:18:56,203 [INFO] ⏳ [Gold Step 5] Collecting popularity data from ID Map...
+2026-04-18 18:19:17,954 [INFO]   📦 Collected 1,610,012 item popularity records
+2026-04-18 18:19:28,091 [INFO]   📊 HEAD: 210,925 items (13.1%)
+2026-04-18 18:19:28,094 [INFO]   📊 MID: 116,282 items (7.2%)
+2026-04-18 18:19:28,097 [INFO]   📊 TAIL: 714,914 items (44.4%)
+2026-04-18 18:19:28,100 [INFO]   📊 COLD_START: 567,891 items (35.3%)
+2026-04-18 18:19:28,101 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-18 18:19:28,355 [INFO]   📊 Sampling prob range: [1.78e-07, 5.15e-04]
+2026-04-18 18:19:28,357 [INFO]   📊 Top-1 head item prob: 5.15e-04 (cao → tăng cường làm negative)
+2026-04-18 18:19:28,396 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-18 18:19:28,852 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-18 18:19:28,938 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-18 18:19:29,207 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-18 18:19:29,237 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-18 18:19:29,238 [INFO] 📊 Dataset Statistics:
+2026-04-18 18:19:29,239 [INFO]   n_users: 1847662
+2026-04-18 18:19:29,240 [INFO]   n_items: 1610012
+2026-04-18 18:19:29,241 [INFO]   n_edges_train: 13964281
+2026-04-18 18:19:29,243 [INFO]   sparsity: 0.99999531
+2026-04-18 18:19:29,244 [INFO]   sparsity_pct: 99.9995%
+2026-04-18 18:19:29,246 [INFO]   n_head_items: 210925
+2026-04-18 18:19:29,247 [INFO]   n_mid_items: 116282
+2026-04-18 18:19:29,248 [INFO]   n_tail_items: 714914
+2026-04-18 18:19:29,249 [INFO]   n_cold_items: 567891
+2026-04-18 18:19:29,250 [INFO]   tail_ratio: 0.444
+2026-04-18 18:19:29,251 [INFO]   cold_ratio: 0.3527
+2026-04-18 18:19:29,252 [INFO]   avg_degree_user: 7.56
+2026-04-18 18:19:29,254 [INFO]   avg_degree_item: 8.67
+2026-04-18 18:19:29,255 [INFO]   max_train_freq: 41183
+2026-04-18 18:19:29,256 [INFO]   median_train_freq_excluding_cold_start: 2
+2026-04-18 18:19:29,258 [INFO]   embedding_dim: 384
+2026-04-18 18:19:29,259 [INFO]   negative_sampling_beta: 0.75
+2026-04-18 18:19:29,262 [INFO]   head_ratio_split: 0.2
+2026-04-18 18:19:29,263 [INFO]   mid_ratio_split: 0.1
+2026-04-18 18:19:29,264 [INFO]   tail_ratio_split: 0.7
+2026-04-18 18:19:29,265 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-18 18:19:29,267 [INFO] ⏱ Step 5 hoàn tất: 0:00:33
+2026-04-18 18:19:29,268 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-18 18:19:30,303 [INFO] ============================================================
+2026-04-18 18:19:30,304 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:04:47
+2026-04-18 18:19:30,305 [INFO] ============================================================
+2026-04-18 18:19:30,306 [INFO] OUTPUT:
+2026-04-18 18:19:30,307 [INFO]   ✅ gold_item_id_map.parquet
+2026-04-18 18:19:30,308 [INFO]   ✅ gold_user_id_map.parquet
+2026-04-18 18:19:30,309 [INFO]   ✅ gold_edge_index.npy
+2026-04-18 18:19:30,310 [INFO]   ✅ gold_edge_weight.npy
+2026-04-18 18:19:30,312 [INFO]   ✅ gold_item_train_freq.npy
+2026-04-18 18:19:30,313 [INFO]   ✅ gold_item_popularity_group.npy
+2026-04-18 18:19:30,314 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-04-18 18:19:30,316 [INFO]   ✅ gold_dataset_stats.json
+2026-04-18 18:19:30,317 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:04:47
+2026-04-18 18:19:31,005 [INFO] ⏱ TỔNG THỜI GIAN: 0:04:55
+2026-04-18 18:19:31,015 [INFO] Closing down clientserver connection
+2026-04-19 08:04:07,094 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-19 08:04:07,096 [INFO] ============================================================
+2026-04-19 08:04:07,097 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-19 08:04:07,099 [INFO] ============================================================
+2026-04-19 08:04:09,790 [INFO] 📂 Đọc bronze_train (light) từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-19 08:05:09,225 [INFO]   📦 bronze_train (light): 12,207,341 rows
+2026-04-19 08:05:09,320 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-19 08:05:10,563 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-19 08:05:10,567 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-19 08:05:34,657 [INFO]   📊 Tổng items: 962,046
+2026-04-19 08:05:34,663 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-19 08:06:02,987 [INFO]   🔴 HEAD : 207,336 items | train_freq ≥ 8 | ~21.6%
+2026-04-19 08:06:02,988 [INFO]   🟡 MID  : 88,285 items | 5 ≤ train_freq < 8 | ~9.2%
+2026-04-19 08:06:02,989 [INFO]   🟢 TAIL : 666,425 items | train_freq < 5 | ~69.3%
+2026-04-19 08:06:03,750 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-19 08:06:20,765 [INFO] ✅ [Step1] silver_item_popularity: 962,046 items
+2026-04-19 08:06:24,982 [INFO] ⏱ Step 1 hoàn tất: 0:01:14
+2026-04-19 08:06:24,983 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-19 08:06:24,985 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-19 08:06:25,482 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-19 08:06:27,597 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-19 08:06:28,005 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-19 08:14:25,619 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-19 08:14:29,144 [INFO] ⏱ Step 2 hoàn tất: 0:08:05
+2026-04-19 08:14:29,146 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-19 08:14:29,225 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-19 08:14:30,138 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-19 08:15:21,493 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-19 08:15:21,495 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-19 08:15:21,886 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-19 08:15:30,532 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-19 08:15:30,533 [INFO] ⏱ Step 4 hoàn tất: 0:01:01
+2026-04-19 08:15:30,543 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-19 08:15:34,208 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-19 08:15:34,558 [INFO] [Step3] Tính review weights...
+2026-04-19 08:32:36,260 [INFO]   Reviews có text hợp lệ: 12,207,296
+2026-04-19 08:32:36,388 [INFO] [Step3] groupBy + collect_list + top-3 + join text (1 pass)...
+2026-04-19 08:32:38,658 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-19 08:50:44,394 [INFO] [Step3] silver_user_text_profile: 1,832,577 users
+2026-04-19 08:50:44,414 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-19 08:50:44,419 [INFO] [Step3] Xây dựng val ground truth...
+2026-04-19 08:50:55,671 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-04-19 08:50:55,681 [INFO] ⏱ Step 3 hoàn tất: 0:35:29
+2026-04-19 08:50:55,685 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-19 08:50:58,398 [INFO] ============================================================
+2026-04-19 08:50:58,400 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:47:01
+2026-04-19 08:50:58,401 [INFO] ============================================================
+2026-04-19 08:50:58,402 [INFO] OUTPUT:
+2026-04-19 08:50:58,403 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-19 08:50:58,404 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-19 08:50:58,405 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-19 08:50:58,406 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-19 08:50:58,407 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-19 08:50:58,408 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-19 08:50:58,409 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 0:47:01
+2026-04-19 08:50:59,421 [INFO] ⏱ TỔNG THỜI GIAN: 0:47:09
+2026-04-19 08:50:59,454 [INFO] Closing down clientserver connection
+2026-04-19 09:11:32,178 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-19 09:11:32,180 [INFO] ============================================================
+2026-04-19 09:11:32,183 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-19 09:11:32,184 [INFO] ============================================================
+2026-04-19 09:11:32,186 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-19 09:11:32,187 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-19 09:11:32,188 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-19 09:11:32,189 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-19 09:11:32,191 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-19 09:11:51,165 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-19 09:11:51,230 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-19 09:12:50,275 [INFO]   📊 Total unique items: 1,610,012
+2026-04-19 09:12:50,277 [INFO] ⏳ [Gold Step 1] Collecting all unique users and computing frequency...
+2026-04-19 09:13:45,489 [INFO]   📊 Total unique users: 1,832,578
+2026-04-19 09:13:45,491 [INFO]   📊 Embedding matrix estimate: 3,442,590 nodes × 384d = 5043 MB
+2026-04-19 09:13:45,492 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-04-19 09:14:43,751 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-19 09:15:13,849 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-19 09:15:22,308 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,832,578 users
+2026-04-19 09:15:27,830 [INFO] ⏱ Step 1 hoàn tất: 0:03:37
+2026-04-19 09:15:27,837 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-04-19 09:15:34,844 [INFO] 
+📌 GOLD STEP 2: Edge List + Semantic Edges
+2026-04-19 09:15:38,073 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-19 09:15:38,615 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-19 09:16:14,435 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-19 09:16:16,597 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-19 09:16:17,351 [INFO]   📊 Total edges: 12,207,341
+2026-04-19 09:16:17,612 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-19 09:16:22,957 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (186.3 MB)
+2026-04-19 09:16:23,158 [INFO] ✅ [Gold Step 2] Edge list complete: 12,207,341 edges
+2026-04-19 09:16:23,163 [INFO] ⏱ Step 2 hoàn tất: 0:00:48
+2026-04-19 09:16:23,164 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-19 09:16:24,256 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-19 09:16:24,258 [INFO] ⏳ [Gold Step 5] Collecting popularity data from ID Map...
+2026-04-19 09:16:45,982 [INFO]   📦 Collected 1,610,012 item popularity records
+2026-04-19 09:16:56,174 [INFO]   📊 ITEM HEAD: 207,336 items (12.9%)
+2026-04-19 09:16:56,177 [INFO]   📊 ITEM MID: 88,285 items (5.5%)
+2026-04-19 09:16:56,180 [INFO]   📊 ITEM TAIL: 666,425 items (41.4%)
+2026-04-19 09:16:56,182 [INFO]   📊 ITEM COLD_START: 647,966 items (40.2%)
+2026-04-19 09:16:56,183 [INFO] ⏳ [Gold Step 5] Collecting user activity data from ID Map...
+2026-04-19 09:17:19,302 [INFO]   📦 Collected 1,832,578 user activity records
+2026-04-19 09:17:31,075 [INFO]   📊 USER INACTIVE: 964,392 users (52.6%)
+2026-04-19 09:17:31,078 [INFO]   📊 USER ACTIVE: 793,896 users (43.3%)
+2026-04-19 09:17:31,081 [INFO]   📊 USER SUPER_ACTIVE: 74,290 users (4.1%)
+2026-04-19 09:17:31,083 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-19 09:17:31,275 [INFO]   📊 Sampling prob range: [1.94e-07, 5.24e-04]
+2026-04-19 09:17:31,277 [INFO]   📊 Top-1 head item prob: 5.24e-04 (cao → tăng cường làm negative)
+2026-04-19 09:17:31,386 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-19 09:17:31,958 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-19 09:17:32,045 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-19 09:17:32,391 [INFO]   📤 gold_user_train_freq.npy → s3://recsys/gold/gold_user_train_freq.npy (14.0 MB)
+2026-04-19 09:17:32,521 [INFO]   📤 gold_user_activity_group.npy → s3://recsys/gold/gold_user_activity_group.npy (1.7 MB)
+2026-04-19 09:17:32,736 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-19 09:17:32,766 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-19 09:17:32,767 [INFO] 📊 Dataset Statistics:
+2026-04-19 09:17:32,768 [INFO]   n_users: 1832578
+2026-04-19 09:17:32,770 [INFO]   n_items: 1610012
+2026-04-19 09:17:32,771 [INFO]   n_edges_train: 12207341
+2026-04-19 09:17:32,772 [INFO]   sparsity: 0.99999586
+2026-04-19 09:17:32,774 [INFO]   sparsity_pct: 99.9996%
+2026-04-19 09:17:32,775 [INFO]   n_head_items: 207336
+2026-04-19 09:17:32,776 [INFO]   n_mid_items: 88285
+2026-04-19 09:17:32,778 [INFO]   n_tail_items: 666425
+2026-04-19 09:17:32,779 [INFO]   n_cold_items: 647966
+2026-04-19 09:17:32,780 [INFO]   n_inactive_users: 964392
+2026-04-19 09:17:32,781 [INFO]   n_active_users: 793896
+2026-04-19 09:17:32,783 [INFO]   n_super_active_users: 74290
+2026-04-19 09:17:32,784 [INFO]   tail_ratio: 0.4139
+2026-04-19 09:17:32,785 [INFO]   cold_ratio: 0.4025
+2026-04-19 09:17:32,787 [INFO]   inactive_user_ratio: 0.5262
+2026-04-19 09:17:32,788 [INFO]   avg_degree_user: 6.66
+2026-04-19 09:17:32,789 [INFO]   avg_degree_item: 7.58
+2026-04-19 09:17:32,791 [INFO]   max_train_freq_item: 37582
+2026-04-19 09:17:32,792 [INFO]   max_train_freq_user: 938
+2026-04-19 09:17:32,793 [INFO]   median_train_freq_item: 2
+2026-04-19 09:17:32,794 [INFO]   median_train_freq_user: 4
+2026-04-19 09:17:32,796 [INFO]   embedding_dim: 384
+2026-04-19 09:17:32,797 [INFO]   negative_sampling_beta: 0.75
+2026-04-19 09:17:32,799 [INFO]   head_ratio_split: 0.2
+2026-04-19 09:17:32,800 [INFO]   mid_ratio_split: 0.1
+2026-04-19 09:17:32,801 [INFO]   tail_ratio_split: 0.7
+2026-04-19 09:17:32,802 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-19 09:17:32,805 [INFO] ⏱ Step 5 hoàn tất: 0:01:08
+2026-04-19 09:17:32,806 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-19 09:17:33,899 [INFO] ============================================================
+2026-04-19 09:17:33,900 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:06:03
+2026-04-19 09:17:33,901 [INFO] ============================================================
+2026-04-19 09:17:33,902 [INFO] OUTPUT:
+2026-04-19 09:17:33,904 [INFO]   ✅ gold_item_id_map.parquet
+2026-04-19 09:17:33,905 [INFO]   ✅ gold_user_id_map.parquet
+2026-04-19 09:17:33,906 [INFO]   ✅ gold_edge_index.npy
+2026-04-19 09:17:33,907 [INFO]   ✅ gold_item_train_freq.npy
+2026-04-19 09:17:33,908 [INFO]   ✅ gold_item_popularity_group.npy
+2026-04-19 09:17:33,910 [INFO]   ✅ gold_user_train_freq.npy
+2026-04-19 09:17:33,911 [INFO]   ✅ gold_user_activity_group.npy
+2026-04-19 09:17:33,912 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-04-19 09:17:33,913 [INFO]   ✅ gold_dataset_stats.json
+2026-04-19 09:17:33,915 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:06:03
+2026-04-19 09:17:34,591 [INFO] ⏱ TỔNG THỜI GIAN: 0:06:10
+2026-04-19 09:17:34,617 [INFO] Closing down clientserver connection
+2026-04-19 18:18:30,615 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-19 18:18:30,617 [INFO] ============================================================
+2026-04-19 18:18:30,618 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-19 18:18:30,620 [INFO] ============================================================
+2026-04-19 18:18:33,218 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-19 18:19:18,785 [INFO]   📦 bronze_train_light (positive only >= 3.0): 12,207,341 rows
+2026-04-19 18:19:18,786 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-19 18:19:19,343 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-19 18:19:19,403 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-19 18:19:37,990 [INFO]   📊 Tổng items: 962,046
+2026-04-19 18:19:37,991 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-19 18:20:02,559 [INFO]   🔴 HEAD : 207,336 items | train_freq ≥ 8 | ~21.6%
+2026-04-19 18:20:02,574 [INFO]   🟡 MID  : 88,285 items | 5 ≤ train_freq < 8 | ~9.2%
+2026-04-19 18:20:02,575 [INFO]   🟢 TAIL : 666,425 items | train_freq < 5 | ~69.3%
+2026-04-19 18:20:03,271 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-19 18:20:17,404 [INFO] ✅ [Step1] silver_item_popularity: 962,046 items
+2026-04-19 18:20:22,689 [INFO] ⏱ Step 1 hoàn tất: 0:01:03
+2026-04-19 18:20:22,690 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-19 18:20:22,691 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-19 18:20:23,088 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-19 18:20:25,567 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-19 18:20:25,977 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-19 18:28:23,094 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-19 18:28:24,775 [INFO] ⏱ Step 2 hoàn tất: 0:08:03
+2026-04-19 18:28:24,782 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-19 18:28:24,845 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-19 18:28:25,879 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-19 18:29:09,109 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-19 18:29:09,110 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-19 18:29:09,639 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-19 18:29:18,173 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-19 18:29:18,174 [INFO] ⏱ Step 4 hoàn tất: 0:00:53
+2026-04-19 18:29:18,179 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-19 18:29:19,646 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-19 18:29:20,248 [INFO] [Step3] Tính review weights...
+2026-04-20 02:26:20,696 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-20 02:26:20,699 [INFO] ============================================================
+2026-04-20 02:26:20,704 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-20 02:26:20,706 [INFO] ============================================================
+2026-04-20 02:26:23,715 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-20 02:27:14,212 [INFO]   📦 bronze_train_light (positive only >= 3.0): 12,207,341 rows
+2026-04-20 02:27:14,215 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-20 02:27:15,011 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-20 02:27:15,012 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-20 02:27:35,981 [INFO]   📊 Tổng items: 962,046
+2026-04-20 02:27:35,983 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-20 02:28:05,401 [INFO]   🔴 HEAD : 207,336 items | train_freq ≥ 8 | ~21.6%
+2026-04-20 02:28:05,402 [INFO]   🟡 MID  : 88,285 items | 5 ≤ train_freq < 8 | ~9.2%
+2026-04-20 02:28:05,404 [INFO]   🟢 TAIL : 666,425 items | train_freq < 5 | ~69.3%
+2026-04-20 02:28:06,239 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-20 02:28:21,625 [INFO] ✅ [Step1] silver_item_popularity: 962,046 items
+2026-04-20 02:28:27,221 [INFO] ⏱ Step 1 hoàn tất: 0:01:12
+2026-04-20 02:28:27,223 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-20 02:28:27,226 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-20 02:28:27,747 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-20 02:28:30,140 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-20 02:28:30,721 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-20 02:37:47,633 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-20 02:37:49,594 [INFO] ⏱ Step 2 hoàn tất: 0:09:23
+2026-04-20 02:37:49,595 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-20 02:37:49,597 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-20 02:37:50,131 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-20 02:38:38,854 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-20 02:38:38,860 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-20 02:38:39,430 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-20 02:38:49,095 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-20 02:38:49,097 [INFO] ⏱ Step 4 hoàn tất: 0:00:59
+2026-04-20 02:38:49,102 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-20 02:38:50,282 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-20 02:38:50,558 [INFO] [Step3] Tính review weights...
+2026-04-20 02:58:29,077 [INFO]   Reviews có text hợp lệ: 12,207,296
+2026-04-20 02:58:29,099 [INFO] [Step3] groupBy + collect_list + top-3 + join text (1 pass)...
+2026-04-20 02:58:30,798 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-20 03:16:44,557 [INFO] [Step3] silver_user_text_profile: 1,832,577 users
+2026-04-20 03:16:44,559 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-20 03:16:44,562 [INFO] [Step3] Xây dựng val ground truth...
+2026-04-20 03:16:54,619 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-04-20 03:16:54,625 [INFO] ⏱ Step 3 hoàn tất: 0:38:08
+2026-04-20 03:16:54,632 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-20 03:16:57,273 [INFO] ============================================================
+2026-04-20 03:16:57,274 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:50:41
+2026-04-20 03:16:57,275 [INFO] ============================================================
+2026-04-20 03:16:57,278 [INFO] OUTPUT:
+2026-04-20 03:16:57,279 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-20 03:16:57,280 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-20 03:16:57,281 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-20 03:16:57,282 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-20 03:16:57,283 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-20 03:16:57,284 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-20 03:16:57,286 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 0:50:41
+2026-04-20 03:16:58,288 [INFO] ⏱ TỔNG THỜI GIAN: 0:50:50
+2026-04-20 03:16:58,317 [INFO] Closing down clientserver connection
+2026-04-20 03:18:53,672 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-20 03:18:53,674 [INFO] ============================================================
+2026-04-20 03:18:53,675 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-20 03:18:53,677 [INFO] ============================================================
+2026-04-20 03:18:53,678 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-20 03:18:53,679 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-20 03:18:53,680 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-20 03:18:53,681 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-20 03:18:53,683 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-20 03:19:10,597 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-20 03:19:10,601 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-20 03:20:07,619 [INFO]   📊 Total unique items: 1,610,012
+2026-04-20 03:20:07,621 [INFO] ⏳ [Gold Step 1] Collecting all unique users and computing frequency...
+2026-04-20 03:21:02,699 [INFO]   📊 Total unique users: 1,832,578
+2026-04-20 03:21:02,700 [INFO]   📊 Embedding matrix estimate: 3,442,590 nodes × 384d = 5043 MB
+2026-04-20 03:21:02,701 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-04-20 03:21:58,139 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-20 03:22:26,042 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-20 03:22:34,469 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,832,578 users
+2026-04-20 03:22:39,810 [INFO] ⏱ Step 1 hoàn tất: 0:03:29
+2026-04-20 03:22:39,819 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-04-20 03:22:46,389 [INFO] 
+📌 GOLD STEP 2: Edge List + Semantic Edges
+2026-04-20 03:22:48,882 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-20 03:22:49,549 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-20 03:23:22,874 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-20 03:23:25,615 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-20 03:23:26,501 [INFO]   📊 Total edges: 12,207,341
+2026-04-20 03:23:26,833 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-20 03:23:32,735 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (186.3 MB)
+2026-04-20 03:23:32,941 [INFO] ✅ [Gold Step 2] Edge list complete: 12,207,341 edges
+2026-04-20 03:23:32,947 [INFO] ⏱ Step 2 hoàn tất: 0:00:46
+2026-04-20 03:23:32,948 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-20 03:23:34,036 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-20 03:23:34,038 [INFO] ⏳ [Gold Step 5] Collecting popularity data from ID Map...
+2026-04-20 03:23:55,029 [INFO]   📦 Collected 1,610,012 item popularity records
+2026-04-20 03:24:05,170 [INFO]   📊 ITEM HEAD: 207,336 items (12.9%)
+2026-04-20 03:24:05,174 [INFO]   📊 ITEM MID: 88,285 items (5.5%)
+2026-04-20 03:24:05,177 [INFO]   📊 ITEM TAIL: 666,425 items (41.4%)
+2026-04-20 03:24:05,180 [INFO]   📊 ITEM COLD_START: 647,966 items (40.2%)
+2026-04-20 03:24:05,182 [INFO] ⏳ [Gold Step 5] Collecting user activity data from ID Map...
+2026-04-20 03:24:25,646 [INFO]   📦 Collected 1,832,578 user activity records
+2026-04-20 03:24:37,085 [INFO]   📊 USER INACTIVE: 964,392 users (52.6%)
+2026-04-20 03:24:37,088 [INFO]   📊 USER ACTIVE: 793,896 users (43.3%)
+2026-04-20 03:24:37,091 [INFO]   📊 USER SUPER_ACTIVE: 74,290 users (4.1%)
+2026-04-20 03:24:37,092 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-20 03:24:37,250 [INFO]   📊 Sampling prob range: [1.94e-07, 5.24e-04]
+2026-04-20 03:24:37,252 [INFO]   📊 Top-1 head item prob: 5.24e-04 (cao → tăng cường làm negative)
+2026-04-20 03:24:37,348 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-20 03:24:37,766 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-20 03:24:37,864 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-20 03:24:38,314 [INFO]   📤 gold_user_train_freq.npy → s3://recsys/gold/gold_user_train_freq.npy (14.0 MB)
+2026-04-20 03:24:38,431 [INFO]   📤 gold_user_activity_group.npy → s3://recsys/gold/gold_user_activity_group.npy (1.7 MB)
+2026-04-20 03:24:38,607 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-20 03:24:38,638 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-20 03:24:38,639 [INFO] 📊 Dataset Statistics:
+2026-04-20 03:24:38,640 [INFO]   n_users: 1832578
+2026-04-20 03:24:38,642 [INFO]   n_items: 1610012
+2026-04-20 03:24:38,644 [INFO]   n_edges_train: 12207341
+2026-04-20 03:24:38,645 [INFO]   sparsity: 0.99999586
+2026-04-20 03:24:38,646 [INFO]   sparsity_pct: 99.9996%
+2026-04-20 03:24:38,647 [INFO]   n_head_items: 207336
+2026-04-20 03:24:38,649 [INFO]   n_mid_items: 88285
+2026-04-20 03:24:38,650 [INFO]   n_tail_items: 666425
+2026-04-20 03:24:38,651 [INFO]   n_cold_items: 647966
+2026-04-20 03:24:38,652 [INFO]   n_inactive_users: 964392
+2026-04-20 03:24:38,653 [INFO]   n_active_users: 793896
+2026-04-20 03:24:38,655 [INFO]   n_super_active_users: 74290
+2026-04-20 03:24:38,656 [INFO]   tail_ratio: 0.4139
+2026-04-20 03:24:38,657 [INFO]   cold_ratio: 0.4025
+2026-04-20 03:24:38,659 [INFO]   inactive_user_ratio: 0.5262
+2026-04-20 03:24:38,660 [INFO]   avg_degree_user: 6.66
+2026-04-20 03:24:38,662 [INFO]   avg_degree_item: 7.58
+2026-04-20 03:24:38,663 [INFO]   max_train_freq_item: 37582
+2026-04-20 03:24:38,665 [INFO]   max_train_freq_user: 938
+2026-04-20 03:24:38,666 [INFO]   median_train_freq_item: 2
+2026-04-20 03:24:38,667 [INFO]   median_train_freq_user: 4
+2026-04-20 03:24:38,668 [INFO]   embedding_dim: 384
+2026-04-20 03:24:38,670 [INFO]   negative_sampling_beta: 0.75
+2026-04-20 03:24:38,671 [INFO]   head_ratio_split: 0.2
+2026-04-20 03:24:38,672 [INFO]   mid_ratio_split: 0.1
+2026-04-20 03:24:38,673 [INFO]   tail_ratio_split: 0.7
+2026-04-20 03:24:38,675 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-20 03:24:38,677 [INFO] ⏱ Step 5 hoàn tất: 0:01:04
+2026-04-20 03:24:38,678 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-20 03:24:39,770 [INFO] ============================================================
+2026-04-20 03:24:39,772 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:05:46
+2026-04-20 03:24:39,773 [INFO] ============================================================
+2026-04-20 03:24:39,774 [INFO] OUTPUT:
+2026-04-20 03:24:39,775 [INFO]   ✅ gold_item_id_map.parquet
+2026-04-20 03:24:39,776 [INFO]   ✅ gold_user_id_map.parquet
+2026-04-20 03:24:39,777 [INFO]   ✅ gold_edge_index.npy
+2026-04-20 03:24:39,779 [INFO]   ✅ gold_item_train_freq.npy
+2026-04-20 03:24:39,780 [INFO]   ✅ gold_item_popularity_group.npy
+2026-04-20 03:24:39,781 [INFO]   ✅ gold_user_train_freq.npy
+2026-04-20 03:24:39,782 [INFO]   ✅ gold_user_activity_group.npy
+2026-04-20 03:24:39,784 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-04-20 03:24:39,785 [INFO]   ✅ gold_dataset_stats.json
+2026-04-20 03:24:39,787 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:05:46
+2026-04-20 03:24:40,575 [INFO] ⏱ TỔNG THỜI GIAN: 0:05:54
+2026-04-20 03:24:40,594 [INFO] Closing down clientserver connection
+2026-04-20 08:50:56,150 [INFO] === FULL PIPELINE: Bronze → Silver → Gold ===
+2026-04-20 08:50:56,151 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-04-20 08:50:56,153 [INFO] ⏳ [Metadata] Bắt đầu kéo dữ liệu metadata (streaming write)...
+2026-04-20 10:23:09,687 [INFO]   📦 Metadata: 1,500,000 dòng (5 batches)
+2026-04-20 10:25:17,319 [INFO] Worker hoàn tất: đã xử lý 1,610,012 bản ghi từ 6 batch.
+2026-04-20 10:25:23,464 [INFO] ✅ [Metadata] Hoàn tất: 1,610,012 sản phẩm → s3://recsys/bronze/bronze_meta.parquet
+2026-04-20 10:25:23,584 [INFO] ⏳ [Phase 1 – MAP] Streaming batches → Landing Zone (parallel upload)...
+2026-04-20 11:31:37,712 [INFO] Worker hoàn tất: đã xử lý 36,270,538 bản ghi từ 147 batch.
+2026-04-20 11:31:38,506 [INFO] ✅ [Phase 1] Đã ghi 147 batch (36,270,538 dòng) vào Landing Zone.
+2026-04-20 11:31:38,509 [INFO] ⏳ [Phase 2 – REDUCE] Chạy thuật toán Spark Native (tối ưu Shuffle)...
+2026-04-20 11:38:22,284 [INFO]   📦 Core-5: 14,091,265 interactions
+2026-04-20 11:38:22,473 [INFO] ⏳ Đang chia tập Test / Val / Train bằng Double Max Join...
+2026-04-20 11:38:24,488 [INFO] ⏳ [Phase 3 – SINK] Ghi ra MinIO (ZSTD, coalesce)...
+2026-04-20 11:40:47,890 [INFO] ✅ Ghi thành công bronze_test.
+2026-04-20 11:45:45,794 [INFO] ✅ Ghi thành công bronze_val.
+2026-04-20 11:56:19,958 [INFO] ✅ Ghi thành công bronze_train.
+2026-04-20 11:56:27,599 [INFO] 🗑 Đã xóa landing zone: s3://recsys/landing/reviews_temp
+2026-04-20 11:56:27,605 [INFO] 🎉 Bronze Pipeline hoàn tất!
+2026-04-20 11:56:28,636 [INFO] ✓ Bước 1+2 hoàn tất.  ⏱ 3:07:09
+2026-04-20 11:56:28,654 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-04-20 11:56:37,411 [INFO] === Bước 3: Silver Pipeline ===
+2026-04-20 11:56:37,417 [INFO] ============================================================
+2026-04-20 11:56:37,417 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-04-20 11:56:37,425 [INFO] ============================================================
+2026-04-20 11:56:37,442 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-04-20 11:57:32,278 [INFO]   📦 bronze_train_light (positive only >= 3.0): 11,123,425 rows
+2026-04-20 11:57:32,279 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-04-20 11:57:33,429 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-04-20 11:57:33,432 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-04-20 11:57:53,379 [INFO]   📊 Tổng items: 922,459
+2026-04-20 11:57:53,380 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-04-20 11:59:09,839 [INFO]   🔴 HEAD : 194,124 items | train_freq ≥ 8 | ~21.0%
+2026-04-20 11:59:09,840 [INFO]   🟡 MID  : 84,077 items | 5 ≤ train_freq < 8 | ~9.1%
+2026-04-20 11:59:09,841 [INFO]   🟢 TAIL : 644,258 items | train_freq < 5 | ~69.8%
+2026-04-20 11:59:10,776 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-20 11:59:22,859 [INFO] ✅ [Step1] silver_item_popularity: 922,459 items
+2026-04-20 11:59:27,995 [INFO] ⏱ Step 1 hoàn tất: 0:01:54
+2026-04-20 11:59:27,996 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-04-20 11:59:27,998 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-04-20 11:59:28,351 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-04-20 11:59:30,271 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-04-20 11:59:30,693 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-20 12:09:11,823 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-04-20 12:09:14,219 [INFO] ⏱ Step 2 hoàn tất: 0:09:48
+2026-04-20 12:09:14,221 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-04-20 12:09:14,232 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-04-20 12:09:14,846 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-20 12:10:37,221 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-04-20 12:10:37,224 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-04-20 12:10:37,730 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-20 12:10:48,889 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-04-20 12:10:48,890 [INFO] ⏱ Step 4 hoàn tất: 0:01:34
+2026-04-20 12:10:48,896 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-04-20 12:10:55,229 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-04-20 12:10:55,447 [INFO] [Step3] Tính review weights...
+2026-04-20 12:26:56,125 [INFO]   Reviews có text hợp lệ: 11,123,389
+2026-04-20 12:26:56,139 [INFO] [Step3] groupBy + collect_list + top-3 + join text (1 pass)...
+2026-04-20 12:26:57,006 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-04-20 12:43:41,030 [INFO] [Step3] silver_user_text_profile: 1,483,919 users
+2026-04-20 12:43:41,047 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-04-20 12:43:41,103 [INFO] [Step3] Xây dựng val ground truth...
+2026-04-20 12:43:58,952 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-04-20 12:43:58,955 [INFO] ⏱ Step 3 hoàn tất: 0:33:11
+2026-04-20 12:43:58,960 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-04-20 12:44:02,037 [INFO] ============================================================
+2026-04-20 12:44:02,038 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:47:35
+2026-04-20 12:44:02,039 [INFO] ============================================================
+2026-04-20 12:44:02,042 [INFO] OUTPUT:
+2026-04-20 12:44:02,043 [INFO]   ✅ silver_item_popularity.parquet
+2026-04-20 12:44:02,043 [INFO]   ✅ silver_item_text_profile.parquet
+2026-04-20 12:44:02,045 [INFO]   ✅ silver_user_text_profile.parquet
+2026-04-20 12:44:02,046 [INFO]   ✅ silver_interactions_train.parquet
+2026-04-20 12:44:02,047 [INFO]   ✅ silver_interactions_val.parquet
+2026-04-20 12:44:02,049 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-04-20 12:44:02,053 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 0:47:35
+2026-04-20 12:44:02,055 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-04-20 12:44:04,163 [INFO] === Bước 4: Gold Pipeline ===
+2026-04-20 12:44:04,165 [INFO] ============================================================
+2026-04-20 12:44:04,167 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-04-20 12:44:04,168 [INFO] ============================================================
+2026-04-20 12:44:04,169 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-04-20 12:44:04,170 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-04-20 12:44:04,172 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-04-20 12:44:04,173 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-04-20 12:44:04,174 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-04-20 12:44:04,928 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-04-20 12:44:04,945 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-04-20 12:45:36,500 [INFO]   📊 Total unique items: 1,610,012
+2026-04-20 12:45:36,501 [INFO] ⏳ [Gold Step 1] Collecting all unique users and computing frequency...
+2026-04-20 12:46:26,363 [INFO]   📊 Total unique users: 1,483,920
+2026-04-20 12:46:26,366 [INFO]   📊 Embedding matrix estimate: 3,093,932 nodes × 384d = 4532 MB
+2026-04-20 12:46:26,367 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-04-20 12:48:34,798 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-04-20 12:49:06,378 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-04-20 12:49:19,214 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,483,920 users
+2026-04-20 12:50:00,584 [INFO] ⏱ Step 1 hoàn tất: 0:05:57
+2026-04-20 12:50:00,590 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-04-20 12:50:06,339 [INFO] 
+📌 GOLD STEP 2: Edge List + Semantic Edges
+2026-04-20 12:50:06,915 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-04-20 12:50:07,099 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-04-20 12:50:38,660 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-04-20 12:50:43,874 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-04-20 12:50:45,895 [INFO]   📊 Total edges: 11,123,425
+2026-04-20 12:50:48,388 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-04-20 12:50:55,136 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (169.7 MB)
+2026-04-20 12:50:55,329 [INFO] ✅ [Gold Step 2] Edge list complete: 11,123,425 edges
+2026-04-20 12:50:55,333 [INFO] ⏱ Step 2 hoàn tất: 0:00:49
+2026-04-20 12:50:55,335 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-04-20 12:50:56,443 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-04-20 12:50:56,445 [INFO] ⏳ [Gold Step 5] Collecting popularity data from ID Map...
+2026-04-20 12:51:16,187 [INFO]   📦 Collected 1,610,012 item popularity records
+2026-04-20 12:51:26,022 [INFO]   📊 ITEM HEAD: 194,124 items (12.1%)
+2026-04-20 12:51:26,024 [INFO]   📊 ITEM MID: 84,077 items (5.2%)
+2026-04-20 12:51:26,027 [INFO]   📊 ITEM TAIL: 644,258 items (40.0%)
+2026-04-20 12:51:26,029 [INFO]   📊 ITEM COLD_START: 687,553 items (42.7%)
+2026-04-20 12:51:26,031 [INFO] ⏳ [Gold Step 5] Collecting user activity data from ID Map...
+2026-04-20 12:51:43,758 [INFO]   📦 Collected 1,483,920 user activity records
+2026-04-20 12:51:52,823 [INFO]   📊 USER INACTIVE: 668,794 users (45.1%)
+2026-04-20 12:51:52,825 [INFO]   📊 USER ACTIVE: 742,589 users (50.0%)
+2026-04-20 12:51:52,828 [INFO]   📊 USER SUPER_ACTIVE: 72,537 users (4.9%)
+2026-04-20 12:51:52,829 [INFO] ⏳ [Gold Step 5] Computing negative sampling probs (β=0.75)...
+2026-04-20 12:51:53,060 [INFO]   📊 Sampling prob range: [2.05e-07, 5.11e-04]
+2026-04-20 12:51:53,063 [INFO]   📊 Top-1 head item prob: 5.11e-04 (cao → tăng cường làm negative)
+2026-04-20 12:51:53,148 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-04-20 12:51:53,540 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-04-20 12:51:53,628 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-04-20 12:51:53,995 [INFO]   📤 gold_user_train_freq.npy → s3://recsys/gold/gold_user_train_freq.npy (11.3 MB)
+2026-04-20 12:51:54,090 [INFO]   📤 gold_user_activity_group.npy → s3://recsys/gold/gold_user_activity_group.npy (1.4 MB)
+2026-04-20 12:51:54,228 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-04-20 12:51:54,255 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-04-20 12:51:54,256 [INFO] 📊 Dataset Statistics:
+2026-04-20 12:51:54,258 [INFO]   n_users: 1483920
+2026-04-20 12:51:54,259 [INFO]   n_items: 1610012
+2026-04-20 12:51:54,260 [INFO]   n_edges_train: 11123425
+2026-04-20 12:51:54,261 [INFO]   sparsity: 0.99999534
+2026-04-20 12:51:54,263 [INFO]   sparsity_pct: 99.9995%
+2026-04-20 12:51:54,264 [INFO]   n_head_items: 194124
+2026-04-20 12:51:54,265 [INFO]   n_mid_items: 84077
+2026-04-20 12:51:54,266 [INFO]   n_tail_items: 644258
+2026-04-20 12:51:54,267 [INFO]   n_cold_items: 687553
+2026-04-20 12:51:54,269 [INFO]   n_inactive_users: 668794
+2026-04-20 12:51:54,270 [INFO]   n_active_users: 742589
+2026-04-20 12:51:54,271 [INFO]   n_super_active_users: 72537
+2026-04-20 12:51:54,273 [INFO]   tail_ratio: 0.4002
+2026-04-20 12:51:54,274 [INFO]   cold_ratio: 0.427
+2026-04-20 12:51:54,275 [INFO]   inactive_user_ratio: 0.4507
+2026-04-20 12:51:54,278 [INFO]   avg_degree_user: 7.5
+2026-04-20 12:51:54,279 [INFO]   avg_degree_item: 6.91
+2026-04-20 12:51:54,280 [INFO]   max_train_freq_item: 33737
+2026-04-20 12:51:54,282 [INFO]   max_train_freq_user: 938
+2026-04-20 12:51:54,283 [INFO]   median_train_freq_item: 2
+2026-04-20 12:51:54,284 [INFO]   median_train_freq_user: 5
+2026-04-20 12:51:54,285 [INFO]   embedding_dim: 384
+2026-04-20 12:51:54,287 [INFO]   negative_sampling_beta: 0.75
+2026-04-20 12:51:54,288 [INFO]   head_ratio_split: 0.2
+2026-04-20 12:51:54,289 [INFO]   mid_ratio_split: 0.1
+2026-04-20 12:51:54,290 [INFO]   tail_ratio_split: 0.7
+2026-04-20 12:51:54,292 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-04-20 12:51:54,303 [INFO] ⏱ Step 5 hoàn tất: 0:00:58
+2026-04-20 12:51:54,305 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-04-20 12:51:55,397 [INFO] ============================================================
+2026-04-20 12:51:55,398 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:07:53
+2026-04-20 12:51:55,400 [INFO] ============================================================
+2026-04-20 12:51:55,401 [INFO] OUTPUT:
+2026-04-20 12:51:55,403 [INFO]   ✅ gold_item_id_map.parquet
+2026-04-20 12:51:55,404 [INFO]   ✅ gold_user_id_map.parquet
+2026-04-20 12:51:55,405 [INFO]   ✅ gold_edge_index.npy
+2026-04-20 12:51:55,407 [INFO]   ✅ gold_item_train_freq.npy
+2026-04-20 12:51:55,408 [INFO]   ✅ gold_item_popularity_group.npy
+2026-04-20 12:51:55,410 [INFO]   ✅ gold_user_train_freq.npy
+2026-04-20 12:51:55,411 [INFO]   ✅ gold_user_activity_group.npy
+2026-04-20 12:51:55,413 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-04-20 12:51:55,414 [INFO]   ✅ gold_dataset_stats.json
+2026-04-20 12:51:55,416 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:07:53
+2026-04-20 12:51:56,408 [INFO] ⏱ TỔNG THỜI GIAN: 4:02:56
+2026-04-20 12:52:00,264 [INFO] Closing down clientserver connection
+2026-04-21 11:02:35,878 [INFO] Vui lòng chọn --step hoặc --all.
+2026-04-21 11:02:36,278 [INFO] ⏱ TỔNG THỜI GIAN: 0:00:07
+2026-04-21 11:02:36,281 [INFO] Closing down clientserver connection

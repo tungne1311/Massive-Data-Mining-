@@ -1,169 +1,278 @@
-# RecSys Data Engineering Pipeline v3 — PySpark Cluster + MinIO
+# TA-RecMind: Tail-Augmented Recommendation with LLM-GNN Alignment
 
-Dự án này tập trung vào Data Engineering (DE) pipeline, xử lý bộ dữ liệu khổng lồ **Amazon Reviews 2023 (Electronics)** và chuyển đổi nó thành **Feature Store** chuẩn bị cho các mô hình Recommender System (RecSys).
-
-Pipeline chạy trên **Spark standalone cluster** (1 master + 2 workers) thông qua Docker Compose, kết hợp **MinIO** làm storage (S3-compatible) đảm bảo xử lý phân tán với hiệu năng cao.
-
----
-
-## Kiến trúc Data Engineering Pipeline (Từ 1 đến 6)
-
-Pipeline gồm 6 bước chính (từ Ingestion đến Feature Store), tuân thủ kiến trúc Medallion (Bronze - Silver - Feature Store).
-
-```text
-[HuggingFace Stream] 
-        │
-        ▼  [Single-threaded, Pandas/PyArrow]
-  [Bước 1] Ingestion: Stream dữ liệu raw từ HF
-  [Bước 2] Bronze Storage: Đẩy dữ liệu thô (chunked Parquet zstd) → s3a://recsys/landing/
-        │
-        ▼  [Distributed, PySpark Cluster]
-  [Bước 3] Silver Cleaning & Computing: Làm sạch, Join Broadcast, Đánh giá độ tin cậy (Reliability Scoring) → s3a://recsys/silver/
-        │
-        ▼  [Distributed, PySpark Cluster]
-  [Bước 4] Labeling: Gán nhãn Interaction, BPR Weights → s3a://recsys/silver/labeled_interactions/
-        │
-        ▼  [Distributed, PySpark Cluster]
-  [Bước 5] Temporal Split: Chia Train/Val/Test theo trục thời gian (Time-based split) → s3a://recsys/splits/
-        │
-        ▼  [Distributed, PySpark Cluster]
-  [Bước 6] Feature Store: Map-Reduce tạo User & Item Features (Wilson Score, Top K) → s3a://recsys/feature_store/
-```
-
-### Spark Cluster (Docker Compose)
-
-```
-spark-master (recsys_spark_master)  ← Spark UI: http://localhost:8080
-    ├── spark-worker-1               ← Worker UI: http://localhost:8081
-    └── spark-worker-2               ← Worker UI: http://localhost:8082
-
-pipeline-driver                      ← spark-submit client mode
-minio (recsys_minio)                 ← MinIO UI: http://localhost:9001
-```
+> **Hệ thống gợi ý sản phẩm long-tail trên Amazon Electronics**  
+> Kết hợp LightGCN, Sentence-Transformers và Gate Fusion để giải quyết popularity bias
 
 ---
 
-## Cài đặt
+## Mục Lục
 
-```bash
-# 1. Clone / extract project
-cd recsys_pipeline_minio
-
-# 2. Build image (lần đầu — tải S3A JARs ~70MB)
-docker compose build
-
-# 3. Khởi động hạ tầng
-docker compose up -d minio minio-init spark-master spark-worker-1 spark-worker-2
-
-# 4. Kiểm tra cluster đã ready
-curl http://localhost:8080   # Spark Master UI
-# → Phải thấy 2 workers "ALIVE"
-```
+- [Tổng Quan](#tổng-quan)
+- [Vấn Đề Nghiên Cứu](#vấn-đề-nghiên-cứu)
+- [Kiến Trúc Hệ Thống](#kiến-trúc-hệ-thống)
+- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
+- [Hướng Dẫn Cài Đặt](#hướng-dẫn-cài-đặt)
+- [Hướng Dẫn Chạy Pipeline](#hướng-dẫn-chạy-pipeline)
+- [Kết Quả EDA Chính](#kết-quả-eda-chính)
+- [Đóng Góp Kỹ Thuật](#đóng-góp-kỹ-thuật)
+- [Tài Liệu Tham Khảo](#tài-liệu-tham-khảo)
 
 ---
 
-## Cách chạy
+## Tổng Quan
 
-### A. Chạy bước 3–6 (Bronze đã có sẵn)
+TA-RecMind (**T**ail-**A**ugmented **Rec**ommendation **Mind**) là hệ thống gợi ý học sâu được thiết kế để giải quyết thách thức cốt lõi của bài toán **Long-tail Recommendation** trên tập dữ liệu Amazon Reviews 2023 (Electronics).
 
-```bash
-docker compose run --rm pipeline --step 3_6 --config-id baseline
-```
+Hệ thống tích hợp ba thành phần chính:
 
-### B. Chạy toàn bộ pipeline (1→6)
-
-```bash
-docker compose run --rm pipeline --step all --config-id baseline
-```
-
-### C. Chạy Grid Search (6 configs × bước 3→6)
-
-```bash
-docker compose run --rm pipeline --run-grid-search
-```
-
-### D. Chạy bước đơn lẻ
-
-```bash
-docker compose run --rm pipeline --step 3 --config-id baseline
-docker compose run --rm pipeline --step 4 --config-id baseline
-docker compose run --rm pipeline --step 5 --config-id baseline
-docker compose run --rm pipeline --step 6 --config-id baseline
-```
-
-### E. Test nhanh (20k records)
-
-```bash
-docker compose --profile test run --rm pipeline-test --step 1_2
-```
-
----
-
-## Kiểm tra Cluster
-
-| Mục kiểm tra | Cách kiểm tra |
+| Thành Phần | Vai Trò |
 |---|---|
-| Spark Master UI | `http://localhost:8080` → Status: ALIVE |
-| Workers đã join chưa | Master UI → Workers: 2 workers ALIVE |
-| Job đang chạy | Master UI → Running Applications |
-| Job distributed | Application UI → Stages → Tasks (nhiều executor) |
-| Output vào MinIO | `http://localhost:9001` → Browse recsys bucket |
+| **LightGCN** | Học biểu diễn cộng tác (collaborative embeddings) qua message passing trên đồ thị |
+| **Sentence-Transformers** | Học biểu diễn ngữ nghĩa (semantic embeddings) từ văn bản item và user |
+| **Gate Fusion** | Căn chỉnh động hai không gian embedding, đặc biệt hiệu quả với tail items |
 
-### Xem logs realtime
+**Đóng góp so với RecMind gốc (Xue et al., 2025):**
+- Tail-Weighted Alignment Loss — tăng cường gradient cho tail items trong quá trình huấn luyện
+- User Review Weighting theo `helpful_vote` — lọc nhiễu từ reviews chất lượng thấp
+- Popularity-Penalized Re-ranking — điều chỉnh phân phối gợi ý tại inference time
+- Phân loại HEAD/MID/TAIL dựa trên CDF Pareto từ training set (chống Data Leakage)
 
-```bash
-# Logs spark-master
-docker compose logs -f spark-master
+---
 
-# Logs worker-1
-docker compose logs -f spark-worker-1
+## Vấn Đề Nghiên Cứu
 
-# Logs pipeline job
-docker compose logs -f   # hoặc xem output của docker compose run
+### Bối Cảnh
+
+Tập dữ liệu Amazon Electronics 2023 thể hiện phân phối **power-law** cực đoan:
+
+```
+99.9993% sparsity — đồ thị user-item gần như rỗng hoàn toàn
+72.51%  items là Tail (≤ 5 tương tác trong train)
+23.17%  items trong val/test chưa từng xuất hiện trong train (cold-start)
+```
+
+Vấn đề: Các hệ thống gợi ý truyền thống (LightGCN, MF) tối ưu hóa chủ yếu cho **head items** do chúng chiếm 80% tổng tương tác (nguyên tắc Pareto), bỏ qua phần lớn catalog sản phẩm.
+
+### Câu Hỏi Nghiên Cứu
+
+> Làm thế nào để xây dựng hệ thống gợi ý vừa duy trì độ chính xác tổng thể vừa cải thiện đáng kể khả năng gợi ý **tail items** chất lượng cao nhưng chưa được khám phá?
+
+---
+
+## Kiến Trúc Hệ Thống
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DATA PIPELINE                            │
+│                                                             │
+│  HuggingFace ──► Bronze ──► Silver ──► Gold ──► Model      │
+│  (Amazon 2023)   (Raw)     (Clean)   (Ready)               │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    MODEL ARCHITECTURE                       │
+│                                                             │
+│  Item/User Text ──► Sentence-Transformer ──► z^L_v         │
+│                                                  │          │
+│  Interaction Graph ──► LightGCN ──────────────► │          │
+│                         (L layers)    z^G_v      │          │
+│                                         │        │          │
+│                                    Gate Fusion   │          │
+│                                    γ = σ(w[z^G ∥ z^L ∥ d̃]) │
+│                                         │                   │
+│                                    h_v = α·z^G + (1-α)·z^L │
+│                                         │                   │
+│                                    s(u,i) = ⟨h_u, h_i⟩    │
+│                                         │                   │
+│                              Popularity-Penalized Re-ranking│
+└─────────────────────────────────────────────────────────────┘
+```
+
+Xem chi tiết tại [`docs/02_model_architecture.md`](./docs/02_model_architecture.md).
+
+---
+
+## Cấu Trúc Dự Án
+
+```
+ta-recmind/
+├── README.md                        # File này
+├── docs/
+│   ├── 01_data_pipeline.md          # Kiến trúc pipeline Bronze-Silver-Gold
+│   ├── 02_model_architecture.md     # Chi tiết kiến trúc mô hình
+│   ├── 03_training_strategy.md      # Hàm mất mát và chiến lược huấn luyện
+│   ├── 04_evaluation_protocol.md    # Giao thức đánh giá Long-tail
+│   └── 05_web_demo.md               # Kiến trúc web demo
+├── config/
+│   └── config.yaml                  # Cấu hình toàn pipeline
+├── src/
+│   ├── pipeline_runner.py           # Main entry point điều phối toàn bộ
+│   ├── bronze/
+│   │   ├── ste1.py                  # Bronze: HuggingFace ingestion
+│   │   ├── ste2.py                  # Bronze: Spark processing & split
+│   │   └── upload-bronze.py         # Push Bronze schema (nếu có)
+│   ├── silver/
+│   │   ├── ste3_silver.py               # Silver: Orchestrator
+│   │   ├── silver_step1_popularity.py   # Silver: HEAD/MID/TAIL classification
+│   │   ├── silver_step2_item_profile.py # Silver: Item text profile
+│   │   ├── silver_step3_user_profile.py # Silver: User text profile
+│   │   ├── silver_step4_interactions.py # Silver: Enrich interactions
+│   │   └── upload_silver_to_hf.py       # Tải Silver artifacts lên HF
+│   └── gold/
+│       ├── ste4_gold.py                 # Gold: ID Mapping & Embeddings Orchestrator
+│       └── upload_gold_to_hf.py         # Tải Gold artifacts lên HF
+├── docker-compose.yml               # Hạ tầng Docker (16GB RAM)
+├── Dockerfile                       # Image với Spark + Python deps
+└── .env                             # Biến môi trường (không commit)
 ```
 
 ---
 
-## Cấu trúc MinIO Output
+## Yêu Cầu Hệ Thống
 
+| Tài Nguyên | Tối Thiểu | Khuyến Nghị |
+|---|---|---|
+| RAM | 16 GB | 32 GB |
+| CPU | 4 cores | 8 cores |
+| Disk | 50 GB | 100 GB |
+| GPU | Không bắt buộc (Bronze/Silver) | 16 GB VRAM (training) |
+| Docker | 24.x+ | 24.x+ |
+| Python | 3.10+ | 3.11 |
+
+**Phân bổ RAM (16 GB):**
 ```
-s3a://recsys/
-├── bronze/
-│   ├── reviews/year_month=YYYY-MM/
-│   └── metadata/year_month=YYYY-MM/
-├── silver/
-│   ├── interactions/config_id=<id>/year_month=YYYY-MM/
-│   ├── labeled_interactions/config_id=<id>/year_month=YYYY-MM/
-│   └── logs/
-│       ├── silver_summary_<config_id>.json
-│       └── grid_search_summary_<ts>.json
-├── splits/
-│   └── config_id=<id>/
-│       ├── train/
-│       ├── val/
-│       └── test/
-└── feature_store/
-    └── config_id=<id>/train/
-        ├── user_features/
-        ├── item_features/
-        └── user_item_features/
+MinIO:         ~1.5 GB
+Spark Master:  ~1.0 GB
+Spark Worker:  ~8.0 GB (6 GB JVM + 2 GB overhead)
+Pipeline Driver: ~5.0 GB
+OS + buffer:   ~0.5 GB
 ```
 
 ---
 
-## Tùy chỉnh tài nguyên
+## Hướng Dẫn Cài Đặt
 
-Trong `.env`:
+### 1. Clone và Cấu Hình
+
 ```bash
-SPARK_WORKER_MEMORY=6g    # RAM mỗi worker
-SPARK_WORKER_CORES=4      # CPU cores mỗi worker
-SPARK_EXECUTOR_MEMORY=4g  # RAM mỗi executor
-SPARK_EXECUTOR_CORES=2    # CPU cores mỗi executor
+git clone https://github.com/<your-repo>/ta-recmind.git
+cd ta-recmind
+cp .env.example .env
+# Chỉnh sửa .env theo máy thực tế
 ```
 
-Trong `config/config.yaml`:
-```yaml
-spark:
-  shuffle_partitions: "200"  # Tăng nếu data lớn
-  write_partitions: 0        # 0 = để AQE tự quyết; >0 = repartition về N files
+### 2. Khởi Động Hạ Tầng
+
+```bash
+# Khởi động MinIO + Spark cluster
+docker compose up -d minio minio-init spark-master spark-worker-1
+
+# Kiểm tra trạng thái
+docker compose ps
+
+# Spark UI: http://localhost:18080
+# MinIO UI: http://localhost:9001
 ```
+
+### 3. Kiểm Tra Kết Nối
+
+```bash
+# Test pipeline với 20k records
+docker compose run --rm pipeline-test --step 1_2
+```
+
+---
+
+## Hướng Dẫn Chạy Pipeline
+
+### Chạy Toàn Bộ Pipeline (Từ đầu tới cuối)
+
+```bash
+docker compose run --rm pipeline python src/pipeline_runner.py --all
+```
+
+### Chạy Tách Rời Từng Lớp Data (Bronze / Silver / Gold)
+
+Hệ thống cho phép chạy độc lập từng bước để debug hoặc phân bổ tài nguyên.
+
+```bash
+# Bước 1+2: Ingestion & Tạo Bronze schemas (Lọc Core-5, Time-split theo timestamp)
+docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
+
+# Bước 3: Tạo Silver schema (Phân loại Popularity, Tokenize texts, Enrich profiles)
+docker compose run --rm pipeline python src/pipeline_runner.py --step 3_silver
+
+# Bước 4: Tạo Gold schemas (ID Mapping, Re-mapping nodes, Dense Embeddings)
+docker compose run --rm pipeline python src/pipeline_runner.py --step 4_gold
+```
+
+### Push Artifacts lên Hugging Face
+
+Sau khi chạy xong các layer ở MinIO, bạn có thể đẩy Data Lake lên Cloud Dataset repo. Đừng quên cung cấp `HF_TOKEN` nếu nó chưa ở trong `.env`.
+
+```bash
+# Push Silver Dataset
+docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline python src/silver/upload_silver_to_hf.py
+
+# Push Gold Dataset (Ghi đè tham số repo thông qua command)
+docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline python src/gold/upload_gold_to_hf.py --mode full --repo-id <your-repo>/amazon-2023-gold
+```
+
+### Cấu Hình Thử Nghiệm Nhanh
+
+```bash
+# Chỉ lấy 20k reviews để test pipeline
+MAX_REVIEW_RECORDS=20000 MAX_METADATA_RECORDS=5000 \
+docker compose run --rm pipeline --step 1_2
+```
+
+---
+
+## Kết Quả EDA Chính
+
+### Thống Kê Dataset (Amazon Electronics 2023)
+
+| Chỉ Số | Giá Trị |
+|---|---|
+| Tổng users (sau Core-5 filter) | 1,847,662 |
+| Tổng items (train) | 1,042,121 |
+| Tổng interactions (train) | 1,396,428 |
+| Sparsity | 99.9993% |
+| Tail items (≤ 5 tương tác) | 72.51% |
+| Cold-start items trong Val/Test | 23.17% |
+
+### Phân Phối Rating
+
+| Rating | Tỷ Lệ |
+|---|---|
+| ⭐⭐⭐⭐⭐ (5 sao) | 65.7% |
+| ⭐⭐⭐⭐ (4 sao) | 14.7% |
+| ⭐⭐⭐ (3 sao) | 7.0% |
+| ⭐⭐ (2 sao) | 4.5% |
+| ⭐ (1 sao) | 8.0% |
+
+> **Nhận xét:** Rating skew nặng về 5 sao (65.7%) — đây là lý do hàm trọng số `w(r)` dựa trên `helpful_vote` quan trọng để phân biệt chất lượng review thực sự.
+
+---
+
+## Đóng Góp Kỹ Thuật
+
+| Đóng Góp | Mô Tả | Nguồn Gốc |
+|---|---|---|
+| **Tail-Weighted Alignment Loss** | `w_v = 1/log(1 + train_freq)` nhân vào alignment loss | Novel (mở rộng từ RecMind Eq.5 + LAGCL) |
+| **Review Quality Weighting** | `w(r) = 1 + log(1 + helpful_vote)` | Novel (feature engineering Amazon 2023) |
+| **Anti-Leakage Classification** | Dùng `train_freq` thay vì `rating_number` từ metadata | Novel (phân tích leakage) |
+| **Popularity-Penalized Re-ranking** | `s_adj = s_model - λ·log(1 + train_freq)` | Novel (dựa trên Challenging Long Tail) |
+
+---
+
+## Tài Liệu Tham Khảo
+
+1. He, X. et al. (2020). **LightGCN: Simplifying and Powering GCN**. SIGIR 2020.
+2. Xue, et al. (2025). **RecMind: LLM-Powered Recommendation**. arXiv:2509.06286v1.
+3. Wu, J. et al. (2021). **Self-supervised Graph Learning for Recommendation** (SGL). SIGIR 2021.
+4. Hu, E. et al. (2022). **LoRA: Low-Rank Adaptation of LLMs**. ICLR 2022.
+5. Rendle, S. et al. (2009). **BPR: Bayesian Personalized Ranking**. UAI 2009.
+
+Xem đầy đủ tại [`docs/references.md`](./docs/references.md).

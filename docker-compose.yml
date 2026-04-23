@@ -306,11 +306,11 @@ services:
     volumes:
       - ./data/logs:/app/data/logs
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080"]
+      test: ["CMD-SHELL", "/opt/bitnami/python/bin/python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080')\" 2>/dev/null"]
       interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 20s
+      start_period: 30s
     mem_limit: 1024m # Cấp 1GB cho Master vì chỉ làm nhiệm vụ điều phối
     networks:
       - recsys_net
@@ -359,12 +359,14 @@ services:
       MAX_REVIEW_RECORDS:    "${MAX_REVIEW_RECORDS:-null}"
       MAX_METADATA_RECORDS:  "${MAX_METADATA_RECORDS:-null}"
       HF_STREAM_BATCH_SIZE:  "${HF_STREAM_BATCH_SIZE:-100000}"
+      HF_TOKEN:              "${HF_TOKEN:-}"
       BRONZE_BASE_PATH:      "s3a://recsys/bronze"
       PYTHONUNBUFFERED:      "1"
     volumes:
       - ./src:/app/src
       - ./config:/app/config
       - ./data/logs:/app/data/logs
+      - ./scripts:/app/scripts
       - hf_cache:/app/.cache/huggingface
     mem_limit: 5g # Giới hạn Docker cho Driver
     cpus: "1.0"
@@ -390,6 +392,7 @@ services:
       MAX_REVIEW_RECORDS:    "20000"
       MAX_METADATA_RECORDS:  "5000"
       HF_STREAM_BATCH_SIZE:  "10000"
+      HF_TOKEN:              "${HF_TOKEN:-}"
       BRONZE_BASE_PATH:      "s3a://recsys/bronze"
       PYTHONUNBUFFERED:      "1"
     volumes:

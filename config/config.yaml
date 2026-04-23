@@ -1,4 +1,4 @@
-# RecSys Pipeline v3 — Full config (Bước 1–6)
+# RecSys Pipeline v3 — Full config (Bronze → Silver → Gold)
 
 huggingface:
   review_dataset:   "McAuley-Lab/Amazon-Reviews-2023"
@@ -34,13 +34,13 @@ spark:
   executor_cores:      "2"
   # ── Shuffle & partitions ─────────────────────────────────────────
   # Cluster 2 workers × 2 cores = 4 cores → 100–200 partitions là hợp lý
-  shuffle_partitions:  "100"
+  shuffle_partitions:  "200"
   # ── AQE (Adaptive Query Execution) ───────────────────────────────
   aqe_enabled:              "true"   # bật AQE để tự điều chỉnh partition
   aqe_coalesce_partitions:  "true"   # gộp partition nhỏ sau shuffle
   aqe_skew_join:            "true"   # xử lý skew tự động
   # ── Output ───────────────────────────────────────────────────────
-  parquet_compression: "snappy"
+  parquet_compression: "zstd"
   # write_partitions: số file parquet khi ghi output cuối
   # Đặt 0 = không coalesce, để Spark tự quyết (phù hợp cluster)
   # Đặt > 0 = coalesce về N file (giảm số file nhỏ, phù hợp data nhỏ-trung)
@@ -57,9 +57,26 @@ quality_check:
 
 silver:
   write_mode:       "overwrite"
+  bronze_hf_repo:   "chuongdo1104/amazon-2023-bronze"
   min_year:         2010
   max_year:         2025
   short_review_len: 20
+
+gold:
+  write_mode:       "overwrite"
+  # ── LLM Embedding ──────────────────────────────────────────────
+  # all-MiniLM-L6-v2:  22M params, 384 dim (CPU, validate pipeline)
+  # all-mpnet-base-v2: 109M params, 768 dim (GPU 8GB+)
+  embedding_model:      "all-MiniLM-L6-v2"
+  embedding_dim:        384
+  embedding_batch_size:  256        # tăng lên 512-1024 nếu có GPU
+  embedding_chunk_size:  50000      # số texts xử lý mỗi chunk
+  # ── Temporal Decay ─────────────────────────────────────────────
+  temporal_decay_lambda: 1.0        # λ trong exp(-λ × ΔT / T_range)
+  # ── Negative Sampling ──────────────────────────────────────────
+  negative_sampling_beta: 0.75      # P(j) ∝ freq^{-β}, β ∈ {0.5, 0.75, 1.0}
+  # ── Temp Directory ─────────────────────────────────────────────
+  temp_dir:             "data/gold_temp"
 
 reliability_tuning:
   selected_config_id: "baseline"
