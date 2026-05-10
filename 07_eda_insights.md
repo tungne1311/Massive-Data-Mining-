@@ -35,12 +35,13 @@ Việc lựa chọn Amazon Electronics 2023 không chỉ dựa trên quy mô mà
 
 | Chỉ Số | Giá Trị | Nhận Xét Kiến Trúc |
 |---|---|---|
-| Raw interactions (Silver) | ~44,066,834 | Bao gồm mọi rating |
-| Positive interactions (rating ≥ 3) | ~36,168,550 | Filtered tại Bronze |
-| Tổng Users | 1,847,662 | Kích thước không gian Users |
+| Raw interactions (trước Core-5) | ~44,066,834 | Bronze giữ MỌI interaction (implicit feedback, không lọc rating) |
+| Tổng Users (sau Core-5 filter) | 1,847,662 | Kích thước không gian Users |
 | Tổng Items (Train) | 1,042,121 | Kích thước không gian Items |
 | Tổng Interactions (Train) | 1,396,428 | Số cạnh thực tế của đồ thị Bipartite |
 | **Sparsity** | **99.9993%** | Mức thưa thớt cực đoan |
+
+> **Implicit Feedback Protocol:** Bronze giữ TOÀN BỘ interactions (mọi rating) vì sự kiện "user đã tương tác với item" là tín hiệu chính, bất kể rating score. Ngưỡng `rating ≥ 4.0` chỉ áp dụng riêng ở **Silver Step 3** (xây dựng user text profile) để lấy "lời khen" thể hiện sở thích.
 
 **Insight:** Sparsity 99.9993% giải thích vì sao Collaborative Filtering truyền thống thất bại trên Long-tail. Hệ thống bắt buộc phải dựa vào **LightGCN** (lan truyền item-item similarity gián tiếp) kết hợp **LLM semantic embedding** để làm giàu vector cho nodes ít tương tác.
 
@@ -226,35 +227,17 @@ Tại Val/Test, phân bổ popularity group **khác hẳn** Train:
 
 Dữ liệu từ `data/logs/pipeline.log` xác nhận các thống kê thực tế:
 
-### Silver Step 3 (Silver Cleaning) — Run Thành Công
+### Silver Step 3 (User Text Profile) — v2 (1-Pass)
 
 ```
-Thời gian xử lý Silver:   ~1.5 giờ (08:40 → 10:13)
-Output rows:               44,066,834
-avg_reliability:           0.5883
+Thời gian xử lý Silver Step 3:   ~1.5 giờ (08:40 → 10:13)
 ```
 
-### Silver Step 4 (Labeling) — Phân Phối interaction_type
+Step 3 v2 gộp Phase 2 + Phase 3 cũ thành 1 groupBy duy nhất (tiết kiệm 1 shuffle ~35M rows + bỏ checkpoint MinIO ~9M rows).
 
-```
-strong_positive:  31,214,972  (70.8%) — rating 5 sao + helpful_vote cao
-weak_positive:     4,953,578  (11.2%) — rating 4-5 sao, ít helpful_vote
-neutral:           1,045,028   (2.4%) — rating 3 sao
-medium_negative:   2,035,213   (4.6%) — rating 2 sao
-hard_negative:     4,818,043  (10.9%) — rating 1 sao
-```
+### Silver Step 4 (Enrich Interactions) — v2
 
-→ Xác nhận pipeline Bronze đã filter đúng (rating ≥ 3.0) — mọi negative vào Silver đều bị loại.
-
-### Silver Step 5 (Temporal Split) — Phân Tách Tập Dữ Liệu
-
-```
-Train: 43,925,339 rows | 18,200,233 users | 1,602,487 items
-Val:      137,715 rows |    106,094 users |    52,239 items
-Test:       3,780 rows |      2,993 users |     3,101 items
-```
-
-*(Lưu ý: Đây là số liệu của run cũ Silver trước khi tái cấu trúc pipeline hiện tại — số liệu Bronze EDA phản ánh pipeline mới hơn)*
+Pipeline hiện tại **không có `interaction_type`** — chỉ gắn label `popularity_group` (HEAD/MID/TAIL/COLD_START) và `year_month` cho train + val. Bronze giữ TOÀN BỘ ratings (implicit feedback); bộ lọc `rating ≥ 3.0` thuộc pipeline cũ đã được bãi bỏ.
 
 ---
 

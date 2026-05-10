@@ -52,8 +52,7 @@ Hệ thống xây dựng trên nền tảng **RecMind (Xue et al., 2025)** với
 Tập dữ liệu Amazon Electronics 2023 thể hiện phân phối **power-law** cực đoan:
 
 ```
-Tổng raw interactions:    ~44,066,834 rows (sau Silver cleaning)
-Positive interactions:     ~36M (rating ≥ 3.0)
+Tổng raw interactions:    ~44,066,834 rows (giữ toàn bộ, không lọc rating — implicit feedback)
 Users (sau Core-5 filter): 1,847,662
 Items (train):             1,042,121
 Sparsity:                  99.9993%
@@ -132,12 +131,15 @@ recsys_pipeline_minio/
 ├── config/
 │   └── config.yaml                      # Cấu hình toàn bộ pipeline
 │
+├── scripts/
+│   ├── audit_val_distribution.py        # Kiểm tra phân phối val_gt vs train (standalone)
+│   └── run_pipeline.sh                  # Shell script chạy pipeline theo tầng
+│
 ├── src/
 │   ├── pipeline_runner.py               # Main entry point — điều phối toàn bộ pipeline
-│   ├── EDA_Bronze_V2.ipynb              # EDA tầng Bronze
-│   ├── EDA_Silver_V2.ipynb              # EDA tầng Silver
-│   ├── EDA_gold (1).ipynb               # EDA tầng Gold
 │   ├── TA_RecMind_V2_IntraLayer.ipynb   # Training notebook (phiên bản IntraLayer Gate)
+│   ├── Bản_sao_của_TA_RecMind_V2_IntraLayer.ipynb  # Bản sao training notebook
+│   ├── Fix8_5_của_TA_RecMind_V2_IntraLayer_fixed (2).ipynb  # Phiên bản fixed
 │   ├── demo_recmind_final.ipynb         # Demo notebook hoàn chỉnh
 │   │
 │   ├── bronze/
@@ -146,19 +148,19 @@ recsys_pipeline_minio/
 │   │   └── upload-bronze.py             # Push Bronze artifacts lên HuggingFace Hub
 │   │
 │   ├── silver/
-│   │   ├── ste3_silver.py               # Silver orchestrator (điều phối 4 bước)
+│   │   ├── ste3_silver.py               # Silver orchestrator (thứ tự: Step1→Step2→Step4→Step3)
 │   │   ├── silver_step1_popularity.py   # HEAD/MID/TAIL classification (train_freq CDF)
 │   │   ├── silver_step2_item_profile.py # Item text profile (Field-Aware Token Budget)
-│   │   ├── silver_step3_user_profile.py # User text profile (Top-K reviews, helpfulness)
-│   │   ├── silver_step4_interactions.py # Enrich interactions (labels, edge_weight)
-│   │   ├── upload_silver_to_hf.py       # Push Silver artifacts lên HuggingFace Hub
-│   │   └── patch_xdmh.py                # Patch/fix script cho XDMH notebook
+│   │   ├── silver_step3_user_profile.py # User text profile + val_gt + GUARDRAIL (v2: 1-pass)
+│   │   ├── silver_step4_interactions.py # Enrich interactions (popularity_group, year_month)
+│   │   ├── silver_utils.py              # Shared utils: advanced_clean_text()
+│   │   └── upload_silver_to_hf.py       # Push Silver artifacts lên HuggingFace Hub
 │   │
 │   └── gold/
 │       ├── ste4_gold.py                 # Gold orchestrator (ID mapping → Edge → Meta)
 │       ├── gold_step1_id_mapping.py     # Integer indexing cho users & items
-│       ├── gold_step2_edge_list.py      # PyG-format edge_index
-│       ├── gold_step5_training_meta.py  # Training metadata arrays (npy)
+│       ├── gold_step2_edge_list.py      # PyG-format edge_index [2, E]
+│       ├── gold_step5_training_meta.py  # Training metadata arrays (npy) + blended neg-sampling
 │       └── upload_gold_to_hf.py         # Push Gold artifacts lên HuggingFace (full/partial)
 │
 ├── data/
@@ -290,12 +292,11 @@ Mở `src/TA_RecMind_V2_IntraLayer.ipynb` trên Google Colab:
 
 | Chỉ Số | Giá Trị | Nguồn |
 |---|---|---|
-| Raw interactions (sau Silver) | ~44,066,834 | `pipeline.log` |
-| Positive interactions (rating ≥ 3) | ~36,168,550 | EDA Bronze |
+| Raw interactions (Bronze) | ~44,066,834 | `pipeline.log` |
 | Users (sau Core-5 filter) | 1,847,662 | EDA Bronze |
 | Items (train) | 1,042,121 | EDA Bronze |
 | Items (train + cold val) | ~1,172,867 | EDA Gold |
-| Interactions (train) | 1,396,428 | EDA Bronze |
+| Interactions (train edges) | 1,396,428 | EDA Bronze |
 | Sparsity đồ thị | 99.9993% | EDA Bronze |
 | Tail items (≤ 5 tương tác) | 755,609 (72.51%) | EDA Silver |
 | Cold-start items trong Val/Test | 130,746 (23.17%) | EDA Silver |
@@ -306,11 +307,11 @@ Mở `src/TA_RecMind_V2_IntraLayer.ipynb` trên Google Colab:
 |---|---|---|
 | ⭐⭐⭐⭐⭐ (5 sao) | 65.7% | Skew nặng → không dùng rating để phân loại chất lượng |
 | ⭐⭐⭐⭐ (4 sao) | 14.7% | |
-| ⭐⭐⭐ (3 sao) | 7.0% | Ngưỡng "positive" tối thiểu |
-| ⭐⭐ (2 sao) | 4.5% | Bị lọc tại Bronze |
-| ⭐ (1 sao) | 8.0% | Bị lọc tại Bronze |
+| ⭐⭐⭐ (3 sao) | 7.0% | |
+| ⭐⭐ (2 sao) | 4.5% | |
+| ⭐ (1 sao) | 8.0% | |
 
-> **Quyết định thiết kế:** Thay vì dùng rating, dùng `w(r) = 1 + log(1 + helpful_vote)` để xếp hạng chất lượng review. Hàm log kiểm soát outlier (review có 3,294 helpful_votes không gấp 3,294 lần review có 1 helpful_vote).
+> **Implicit Feedback Protocol:** Bronze giữ TOÀN BỘ interactions (mọi rating 1-5). Sự kiện "user đã tương tác" là tín hiệu chính, bất kể sentiment. Ngưỡng `rating ≥ 4.0` chỉ dùng riêng trong **Silver Step 3** (xây dựng user text profile) để lấy "lời khen" thể hiện sở thích. Thay vì dùng rating, dùng `w(r) = 1 + log(1 + helpful_vote)` để xếp hạng chất lượng review.
 
 ### Bằng Chứng Data Leakage (Lý Do Không Dùng `rating_number`)
 

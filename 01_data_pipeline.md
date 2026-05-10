@@ -28,14 +28,19 @@ HuggingFace (McAuley-Lab/Amazon-Reviews-2023)
 ┌──────────────────────────────────────────┐
 │              TẦNG SILVER                 │
 │  ste3_silver.py: Orchestrator            │
+│  Thứ tự: Step1 → Step2 → Step4 → Step3  │
 │  Step 1: Item Popularity                 │
 │    train_freq CDF → HEAD/MID/TAIL        │
+│    → cache, broadcast cho downstream     │
 │  Step 2: Item Text Profile               │
 │    4-level field-aware token budget      │
-│  Step 4: Enrich Interactions             │
-│    labels (không edge_weight)            │
-│  Step 3: User Text Profile               │
-│    top-3 reviews (helpful_vote weight)   │
+│  Step 4: Enrich Interactions (trước 3)   │
+│    broadcast join popularity, bỏ         │
+│    edge_weight (LightGCN không dùng)     │
+│  Step 3: User Text Profile (RAM nặng)    │
+│    1-pass groupBy: collect_list → sort   │
+│    → slice top-K → join text (v2)        │
+│    + val_ground_truth với GUARDRAIL      │
 │  → MinIO silver/ + HuggingFace backup    │
 └────────────────┬─────────────────────────┘
                  │ silver_* artifacts
@@ -217,10 +222,12 @@ Tầng Silver thực hiện bốn bước theo thứ tự phụ thuộc. Mọi t
 
 **Thứ tự chạy (ste3_silver.py):** `Step 1 → Step 2 → Step 4 → Step 3`
 
-Chiến lược "Vertical Culling":
-- Cache `bronze_train` chỉ với **light columns** (không có Text) cho Step 1+4
-- Sau Step 4, `unpersist` ngay lập tức
-- Step 3 đọc lại `bronze_train` với **full text columns** độc lập
+Chiến lược "Vertical Culling" (v2):
+- Đọc `bronze_train` **1 lần duy nhất** với light columns (`reviewer_id`, `parent_asin`, `rating`, `timestamp`, `helpful_vote`) → cache cho Step 1 + 4
+- Step 2 nhận `meta_path` riêng, không liên quan bronze_train
+- Step 4 chạy **trước** Step 3 vì nhẹ hơn
+- Sau Step 4, `unpersist` `df_train_light` → giải phóng RAM trước Step 3
+- Step 3 đọc lại `bronze_train` với **full text columns** riêng biệt (`reviewer_id`, `parent_asin`, `timestamp`, `rating`, `review_title`, `review_text`, `helpful_vote`)
 
 ### Silver Step 1 — Phân Loại Item Popularity
 
@@ -287,44 +294,61 @@ w(r) = 1 + log(1 + helpful_vote(r))
 | 100 | ≈ 5.61 |
 | 3,294 (max EDA) | ≈ 9.40 |
 
-**Chiến lược chống OOM (1.8M users):**
+**Chiến lược chống OOM v2 — 1 Pass duy nhất (tiết kiệm 1 shuffle + 1 checkpoint MinIO):**
 
 ```
-Phase 1: compute_review_weights()
-  → weighted reviews với snippet (~120 chars title + ~220 chars text)
-  → cache + materialize (chặt lineage)
+Phase 1: _compute_review_weights()
+  → filter rating ≥ 4.0 ("lời khen" của user)
+  → advanced_clean_text(review_title + review_text) → snippet
+    (title: 120 chars | text: 220 chars)
+  → w(r) = 1 + log(1 + helpful_vote)  [Spark JVM built-in log]
+  → filter: snippet không rỗng
+  → cache + count() (chặt lineage)
 
-Phase 2: select_topk_reviews()
-  → groupBy(reviewer_id) + collect_list(struct(timestamp, weight, snippet))
-  → sort_array(desc) theo timestamp → slice(1, TOP_K=3)
-  → repartition TRƯỚC groupBy (phân tải đều)
+Phase 2 (gộp v1-Phase2 + Phase3 → 1 groupBy duy nhất):
+  _build_user_profiles()
+  → repartition(N, "reviewer_id")     [phân tải đều trước groupBy]
+  → groupBy(reviewer_id).agg(
+       collect_list(struct(timestamp, weight, snippet)),
+       count(*), avg(rating), avg(weight)
+     )
+  → sort_array(desc) → slice top-3 → array_join(" [SEP] ")
+  → fallback: "[NO_TEXT] User interaction profile" nếu text rỗng
+  → tiết kiệm 1 shuffle (~35M rows) + bỏ checkpoint tạm MinIO (~9M rows)
 
-Checkpoint: ghi ra MinIO (chặt lineage Phase 1+2)
-
-Phase 3: aggregate_user_text()
-  → groupBy lần 2 (đơn giản, dữ liệu đã nhỏ)
-  → concat_ws(" [SEP] ", sorted_snippets)
+Chỉ 1 groupBy duy nhất (v1 cần 2 groupBy + checkpoint)
 ```
 
 > **Lý do TOP_K=3 thay vì 5:** Giữ token budget dưới 384 (ngưỡng MiniLM), đồng thời giảm GPU memory khi encode.
 
 **`[SEP]` token** phân tách ranh giới review giúp LLM xử lý multi-review input hiệu quả hơn.
 
-**Output bổ sung:** `silver_val_ground_truth.parquet` — chứa `(reviewer_id, parent_asin, popularity_group, is_tail, is_cold_start, train_freq)` từ val, không có text. Phục vụ tính Tail Recall@K, Coverage@K.
+**GUARDRAIL tích hợp trong `_build_val_ground_truth()`:** Sau khi tính phân phối val, tự động cảnh báo nếu:
+- `COLD_START > 35%` → Recall@K tổng thể thấp giả tạo
+- `TAIL > 85%` → val bị dominated bởi long-tail
+- `HEAD < 10%` → HEAD recall không đại diện
+
+**Output bổ sung:** `silver_val_ground_truth.parquet` — chứa `(reviewer_id, parent_asin, timestamp, rating, popularity_group, train_freq, is_tail, is_cold_start)` từ val, không có text. Phục vụ tính Tail Recall@K, Coverage@K.
 
 ### Silver Step 4 — Enrich Interactions
 
-**Edge weight (Loại Bỏ khỏi Silver):**
+**Edge weight (Loại Bỏ khỏi Silver — v2):**
 
-`edge_weight` bị loại bỏ hoàn toàn ở Silver để chuẩn hóa cấu trúc đối xứng đồ thị. Mặc định Edge Weight = 1.0 implicit.
+`edge_weight` bị loại bỏ hoàn toàn ở Silver vì LightGCN dùng **GCN degree normalization** `D^{-1/2}` tính riêng trong Colab — không cần `edge_weight` trong parquet. Mặc định Binary Unweighted (implicit).
 
 Temporal decay `exp(-λ × ΔT)` được để lại tầng Gold/Training vì `λ` là hyperparameter cần tune — Silver phải chứa dữ liệu ổn định, không phụ thuộc hyperparameter.
 
+**Tối ưu v2 — không gọi `count()` thừa:**
+- Bỏ `count()` action sau mỗi enrich (tiết kiệm 5-10 phút/split)
+- Dùng `coalesce` thay `repartition` khi ghi (tránh shuffle)
+- ZSTD compression
+
 **Layout vật lý tối ưu:**
 ```python
-df.repartition(10, "reviewer_id")
+df.coalesce(20)                                  # train: 20 partitions
   .sortWithinPartitions("reviewer_id", "timestamp")
   .write.parquet(silver_out)
+# val: coalesce(5)
 ```
 
 `sortWithinPartitions` khác `orderBy` — sort trong từng partition thay vì sort toàn cục (tránh shuffle thêm). Pattern truy cập phổ biến nhất là "lấy toàn bộ lịch sử của một user" → sort theo `reviewer_id + timestamp` tối ưu I/O.
@@ -368,10 +392,12 @@ parent_asin       string
 rating            float
 timestamp         long
 helpful_vote      integer
-train_freq        long
-popularity_group  string
-year_month        string
+train_freq        long       (0 nếu COLD_START)
+popularity_group  string     (HEAD/MID/TAIL/COLD_START)
+year_month        string     (yyyy-MM, từ timestamp)
 ```
+
+> **Không có `edge_weight`:** LightGCN degree normalization `D^{-1/2}` tính riêng trong Colab từ edge_index — không cần lưu trong Silver.
 
 **silver_val_ground_truth.parquet:**
 ```

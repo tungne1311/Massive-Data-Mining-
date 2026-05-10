@@ -185,6 +185,24 @@ Với mỗi user trong evaluation:
 
 **Tối ưu tốc độ:** FAISS `IndexIVFFlat` cho approximate top-K — giảm từ O(N) brute-force xuống O(√N) mỗi query. Với 1M items và 1.8M users, FAISS là bắt buộc.
 
+### Kiểm Tra Phân Phối Val (audit_val_distribution.py)
+
+**File:** `scripts/audit_val_distribution.py` — chạy standalone, không cần pipeline chạy lại.
+
+```bash
+# Chạy chẩn đoán phân phối val_gt vs train
+docker compose run --rm pipeline python scripts/audit_val_distribution.py
+```
+
+Bao gồm các kiểm tra:
+1. **Distribution Comparison** — So sánh tỉ lệ HEAD/MID/TAIL/COLD_START giữa train và val (cả item-level và interaction-level)
+2. **Leakage Check** — Kiểm tra cặp `(reviewer_id, parent_asin)` trùng giữa val và train (phải = 0)
+3. **LOO Check** — Xác nhận đúng 1 item/user trong val (Leave-One-Out chính xác)
+
+**Ngưỡng cảnh báo:** COLD_START > 35%, TAIL > 85%, HEAD < 10% sẽ báo ⚠️ — dẫn đến Recall@K có thể bị lech lạc.
+
+> **GUARDRAIL tự động:** Silver Step 3 (`_build_val_ground_truth()`) cũng tích hợp kiểm tra này ngay khi xây dựng val_gt — cảnh báo xuất hiện trong pipeline log mỗi lần chạy Silver.
+
 ### Logging Phân Tầng (Mỗi Epoch)
 
 ```python
