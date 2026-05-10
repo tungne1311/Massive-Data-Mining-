@@ -1,125 +1,56 @@
-# RecSys Pipeline v3 — Full config (Bronze → Silver → Gold)
+# RecSys Pipeline — config (Bronze → Silver → Gold)
+# Chỉ chứa các keys thực sự được đọc bởi pipeline_runner.py và các step files.
+# Mọi giá trị có thể override bằng biến môi trường (xem pipeline_runner.py → load_config).
 
+# ── HUGGING FACE ───────────────────────────────────────────────────────────────
 huggingface:
   review_dataset:   "McAuley-Lab/Amazon-Reviews-2023"
   review_subset:    "raw_review_Electronics"
   metadata_dataset: "McAuley-Lab/Amazon-Reviews-2023"
   metadata_subset:  "raw_meta_Electronics"
-  stream_batch_size:    100000
-  max_review_records:   null   # null = toàn bộ | int = giới hạn để test
-  max_metadata_records: null
+  stream_batch_size:    150000       # override bằng env HF_STREAM_BATCH_SIZE
+  max_review_records:   null         # null = toàn bộ | int = giới hạn để test nhanh
+  max_metadata_records: null         # override bằng env MAX_METADATA_RECORDS
 
-paths:
-  bronze_base:   "s3a://recsys/bronze"
-  silver_base:   "s3a://recsys/silver"
-  splits_base:   "s3a://recsys/splits"
-  feature_base:  "s3a://recsys/feature_store"
-  log_dir:       "data/logs"
-
+# ── MINIO / S3 ────────────────────────────────────────────────────────────────
 minio:
-  endpoint:    "http://minio:9000"      # hostname nội bộ Docker network
-  access_key:  "minioadmin"             # override bằng env MINIO_ACCESS_KEY
-  secret_key:  "minioadmin"             # override bằng env MINIO_SECRET_KEY
-  bucket:      "recsys"
+  endpoint:    "http://minio:9000"   # override bằng env MINIO_ENDPOINT
+  access_key:  "minioadmin"          # override bằng env MINIO_ACCESS_KEY
+  secret_key:  "minioadmin"          # override bằng env MINIO_SECRET_KEY
+  bucket:      "recsys"              # override bằng env MINIO_BUCKET
 
+# ── SPARK ─────────────────────────────────────────────────────────────────────
 spark:
-  app_name:   "RecSys_Pipeline"
-  # ── Cluster mode ─────────────────────────────────────────────────
-  # Giá trị này bị override bởi env SPARK_MASTER hoặc bởi spark-submit --master
-  # Đặt local[*] ở đây chỉ để dev/test ngoài Docker
-  master:              "local[*]"
-  deploy_mode:         "client"
-  driver_memory:       "4g"
-  executor_memory:     "4g"
-  executor_cores:      "2"
-  # ── Shuffle & partitions ─────────────────────────────────────────
-  # Cluster 2 workers × 2 cores = 4 cores → 100–200 partitions là hợp lý
-  shuffle_partitions:  "200"
-  # ── AQE (Adaptive Query Execution) ───────────────────────────────
-  aqe_enabled:              "true"   # bật AQE để tự điều chỉnh partition
-  aqe_coalesce_partitions:  "true"   # gộp partition nhỏ sau shuffle
-  aqe_skew_join:            "true"   # xử lý skew tự động
-  # ── Output ───────────────────────────────────────────────────────
-  parquet_compression: "zstd"
-  # write_partitions: số file parquet khi ghi output cuối
-  # Đặt 0 = không coalesce, để Spark tự quyết (phù hợp cluster)
-  # Đặt > 0 = coalesce về N file (giảm số file nhỏ, phù hợp data nhỏ-trung)
-  write_partitions:    0
+  app_name:          "RecSys_Pipeline"
+  master:            "local[*]"      # override bằng env SPARK_MASTER
+  driver_memory:     "4g"            # override bằng env SPARK_DRIVER_MEMORY
+  executor_memory:   "4g"            # override bằng env SPARK_EXECUTOR_MEMORY
+  executor_cores:    "2"             # override bằng env SPARK_EXECUTOR_CORES
+  shuffle_partitions: "200"          # 2 workers × 2 cores × 25 = 100–200 phù hợp
+  parquet_compression: "zstd"        # codec nén cho toàn bộ output Parquet
+  # AQE hardcoded true trong build_spark() — không cần config ở đây
 
+# ── BRONZE ────────────────────────────────────────────────────────────────────
 bronze:
+  write_mode:      "overwrite"
+  cleanup_landing: true              # xóa landing zone tạm sau khi ghi xong Bronze
+
+# ── SILVER ────────────────────────────────────────────────────────────────────
+silver:
   write_mode: "overwrite"
 
-quality_check:
-  max_null_ratio:      0.01
-  max_duplicate_ratio: 0.05
-  min_verified_ratio:  0.30
-  max_five_star_ratio: 0.70
-
-silver:
-  write_mode:       "overwrite"
-  bronze_hf_repo:   "chuongdo1104/amazon-2023-bronze"
-  min_year:         2010
-  max_year:         2025
-  short_review_len: 20
-
+# ── GOLD ──────────────────────────────────────────────────────────────────────
 gold:
-  write_mode:       "overwrite"
-  # ── LLM Embedding ──────────────────────────────────────────────
-  # all-MiniLM-L6-v2:  22M params, 384 dim (CPU, validate pipeline)
-  # all-mpnet-base-v2: 109M params, 768 dim (GPU 8GB+)
-  embedding_model:      "all-MiniLM-L6-v2"
-  embedding_dim:        384
-  embedding_batch_size:  256        # tăng lên 512-1024 nếu có GPU
-  embedding_chunk_size:  50000      # số texts xử lý mỗi chunk
-  # ── Temporal Decay ─────────────────────────────────────────────
-  temporal_decay_lambda: 1.0        # λ trong exp(-λ × ΔT / T_range)
-  # ── Negative Sampling ──────────────────────────────────────────
-  negative_sampling_beta: 0.75      # P(j) ∝ freq^{-β}, β ∈ {0.5, 0.75, 1.0}
-  # ── Temp Directory ─────────────────────────────────────────────
-  temp_dir:             "data/gold_temp"
+  write_mode:    "overwrite"
+  embedding_dim: 384                 # chiều embedding (dùng để cấp phát bộ nhớ GPU)
+                                     # all-MiniLM-L6-v2 = 384 | all-mpnet-base-v2 = 768
 
-reliability_tuning:
-  selected_config_id: "baseline"
-  configs:
-    - config_id: "baseline"
-      w_verified:       0.50
-      w_text:           0.30
-      w_helpful:        0.20
-      unverified_value: 0.50
+  # ── Negative Sampling — Blended Strategy ──────────────────────────────────
+  # P(j) = α · freq^{-β}  +  (1-α) · freq^{+0.4β}
+  #   α cao → tập trung tail hơn (có thể giảm head quality)
+  #   α thấp → cân bằng hơn
+  negative_sampling_beta:       0.75  # β ∈ {0.5, 0.75, 1.0}
+  neg_sampling_blend_alpha:     0.70  # α ∈ [0.5, 0.9], mặc định 0.70
 
-    - config_id: "cfg_2"
-      w_verified:       0.60
-      w_text:           0.25
-      w_helpful:        0.15
-      unverified_value: 0.50
-
-    - config_id: "cfg_3"
-      w_verified:       0.40
-      w_text:           0.40
-      w_helpful:        0.20
-      unverified_value: 0.50
-
-    - config_id: "cfg_4"
-      w_verified:       0.50
-      w_text:           0.20
-      w_helpful:        0.30
-      unverified_value: 0.50
-
-    - config_id: "cfg_5"
-      w_verified:       0.55
-      w_text:           0.25
-      w_helpful:        0.20
-      unverified_value: 0.40
-
-    - config_id: "cfg_6"
-      w_verified:       0.45
-      w_text:           0.35
-      w_helpful:        0.20
-      unverified_value: 0.60
-
-temporal_split:
-  mode: "auto"
-  # explicit example:
-  # train_months: ["2022-01", "2022-02"]
-  # val_months:   ["2022-03"]
-  # test_months:  ["2022-04"]
+  # ── Temp Directory ────────────────────────────────────────────────────────
+  temp_dir: "data/gold_temp"          # thư mục local tạm để lưu .npy trước khi upload S3

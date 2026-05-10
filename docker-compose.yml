@@ -152,7 +152,7 @@
 #         condition: service_completed_successfully
 #       spark-master:
 #         condition: service_healthy
-#     entrypoint: ["/app/scripts/run_pipeline.sh"]
+#     entrypoint: []
 #     # CMD không set — args được pass qua docker compose run
 #     environment:
 #       <<: *spark-s3a-env
@@ -186,7 +186,7 @@
 #         condition: service_completed_successfully
 #       spark-master:
 #         condition: service_healthy
-#     entrypoint: ["/app/scripts/run_pipeline.sh"]
+#     entrypoint: []
 #     environment:
 #       <<: *spark-s3a-env
 #       SPARK_DRIVER_MEMORY:   "2g"
@@ -350,7 +350,7 @@ services:
         condition: service_completed_successfully
       spark-master:
         condition: service_healthy
-    entrypoint: ["/app/scripts/run_pipeline.sh"]
+    entrypoint: []
     environment:
       <<: *spark-s3a-env
       SPARK_DRIVER_MEMORY:   "3g" # Driver chỉ cần ít RAM để giữ Job
@@ -383,7 +383,7 @@ services:
         condition: service_completed_successfully
       spark-master:
         condition: service_healthy
-    entrypoint: ["/app/scripts/run_pipeline.sh"]
+    entrypoint: []
     environment:
       <<: *spark-s3a-env
       SPARK_DRIVER_MEMORY:   "2g"

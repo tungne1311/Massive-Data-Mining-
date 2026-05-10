@@ -13,11 +13,12 @@ HuggingFace (McAuley-Lab/Amazon-Reviews-2023)
 │              TẦNG BRONZE                 │
 │  ste1.py: Streaming ingestion            │
 │    → Producer-Consumer threading         │
-│    → Batch 100k records → MinIO landing  │
+│    → Batch 150k records → MinIO landing  │
+│    → GIỮ TOÀN BỘ interactions (implicit │
+│      feedback, không lọc rating)         │
 │  ste2.py: PySpark processing             │
-│    → rating ≥ 3.0 filter                 │
 │    → dropDuplicates                      │
-│    → Core-5 filter (users only)          │
+│    → Core-5 filter (toàn bộ interactions)│
 │    → Chronological split (Double Max Join)│
 │    → train / val / test                  │
 │  → MinIO bronze/ + HuggingFace backup    │
@@ -100,12 +101,19 @@ Subset:  raw_review_Electronics   (~44M reviews)
 
 **Phase 1 — MAP (HuggingFace → Landing Zone):**
 
-Dữ liệu được kéo theo luồng streaming với batch 100,000 records mỗi lần, xử lý song song qua producer-consumer threading. Mỗi batch được normalize và ghi thẳng ra MinIO landing zone dưới dạng Parquet (compression: zstd).
+Dữ liệu được kéo theo luồng streaming với batch **150,000 records** mỗi lần, xử lý song song qua producer-consumer threading (Producer: kéo HuggingFace, Consumer: normalize + ghi MinIO). Mỗi batch được normalize và ghi thẳng ra MinIO landing zone dưới dạng Parquet (compression: zstd).
 
-Hàm `normalize_review` xử lý:
+Hàm `normalize_review_batch()` — vectorized hoàn toàn bằng PyArrow (nhanh hơn Python loop 10-50×):
 - `reviewer_id` có thể từ `user_id`, `reviewer_id`, hoặc `reviewerID` (tương thích nhiều phiên bản)
+- `reviewer_id` và `parent_asin` được **trim whitespace** (`pc.utf8_trim_whitespace`) ngay khi lấy → tránh miss join ở downstream
 - Timestamp: tự động phát hiện millisecond vs second, chuyển về Unix second
-- Trường null được thay thế bằng giá trị mặc định hợp lý
+- **Rating: `float32` → `int8`** sau khi clip `[1, 5]` → tiết kiệm 75% RAM cho cột này
+- **KHÔNG lọc theo rating** — giữ MỌI interaction (implicit feedback protocol)
+- Log tiến độ mỗi `LOG_EVERY_N_BATCHES=20` batch để monitor khi chạy hàng giờ
+
+> **Implicit Feedback Protocol (v3):** Bài báo RecMind dùng mọi interaction làm tín hiệu ngầm định. Sự kiện "user đã tương tác với item" là tín hiệu chính, bất kể rating score. Lọc rating tại Bronze sẽ tạo ra dataset khác với paper và inflate metric (core-5 tính trên tập hẹp hơn → item pool nhỏ hơn → bài toán ranking dễ hơn).
+
+> **HuggingFace Cache (v3):** Đã bỏ `download_mode="force_redownload"`. Với `streaming=True`, không có file dữ liệu nào được cache trên disk — chỉ có metadata (~vài KB) được lưu tại `$HF_HOME/datasets/`. Nếu gặp lỗi cache corrupt, xóa thủ công: `rm -rf /app/.cache/huggingface/datasets`.
 
 **Phase 2 — REDUCE (PySpark Native Processing):**
 
@@ -113,13 +121,11 @@ Hàm `normalize_review` xử lý:
 Landing Zone Parquet
         │
         ▼
-Lọc Positive Feedback (rating ≥ 3.0)     ← Chặn rò rỉ dữ liệu ngay từ đầu
+dropDuplicates(["reviewer_id", "parent_asin"])   ← mỗi cặp user-item giữ 1 interaction
         │
         ▼
-dropDuplicates(["reviewer_id", "parent_asin"])
-        │
-        ▼
-Core-5 Filter (left_semi join)            ← Giữ users có ≥ 5 positive interactions
+Core-5 Filter (Broadcast Semi-Join)               ← Giữ users có ≥ 5 interactions
+│  (tính trên TOÀN BỘ interactions — đúng chuẩn paper)
         │
         ▼
 Chronological Split (Double Max Join)
@@ -128,12 +134,34 @@ Chronological Split (Double Max Join)
   └── Train: phần còn lại
         │
         ▼
-Ghi ra MinIO (repartition=10, sortWithinPartitions)
+Ghi ra MinIO (coalesce, sortWithinPartitions)
+```
+
+**Cơ chế Producer-Consumer (đa luồng):**
+
+```
+Thread Worker (Producer)          Main Thread (Consumer)
+─────────────────────────         ──────────────────────
+HuggingFace stream                Queue (maxsize=30)
+    → lấy batch dict                  → nhận Arrow Table
+    → normalize_batch()               → yield ra ngoài
+    → put vào Queue           →→→→
+    → lặp lại...              ste2.py dùng dữ liệu
 ```
 
 **Tại sao Double Max Join thay vì Window Function?**
 
-`ROW_NUMBER() OVER (PARTITION BY user ORDER BY ts DESC)` tạo ra shuffle stage với single huge partition khi dữ liệu skew (1.8M users phân phối không đều). Double Max Join thực hiện hai lần `groupBy → max(timestamp) → inner join` — mỗi lần chỉ là một shuffle nhỏ, không tập trung dữ liệu vào một partition, tránh OOM.
+`ROW_NUMBER() OVER (PARTITION BY user ORDER BY ts DESC)` tạo ra shuffle stage với single huge partition khi dữ liệu skew (1.8M users phân phối không đều). Double Max Join thực hiện hai lần `groupBy → max(timestamp) → broadcast join` — mỗi lần chỉ là một shuffle nhỏ, không tập trung dữ liệu vào một partition, tiết kiệm ~70% bộ nhớ so với Window Function.
+
+**Các tối ưu `ste2.py` v3:**
+
+| Tối ưu | Mô tả | Lợi ích |
+|---|---|---|
+| **_SUCCESS Marker** | Ghi file JSON ~50 bytes sau khi Phase 1 hoàn tất. Khi chạy lại: nếu có `_SUCCESS` → bỏ qua Phase 1, nhảy thẳng Phase 2 | Tiết kiệm hàng giờ khi fail ở Phase 2/3 |
+| **Pre-run Cleanup** | Nếu không có `_SUCCESS` nhưng có partial files → xóa sạch trước khi chạy lại | Tránh dữ liệu nhân đôi |
+| **DAG Checkpoint** | Ghi `core5_ckpt.parquet` ra MinIO sau Core-5, đọc lại → bẻ gãy DAG lineage hoàn toàn | Nếu executor chết khi Join, không phải recompute từ đầu |
+| **Data Validation** | Filter null ID, timestamp ≤ 0, rating ngoài [1,5] sau `spark.read` | Defense-in-depth, chặn data skew trong Join |
+| **Broadcast Anti-Join** | `test_df` và `val_df` (~1.8M rows) được ép `F.broadcast()` trong left_anti join | Tránh SortMergeJoin → không shuffle `df_core5` thêm 2 lần |
 
 ### Xử Lý Metadata — `ste2.py`
 
@@ -145,12 +173,11 @@ Metadata xử lý bằng PyArrow thuần (không cần Spark) do kích thước 
 ```
 reviewer_id       string
 parent_asin       string   ← dùng parent_asin, không dùng asin
-rating            float32
+rating            int8     ← Amazon [1,2,3,4,5]: int8(1 byte) thay float32(4 bytes) → -75% RAM
 review_title      string
 review_text       string
 timestamp         int64    (Unix second)
 helpful_vote      int32
-verified_purchase bool
 ```
 
 **Metadata:**
@@ -160,14 +187,13 @@ title             string
 main_category     string
 store             string
 price             float32
-average_rating    float32
-rating_number     int32    ← KHÔNG dùng để phân loại HEAD/MID/TAIL (data leakage)
 categories        string   (ghép chuỗi phân cấp)
 features          string   (ghép với "|")
 description       string
 details           string   (dict → "k: v | k: v")
-bought_together   string   (bỏ qua trong pipeline hiện tại)
 ```
+
+> **Đã xóa khỏi schema:** `verified_purchase` (review), `bought_together` (metadata) — không dùng trong pipeline. `average_rating` và `rating_number` (metadata) — chứa thông tin tổng hợp từ toàn bộ vòng đời item, bao gồm dữ liệu val/test → **data leakage**.
 
 ### Output Bronze
 
@@ -245,7 +271,9 @@ Item B07H65KP63:
 
 **Nguyên tắc tuyệt đối:**
 1. Reviews của val/test items **tuyệt đối không** được đưa vào user profile — lọc hoàn toàn từ đầu.
-2. Dữ liệu Bronze đã đảm bảo `rating ≥ 3.0` — tránh nhồi nhét sentiment tiêu cực vào vector sở thích.
+2. Chỉ lấy **reviews chất lượng cao (`rating ≥ 4.0`)** để xây dựng text profile — đây là "lời khen" thể hiện sở thích thực sự của user, không phải toàn bộ interactions.
+
+> **Phân biệt quan trọng:** Bronze giữ TOÀN BỘ interactions (implicit feedback cho training), còn Silver Step 3 chỉ lấy reviews `rating ≥ 4.0` để xây dựng **ngôn ngữ mô tả sở thích** cho LLM embedding. Hai mục đích khác nhau, hai filter khác nhau.
 
 **Hàm trọng số review:**
 ```
@@ -318,11 +346,11 @@ main_category     string
 item_text         string
 text_source_level integer
 token_estimate    integer
-average_rating    float
-rating_number     integer
 popularity_group  string    (Partition Column)
 train_freq        long
 ```
+
+> **Lưu ý:** `average_rating` và `rating_number` đã bị **xóa khỏi schema** để tránh data leakage tiềm ẩn — cả hai được tính từ TOÀN BỘ reviews (bao gồm val/test tương lai). `popularity_group` + `train_freq` đã đủ cho model training.
 
 **silver_user_text_profile.parquet:**
 ```
@@ -427,11 +455,50 @@ Format chuẩn PyG: `edge_index` shape `[2, E]`.
 
 ```
 gold_item_train_freq.npy           → [N_items] dùng negative sampling và gate
-gold_item_popularity_group.npy     → [N_items] (0=HEAD, 1=MID, 2=TAIL)
+gold_item_popularity_group.npy     → [N_items] (0=HEAD, 1=MID, 2=TAIL, 3=COLD_START)
 gold_user_train_freq.npy           → [N_users] dùng adaptive gate
 gold_user_activity_group.npy       → [N_users] (0=INACTIVE, 1=ACTIVE, 2=SUPER_ACTIVE)
-gold_negative_sampling_prob.npy    → [N_items] P ∝ freq^{0.75}
-gold_dataset_stats.json            → N_users, N_items, sparsity, tail_ratio, ...
+gold_negative_sampling_prob.npy    → [N_items] Blended probability (xem bên dưới)
+gold_dataset_stats.json            → N_users, N_items, sparsity, tail_ratio, blend_alpha, ...
+```
+
+**Chiến lược Negative Sampling — Blended Strategy:**
+
+Mục tiêu: **Tập trung Long-tail NHƯNG vẫn giữ được chất lượng Head.**
+
+Trong RecSys, "mẫu âm" (Negative) là đề bài để AI giải. Nếu đề quá dễ, AI sẽ dốt; nếu đề quá lệch, AI sẽ bị thiên kiến. Công thức hỗn hợp giải quyết điều này:
+
+$$P(j) = \alpha \cdot \underbrace{\frac{f_j^{-\beta}}{\sum f_j^{-\beta}}}_{P_{tail}} + (1-\alpha) \cdot \underbrace{\frac{f_j^{0.4\beta}}{\sum f_j^{0.4\beta}}}_{P_{head}}$$
+
+#### 1. Beta ($\beta$) — Kẻ điều khiển "Cường độ" (Intensity)
+Beta quyết định việc bạn "ưu tiên" hàng hiếm đến mức nào trong nội bộ từng nhóm:
+- **Nếu $\beta = 0$ (Uniform):** Mọi món hàng có xác suất như nhau. AI sẽ học rất hời hợt vì không phân biệt được đâu là hàng hiếm, đâu là hàng phổ biến.
+- **Nếu $\beta = 0.75$ (Mặc định):** Đây là mức "vừa phải". Nó giúp làm phẳng (smooth) biểu đồ: kéo hàng hiếm lên và nén hàng phổ biến xuống, tạo ra một sân chơi công bằng hơn cho Long-tail.
+
+#### 2. Alpha ($\alpha$) — Kẻ giữ "Cán cân mục tiêu" (Balance)
+Alpha quyết định tỷ lệ loại câu hỏi trong "đề thi" của AI:
+- **Thành phần Tail-focus ($\alpha$):** Chiếm 70% bộ đề. Ép AI phải phân biệt được các món Long-tail với nhau. Đây là "mũi nhọn" để tăng Tail Recall.
+- **Thành phần Head-retain ($1-\alpha$):** Chiếm 30% bộ đề. Sử dụng hàng Head làm **Hard Negatives**. Vì hàng Head thường rất hấp dẫn, nếu AI không học cách coi chúng là "âm" trong đúng ngữ cảnh, nó sẽ gợi ý hàng Head vô tội vạ (Popularity Bias).
+
+#### Bảng so sánh trực giác: "Đề thi cho AI"
+
+| Chiến lược | $\alpha$ | $\beta$ | Bản chất đề thi | Kết quả dự kiến |
+| :--- | :--- | :--- | :--- | :--- |
+| **Uniform** | - | 0 | Đề toàn câu hỏi cực dễ (Táo vs Đá) | AI dốt, Accuracy thấp |
+| **Pure Inverse** | 1.0 | 0.75 | Đề chỉ toàn câu hỏi về hàng hiếm | Tail cực tốt, nhưng "ngáo" hàng Head |
+| **Popularity** | 0.0 | 0.75 | Đề chỉ toàn câu hỏi khó (Táo vs Cam) | Head cực tốt, nhưng ignore hàng Tail |
+| **Blended** | **0.7** | **0.75** | **70% chuyên sâu Tail + 30% đối đầu Head** | **Cân bằng tốt nhất cả hai thế giới** |
+
+**Tại sao xác suất Head lại dùng $0.4\beta$?**
+Chúng ta dùng số mũ nhỏ hơn (0.3 - 0.4) cho phần Head-retain để đảm bảo hàng Head không chiếm quyền kiểm soát hoàn toàn xác suất, nhưng vẫn đủ "nặng" để làm mẫu âm khó cho mô hình.
+
+---
+
+**Tune parameters qua config:**
+```yaml
+gold:
+  negative_sampling_beta: 0.75        # cường độ phân biệt (độ dốc của freq)
+  neg_sampling_blend_alpha: 0.70      # tỷ lệ trộn (0.7 = 70% ưu tiên tail)
 ```
 
 **Tải từ HuggingFace (chống OOM RAM):**

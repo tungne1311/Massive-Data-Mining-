@@ -3,12 +3,18 @@ gold_step5_training_meta.py — Gold Layer: Training Metadata
 
 Tạo các numpy arrays và JSON metadata phục vụ training loop.
 
-NEGATIVE SAMPLING:
-  P(j là negative) ∝ train_freq(j)^{-β_ns}
-  β_ns = 0.75 mặc định
-  → Head items có xác suất làm negative THẤP hơn
-  → Tail items có xác suất làm negative CAO hơn
-  → Mô hình học phân biệt tail items lẫn nhau
+NEGATIVE SAMPLING — Blended Strategy:
+  Mục tiêu: Tập trung long-tail NHUNG vẫn giữ được chất lượng head.
+
+  Hai component được blend:
+    A) Tail-focus:  P_tail(j) ∝ freq^{-β_ns}   → tail items có xác suất CAO
+    B) Head-retain: P_head(j) ∝ freq^{+β_ns*0.4} → head items vẫn xuất hiện
+
+  P(j) = α · P_tail(j) + (1-α) · P_head(j)
+    α = neg_sampling_blend_alpha (mặc định 0.70)
+    α = 1.0 → pure inverse-popularity (chỉ tập trung tail)
+    α = 0.0 → pure popularity-biased (chỉ tập trung head, như word2vec)
+    α = 0.7 → 70% tập trung tail + 30% giữ head (khuyến nghị)
 
 OUTPUT:
   gold/gold_item_train_freq.npy         — shape [N_items], dtype int64
@@ -105,9 +111,10 @@ def run(
         step1_info: dict từ Gold Step 1.
         edge_info: dict từ Gold Step 2 (chứa n_edges).
     """
-    gold_cfg = cfg.get("gold", {})
-    beta_ns  = float(gold_cfg.get("negative_sampling_beta", 0.75))
-    tmp_dir  = gold_cfg.get("temp_dir", "data/gold_temp")
+    gold_cfg    = cfg.get("gold", {})
+    beta_ns     = float(gold_cfg.get("negative_sampling_beta", 0.75))
+    blend_alpha = float(gold_cfg.get("neg_sampling_blend_alpha", 0.70))
+    tmp_dir     = gold_cfg.get("temp_dir", "data/gold_temp")
     os.makedirs(tmp_dir, exist_ok=True)
 
     fs = _get_s3_filesystem(cfg)
@@ -175,17 +182,42 @@ def run(
         pct = count / n_users * 100
         logger.info(f"  📊 USER {group_name}: {count:,} users ({pct:.1f}%)")
 
-    # ── Negative sampling probabilities ───────────────────────────────────────
-    # P(j) ∝ train_freq(j)^{β_ns} (Positive alpha - Popularity-biased)
-    # Head items có freq cao sẽ bị pick làm negative nhiều hơn, tránh nịnh hót Head.
-    logger.info(f"⏳ [Gold Step 5] Computing negative sampling probs (β={beta_ns})...")
+    # ── Negative sampling probabilities (Blended Strategy) ──────────────────────
+    # Mục tiêu: Tập trung long-tail NHUNG vẫn giữ được chất lượng head.
+    #
+    # Vấn đề với pure inverse-popularity (α=1.0):
+    #   Head items gần như không bao giờ là negative
+    #   → Model không học được rằng “đây là negative” với head
+    #   → Head recall giảm (model dễ bị đánh lừa bởi head items)
+    #
+    # Blended: P(j) = α · P_tail(j) + (1-α) · P_head(j)
+    #   P_tail(j) ∝ freq^{-β}    → tail items được ưu tiên làm negative
+    #   P_head(j) ∝ freq^{+β*0.4} → head items vẫn xuất hiện đủ để học
+    #
+    # Tham số tune:
+    #   blend_alpha = 0.70 (mặc định): 70% tail-focus, 30% head-retain
+    #   blend_alpha = 0.85: tập trung tail hơn nữa (có thể giảm head quality)
+    #   blend_alpha = 0.50: cân bằng hơn
+    logger.info(
+        f"⏳ [Gold Step 5] Computing blended neg-sampling probs "
+        f"(β={beta_ns}, α={blend_alpha})..."
+    )
 
     freq_safe = np.maximum(train_freq_arr, 1).astype(np.float64)
-    raw_prob  = np.power(freq_safe, beta_ns)  # Đã sửa -beta_ns thành beta_ns dương
+
+    # Component A: Tail-focus — inverse-popularity
+    p_tail = np.power(freq_safe, -beta_ns)
+    p_tail = p_tail / p_tail.sum()
+
+    # Component B: Head-retain — mild popularity-biased (exponent nhỏ hơn)
+    p_head = np.power(freq_safe, beta_ns * 0.4)
+    p_head = p_head / p_head.sum()
+
+    # Blend
+    raw_prob = blend_alpha * p_tail + (1.0 - blend_alpha) * p_head
 
     # Normalize về tổng = 1
-    prob_sum  = raw_prob.sum()
-    neg_sampling_prob = (raw_prob / prob_sum).astype(np.float32)
+    neg_sampling_prob = (raw_prob / raw_prob.sum()).astype(np.float32)
 
     # Clip tránh extreme values
     eps = 1e-7
@@ -193,7 +225,10 @@ def run(
     neg_sampling_prob = neg_sampling_prob / neg_sampling_prob.sum()  # re-normalize
 
     logger.info(f"  📊 Sampling prob range: [{neg_sampling_prob.min():.2e}, {neg_sampling_prob.max():.2e}]")
-    logger.info(f"  📊 Top-1 head item prob: {neg_sampling_prob.max():.2e} (cao → tăng cường làm negative)")
+    logger.info(f"  📊 Blend: {blend_alpha:.0%} tail-focus + {1-blend_alpha:.0%} head-retain")
+    # xác suất cao nhất = tail/cold-start items; thấp nhất = head items
+    logger.info(f"  📊 Max prob (tail): {neg_sampling_prob.max():.2e} | Min prob (head): {neg_sampling_prob.min():.2e}")
+
 
     # ── Dataset statistics ────────────────────────────────────────────────────
     sparsity = 1.0 - (n_edges / (n_users * n_items))
@@ -230,7 +265,9 @@ def run(
         "median_train_freq_item": int(np.median(train_freq_arr[train_freq_arr > 0])) if np.any(train_freq_arr > 0) else 0,
         "median_train_freq_user": int(np.median(user_train_freq_arr[user_train_freq_arr > 0])) if np.any(user_train_freq_arr > 0) else 0,
         "embedding_dim":    int(cfg.get("gold", {}).get("embedding_dim", 384)),
-        "negative_sampling_beta": beta_ns,
+        "negative_sampling_beta":        beta_ns,
+        "neg_sampling_blend_alpha":      blend_alpha,
+        "neg_sampling_strategy":         "blended",   # α·freq^{-β} + (1-α)·freq^{+0.4β}
         "head_ratio_split": 0.20,
         "mid_ratio_split":  0.10,
         "tail_ratio_split": 0.70,

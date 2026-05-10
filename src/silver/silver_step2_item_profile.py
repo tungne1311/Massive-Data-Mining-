@@ -116,7 +116,9 @@ def _build_item_text(df_meta: DataFrame) -> DataFrame:
     return df.select(
         "parent_asin", "title", "main_category",
         "item_text", "text_source_level", "token_estimate",
-        "average_rating", "rating_number",
+        # NOTE: average_rating và rating_number được BỎ để tránh data leakage tiềm ẩn.
+        # Cả hai tính từ TOÀN BỘ reviews (bao gồm val/test tương lai).
+        # popularity_group + train_freq đã đủ cho model training.
     )
 
 
@@ -143,7 +145,7 @@ def run(
     meta_cols = [
         "parent_asin", "title", "main_category", "store",
         "features", "categories", "description", "details",
-        "average_rating", "rating_number",
+        # average_rating + rating_number bị bỏ: chứa future signal (val/test reviews)
     ]
     df_meta = spark.read.parquet(meta_path).select(*meta_cols)
 

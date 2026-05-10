@@ -59,12 +59,7 @@ def _enrich_interactions(
         F.coalesce(F.col("popularity_group"), F.lit("COLD_START"))
     ).withColumn(
         "train_freq",
-        F.coalesce(F.col("train_freq"), F.lit(0).cast(LongType()))
-    # ).withColumn(
-    #     "edge_weight",                                          # KHÔNG DÙNG:
-    #     (F.col("rating").cast(FloatType()) / F.lit(5.0))        # Gold Step 2 drop cột này;
-    #         .cast(FloatType())                                  # LightGCN dùng GCN normalization
-    # ).withColumn(                                               # (D^{-1/2}) tính riêng ở Colab.
+        F.coalesce(F.col("train_freq"), F.lit(0).cast(LongType()))                                     
     ).withColumn(
         "year_month",
         F.date_format(

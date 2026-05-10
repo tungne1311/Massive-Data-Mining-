@@ -1,11 +1,17 @@
 """
 ste1.py – Ingestion & Normalization (HuggingFace → Arrow Batches)
 
-TỐI ƯU v2:
-  - BỎ: bought_together (metadata), verified_purchase (review)
+TỐI ƯU v3:
+  - BỎ force_redownload → tận dụng HuggingFace local cache, tránh tải lại mỗi run
+  - rating: float32 → int8 (tiết kiệm 75% RAM) + clip [1,5] tránh ArrowInvalid
+  - Trim whitespace trên reviewer_id/parent_asin → tránh miss join ở downstream
+  - Log tiến độ mỗi LOG_EVERY_N_BATCHES batch → dễ monitor khi chạy hàng giờ
   - Vectorized normalization: dùng pyarrow.compute thay vì lặp từng dòng Python
-    → Tăng tốc 10-50× cho mỗi batch
-  - Giữ nguyên kiến trúc streaming + exponential backoff
+
+IMPLICIT FEEDBACK PROTOCOL (v3):
+  - KHÔNG lọc theo rating — mọi interaction đều được giữ lại
+  - Phù hợp với bài báo RecMind: "all interactions as implicit feedback"
+  - Core-5 filter sẽ được áp trên TOÀN BỘ interactions (không phải sau khi lọc)
 """
 
 import logging
@@ -25,13 +31,16 @@ os.environ.setdefault("REQUESTS_TIMEOUT", "120")
 logger = logging.getLogger(__name__)
 
 # ==========================================
-# 1. ĐỊNH NGHĨA SCHEMA
+# 1. ĐỊNH NGHĨA SCHEMA & HẰNG SỐ
 # ==========================================
+
+# Log tiến độ mỗi N batch (150k records/batch × 20 = ~3M records/log)
+LOG_EVERY_N_BATCHES = 20
 
 REVIEW_ARROW_SCHEMA = pa.schema([
     ('reviewer_id',       pa.string()),
     ('parent_asin',       pa.string()),
-    ('rating',            pa.float32()),
+    ('rating',            pa.int8()),    # int8 (1 byte) thay float32 (4 bytes) → tiết kiệm 75% RAM
     ('review_title',      pa.string()),
     ('review_text',       pa.string()),
     ('timestamp',         pa.int64()),
@@ -104,40 +113,38 @@ def normalize_review_batch(raw_batch: dict) -> pa.Table:
     if n == 0:
         return pa.table({}, schema=REVIEW_ARROW_SCHEMA)
 
-    reviewer_id = _safe_string_column(raw_batch, "user_id", "reviewer_id", "reviewerID")
-    parent_asin = _safe_string_column(raw_batch, "parent_asin", "asin")
-
-    # Filter: bỏ dòng thiếu reviewer_id hoặc parent_asin
-    valid_mask = pc.and_(
-        pc.is_valid(reviewer_id),
-        pc.is_valid(parent_asin),
+    # ── [Cải thiện 3] Trim whitespace ngay khi lấy ID ─────────────────────────
+    # Tránh miss join ở ste2/silver do key dính khoảng trắng ẩn (leading/trailing)
+    reviewer_id = pc.utf8_trim_whitespace(
+        _safe_string_column(raw_batch, "user_id", "reviewer_id", "reviewerID")
     )
-    # Thêm kiểm tra chuỗi rỗng
+    parent_asin = pc.utf8_trim_whitespace(
+        _safe_string_column(raw_batch, "parent_asin", "asin")
+    )
+
+    # Filter: bỏ dòng thiếu reviewer_id hoặc parent_asin (sau khi đã trim)
     valid_mask = pc.and_(
-        valid_mask,
-        pc.and_(
-            pc.not_equal(reviewer_id, ""),
-            pc.not_equal(parent_asin, ""),
-        )
+        pc.and_(pc.is_valid(reviewer_id), pc.not_equal(reviewer_id, "")),
+        pc.and_(pc.is_valid(parent_asin), pc.not_equal(parent_asin, "")),
     )
 
     # Timestamp: xử lý millisecond → second
     ts_arr = _safe_numeric_column(raw_batch, "timestamp", pa.int64(), default=0)
-    # Nếu không có "timestamp", thử "unixReviewTime"
     if raw_batch.get("timestamp") is None:
         ts_arr = _safe_numeric_column(raw_batch, "unixReviewTime", pa.int64(), default=0)
-    # Chuyển millisecond về second nếu cần
     threshold = pa.scalar(1_000_000_000_000, type=pa.int64())
     ts_arr = pc.if_else(pc.greater(ts_arr, threshold), pc.divide(ts_arr, 1000), ts_arr)
 
-    rating_arr = _safe_numeric_column(raw_batch, "rating", pa.float32(), default=0.0)
-
-    # Khóa chặn OOM: Lọc rating >= 3.0 NGAY TỪ HUGGING FACE STREAM
-    # Cắt giảm >30% dữ liệu rác (string reviews bị bỏ đi) trước khi nạp vào RAM bộ nhớ
-    valid_mask = pc.and_(
-        valid_mask,
-        pc.greater_equal(rating_arr, 3.0)
+    # ── [Cải thiện 2] Rating: float32 → int8, clip [1, 5] ────────────────────
+    # Amazon rating chỉ là [1,2,3,4,5] → int8 (1 byte) thay float32 (4 bytes)
+    # Clip trước để tránh ArrowInvalid khi giá trị nằm ngoài [-128, 127]
+    # IMPLICIT FEEDBACK: KHÔNG lọc theo rating — giữ lại MỌI interaction
+    rating_raw = _safe_numeric_column(raw_batch, "rating", pa.float32(), default=0.0)
+    rating_clipped = pc.min_element_wise(
+        pc.max_element_wise(rating_raw, pa.scalar(1, pa.float32())),
+        pa.scalar(5, pa.float32()),
     )
+    rating_arr = pc.cast(pc.round(rating_clipped), pa.int8())
 
     table = pa.table({
         "reviewer_id":  reviewer_id,
@@ -149,7 +156,6 @@ def normalize_review_batch(raw_batch: dict) -> pa.Table:
         "helpful_vote": _safe_numeric_column(raw_batch, "helpful_vote", pa.int32(), default=0),
     })
 
-    # Áp filter mask
     filtered = pc.filter(table, valid_mask)
     return filtered.cast(REVIEW_ARROW_SCHEMA)
 
@@ -164,7 +170,10 @@ def normalize_metadata_batch(raw_batch: dict) -> pa.Table:
     if n == 0:
         return pa.table({}, schema=METADATA_ARROW_SCHEMA)
 
-    parent_asin = _safe_string_column(raw_batch, "parent_asin", "asin")
+    # [Cải thiện 3] Trim whitespace trên parent_asin để tránh miss join với review
+    parent_asin = pc.utf8_trim_whitespace(
+        _safe_string_column(raw_batch, "parent_asin", "asin")
+    )
 
     # Filter rows thiếu parent_asin
     valid_mask = pc.and_(
@@ -272,6 +281,14 @@ def _fetch_and_process_worker(
 
         batch_idx += 1
 
+        # ── [Cải thiện 4] Log tiến độ định kỳ ───────────────────────────────
+        if batch_idx % LOG_EVERY_N_BATCHES == 0:
+            logger.info(
+                f"  -> [Streaming] Batch {batch_idx:,} | "
+                f"Records xử lý: {total_records:,} | "
+                f"Queue size: {out_queue.qsize()}"
+            )
+
         if max_records and total_records >= max_records:
             logger.info(f"Đã đạt giới hạn max_records={max_records}. Dừng worker.")
             break
@@ -288,12 +305,13 @@ def _create_iterator(
     queue_size = int(hf.get("queue_maxsize", 30))
     out_queue  = queue.Queue(maxsize=queue_size)
 
-    # download_mode="force_redownload": tránh cache cũ/hỏng gây lỗi
-    # FileNotFoundError: '/app/raw/review_categories/Electronics.jsonl'
+    # ── [Cải thiện 1] BỎ force_redownload → tận dụng HuggingFace local cache ─
+    # force_redownload bỏ qua cache, tải lại qua mạng mỗi lần chạy → rất chậm.
+    # streaming=True không lưu file local → không có nguy cơ cache cũ/hỏng.
+    # Nếu gặp lỗi cache corruption: xóa thủ công $HF_HOME/datasets rồi chạy lại.
     ds = load_dataset(
         dataset_name, subset,
         split="full", streaming=True, trust_remote_code=True,
-        download_mode="force_redownload",
     )
 
     t = threading.Thread(

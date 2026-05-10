@@ -198,22 +198,11 @@ silver:
 
 ```yaml
 gold:
-  gold_hf_repo:     "chuongdo1104/amazon-2023-gold"
-  embed_dim:        128
-  neg_sample_beta:  0.75     # P ∝ freq^{-beta}
-  user_active_thr:  5        # INACTIVE < 5 ≤ ACTIVE ≤ 20 < SUPER_ACTIVE
-  user_super_thr:   20
-```
-
-### Phần `reliability_tuning`
-
-```yaml
-reliability_tuning:
-  selected_config_id: "baseline"
-  configs:
-    - config_id:      "baseline"
-      w_helpful:      1.0      # w(r) = 1 + log(1 + helpful_vote) — chỉ param này có hiệu lực
-      # w_verified và w_text đã bỏ — không dùng verified_purchase
+  write_mode:                 "overwrite"
+  embedding_dim:              384          # all-MiniLM-L6-v2
+  negative_sampling_beta:     0.75         # β: độ dốc của phân phối tần suất
+  neg_sampling_blend_alpha:   0.70         # α: tỷ lệ trộn Tail/Head (0.7 = 70% tail-focus)
+  temp_dir:                   "data/gold_temp"
 ```
 
 ---
@@ -245,15 +234,14 @@ docker compose build pipeline
 # Bronze (ste1.py + ste2.py): ~2-4 giờ với full dataset
 docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
 
-# Silver (ste3_silver.py): ~1-2 giờ
+# Silver (silver_step*.py): ~1-2 giờ
 docker compose run --rm pipeline python src/pipeline_runner.py --step 3_silver
 
-# Gold (ste4_gold.py): ~30 phút
+# Gold (gold_step*.py): ~30 phút
 docker compose run --rm pipeline python src/pipeline_runner.py --step 4_gold
-
-# Toàn bộ pipeline:
-docker compose run --rm pipeline python src/pipeline_runner.py --all
 ```
+
+> **Lưu ý:** `entrypoint` trong `docker-compose.yml` đã được đặt rỗng `[]` — bạn phải gõ đầy đủ `python src/pipeline_runner.py ...` thay vì chỉ gõ `--step ...`.
 
 ### Push Lên HuggingFace
 
@@ -302,14 +290,21 @@ docker volume ls
 ### Dọn Dẹp
 
 ```bash
-# Xóa landing zone tạm (sau Bronze)
-docker compose run --rm pipeline python -c "
-import boto3; s3=boto3.client('s3', endpoint_url='http://localhost:9000',
-aws_access_key_id='minioadmin', aws_secret_access_key='minioadmin')
-# xóa s3://recsys/landing/
+# Landing zone tự động quản lý qua _SUCCESS marker:
+# - Nếu pipeline hoàn tất Phase 1: _SUCCESS được ghi, landing zone giữ ngêyên cho lần Resume
+# - Nếu pipeline bị ngắt: không có _SUCCESS, lần chạy lại sẽ tự xóa partial files
+# - Sau khi Bronze hoàn tất (cleanup_landing=True): xóa toàn bộ landing/ bao gồm _SUCCESS
+
+# Xóa thủ công landing zone (nếu cần force restart toàn bộ):
+docker compose run --rm --entrypoint python pipeline -c "
+import s3fs
+fs = s3fs.S3FileSystem(key='minioadmin', secret='minioadmin',
+    client_kwargs={'endpoint_url': 'http://minio:9000'})
+fs.rm('recsys/landing/', recursive=True)
+print('Done')
 "
 
-# Xóa toàn bộ data MinIO (cẩn thận!)
+# Xóa toàn bộ data MinIO (đặc biệt cẩn thận!):
 docker volume rm recsys_minio_data
 ```
 

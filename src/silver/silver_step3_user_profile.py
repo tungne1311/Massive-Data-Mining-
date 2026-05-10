@@ -49,7 +49,7 @@ def _compute_review_weights(df_train: DataFrame) -> DataFrame:
     Dùng Spark built-in log() — vectorized trên JVM.
     """
     # CHỈ NHẶT LỜI KHEN CỦA USER ĐỂ XÂY DỰNG SỞ THÍCH:
-    df_train = df_train.filter(F.col("rating") >= 3.0)
+    df_train = df_train.filter(F.col("rating") >= 4.0)
 
     # ÁP DỤNG HÀM LÀM SẠCH TOÀN DIỆN CHO REVIEW TEXT
     clean_title = advanced_clean_text(F.coalesce(F.col("review_title"), F.lit("")))
@@ -150,13 +150,19 @@ def _build_user_profiles(df_weighted: DataFrame, shuffle_parts: int) -> DataFram
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> DataFrame:
-    """Chỉ lấy (reviewer_id, parent_asin, popularity_group) — không lấy text."""
+    """Chỉ lấy (reviewer_id, parent_asin, popularity_group) — không lấy text.
+
+    Bao gồm GUARDRAIL kiểm tra phân phối popularity_group trong val:
+      - Nếu COLD_START > 35%: cảnh báo Recall@K toàn bộ có thể thấp giả tạo
+      - Nếu TAIL > 85%: cảnh báo val bị dominated bởi long-tail items
+      - Nếu HEAD < 10%: cảnh báo HEAD recall sẽ không đại diện
+    """
     logger.info("[Step3] Xây dựng val ground truth...")
 
     val_cols = ["reviewer_id", "parent_asin", "timestamp", "rating"]
     pop_slim = df_popularity.select("parent_asin", "popularity_group", "train_freq")
 
-    return df_val.select(*val_cols).join(
+    df_gt = df_val.select(*val_cols).join(
         F.broadcast(pop_slim), on="parent_asin", how="left"
     ).withColumn(
         "popularity_group",
@@ -169,6 +175,49 @@ def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> Data
     ).withColumn(
         "is_cold_start", (F.col("popularity_group") == "COLD_START").cast("int")
     )
+
+    # ─── GUARDRAIL: Kiểm tra phân phối val_gt ────────────────────────────────
+    # Mục tiêu: phát hiện sớm nếu val bị dominated bởi COLD/TAIL items.
+    # Nếu val_gt chứa quá nhiều COLD_START (items không có embedding trong train),
+    # Recall@K sẽ thấp không phải vì model tệ, mà vì val biased.
+    # Chi phí: 1 groupBy().collect() nhỏ (~1.8M rows → vài giây).
+    dist_rows  = df_gt.groupBy("popularity_group").count().collect()
+    total_val  = sum(row["count"] for row in dist_rows)
+    dist_dict  = {row["popularity_group"]: row["count"] for row in dist_rows}
+
+    logger.info(f"  📊 [GUARDRAIL] Val ground truth distribution ({total_val:,} interactions):")
+    for group in ["HEAD", "MID", "TAIL", "COLD_START"]:
+        cnt  = dist_dict.get(group, 0)
+        pct  = cnt / max(total_val, 1) * 100
+        flag = ""
+        if (group == "COLD_START" and pct > 35) or \
+           (group == "TAIL"       and pct > 85) or \
+           (group == "HEAD"       and pct < 10):
+            flag = "  ⚠️  UNBALANCED"
+        logger.info(f"    {group:12s}: {cnt:>10,}  ({pct:5.1f}%){flag}")
+
+    cold_pct = dist_dict.get("COLD_START", 0) / max(total_val, 1) * 100
+    tail_pct = dist_dict.get("TAIL",       0) / max(total_val, 1) * 100
+    head_pct = dist_dict.get("HEAD",       0) / max(total_val, 1) * 100
+
+    if cold_pct > 35:
+        logger.warning(
+            f"⚠️  [GUARDRAIL] COLD_START chiếm {cold_pct:.1f}% val_gt (ngưỡng: 35%). "
+            f"Recall@K tổng thể có thể thấp giả tạo — items này chưa có embedding trong train. "
+            f"→ Ưu tiên report Recall@K_core (loại COLD_START) khi so sánh mô hình."
+        )
+    if tail_pct > 85:
+        logger.warning(
+            f"⚠️  [GUARDRAIL] TAIL chiếm {tail_pct:.1f}% val_gt (ngưỡng: 85%). "
+            f"Val bị dominated bởi long-tail items — phân phối lệch nhiều so với train."
+        )
+    if head_pct < 10:
+        logger.warning(
+            f"⚠️  [GUARDRAIL] HEAD chỉ chiếm {head_pct:.1f}% val_gt (ngưỡng: 10%). "
+            f"Recall@K_HEAD sẽ không đại diện — cân nhắc oversampling HEAD khi evaluate."
+        )
+
+    return df_gt
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -216,10 +265,27 @@ def run(
 
     # ── Ghi silver_val_ground_truth ───────────────────────────────────────────
     logger.info(f"[Step3] Ghi silver_val_ground_truth → {silver_val_gt}")
+    # _build_val_ground_truth() sẽ tự log GUARDRAIL distribution trước khi return
     df_val_gt = _build_val_ground_truth(df_val, df_popularity)
     df_val_gt.coalesce(5) \
              .write.mode(write_mode) \
              .option("compression", "zstd") \
              .parquet(silver_val_gt)
 
-    logger.info(f"[Step3] silver_val_ground_truth ghi xong.")
+    logger.info("[Step3] silver_val_ground_truth ghi xong.")
+
+    # ── So sánh Train vs Val distribution (để phát hiện skew) ───────────────
+    # Lấy distribution từ df_popularity (đã tính từ train, đã cache)
+    train_dist = {
+        row["popularity_group"]: row["count"]
+        for row in df_popularity.groupBy("popularity_group").count().collect()
+    }
+    total_train_items = sum(train_dist.values())
+    logger.info("  📋 [TRAIN vs VAL] Popularity distribution comparison (items trong train vs interactions trong val):")
+    logger.info(f"  {'Group':12s} | {'Train items':>12s} | {'Train %':>8s} | {'Val GT':>10s} | {'Val %':>7s}")
+    logger.info(f"  {'-'*12}-+-{'-'*12}-+-{'-'*8}-+-{'-'*10}-+-{'-'*7}")
+    for group in ["HEAD", "MID", "TAIL"]:
+        t_cnt = train_dist.get(group, 0)
+        t_pct = t_cnt / max(total_train_items, 1) * 100
+        # val distribution đã được log bởi _build_val_ground_truth → không cần đọc lại
+        logger.info(f"  {group:12s} | {t_cnt:>12,} | {t_pct:>7.1f}% | {'(xem trên)':>10s} |")
