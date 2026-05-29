@@ -41,7 +41,7 @@ Hệ thống xây dựng trên nền tảng **RecMind (Xue et al., 2025)** với
 | **Tail-Weighted Alignment Loss** | `w_v = 1/log(1+train_freq)` nhân vào InfoNCE loss, ép optimizer tập trung tail | `03_training_strategy.md` |
 | **Anti-Leakage Classification** | Phân loại HEAD/MID/TAIL dựa trên `train_freq` chứ không phải `rating_number` (chống data leakage) | `01_data_pipeline.md` |
 | **Popularity-Penalized Re-ranking** | `s_adj = s_model - λ·log(1+train_freq)` tại inference time | `02_model_architecture.md` |
-| **Review Quality Weighting** | `w(r) = 1 + log(1 + helpful_vote)` lọc nhiễu spam 5-sao | `01_data_pipeline.md` |
+| **Review Quality Weighting** | `w(r) = 1 + log(1 + helpful_vote)` ưu tiên review chất lượng khi tạo text profile | `01_data_pipeline.md` |
 
 ---
 
@@ -133,6 +133,7 @@ recsys_pipeline_minio/
 │
 ├── scripts/
 │   ├── audit_val_distribution.py        # Kiểm tra phân phối val_gt vs train (standalone)
+│   ├── evaluate_most_popular_baseline.py # Baseline MostPopular full-ranking warm-only
 │   └── run_pipeline.sh                  # Shell script chạy pipeline theo tầng
 │
 ├── src/
@@ -160,7 +161,7 @@ recsys_pipeline_minio/
 │       ├── ste4_gold.py                 # Gold orchestrator (ID mapping → Edge → Meta)
 │       ├── gold_step1_id_mapping.py     # Integer indexing cho users & items
 │       ├── gold_step2_edge_list.py      # PyG-format edge_index [2, E]
-│       ├── gold_step5_training_meta.py  # Training metadata arrays (npy) + blended neg-sampling
+│       ├── gold_step5_training_meta.py  # Training metadata arrays (npy) + configurable warm-only neg-sampling
 │       └── upload_gold_to_hf.py         # Push Gold artifacts lên HuggingFace (full/partial)
 │
 ├── data/
@@ -249,7 +250,18 @@ docker compose run --rm pipeline python src/pipeline_runner.py --step 3_silver
 docker compose run --rm pipeline python src/pipeline_runner.py --step 4_gold
 ```
 
-### 4. Push Artifacts Lên HuggingFace Hub
+### 4. Chạy Baseline Đối Chứng
+
+```bash
+# MostPopular exact full-ranking trên warm candidates.
+# Test mặc định mask train + validation positives.
+docker compose run --rm pipeline \
+    python scripts/evaluate_most_popular_baseline.py --split test --ks 20,40
+```
+
+Script ghi báo cáo vào `data/evaluation/most_popular_test.json` và tách metric theo `OVERALL/HEAD/MID/TAIL`.
+
+### 5. Push Artifacts Lên HuggingFace Hub
 
 ```bash
 # Đẩy Bronze (backup toàn bộ)
@@ -269,7 +281,7 @@ docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline \
     python src/gold/upload_gold_to_hf.py --mode full
 ```
 
-### 5. Test Nhanh (20k records)
+### 6. Test Nhanh (20k records)
 
 ```bash
 # Kiểm tra pipeline end-to-end với dataset nhỏ (~5-10 phút)
@@ -277,7 +289,7 @@ MAX_REVIEW_RECORDS=20000 MAX_METADATA_RECORDS=5000 \
 docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
 ```
 
-### 6. Training (Google Colab)
+### 7. Training (Google Colab)
 
 Mở `src/TA_RecMind_V2_IntraLayer.ipynb` trên Google Colab:
 - Notebook tự động tải artifacts từ HuggingFace Hub

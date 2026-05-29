@@ -3,18 +3,15 @@ gold_step5_training_meta.py — Gold Layer: Training Metadata
 
 Tạo các numpy arrays và JSON metadata phục vụ training loop.
 
-NEGATIVE SAMPLING — Blended Strategy:
-  Mục tiêu: Tập trung long-tail NHUNG vẫn giữ được chất lượng head.
+NEGATIVE SAMPLING:
+  Tạo phân phối lấy mẫu negative theo cấu hình:
+    - uniform
+    - popularity
+    - inverse_frequency
+    - blended
 
-  Hai component được blend:
-    A) Tail-focus:  P_tail(j) ∝ freq^{-β_ns}   → tail items có xác suất CAO
-    B) Head-retain: P_head(j) ∝ freq^{+β_ns*0.4} → head items vẫn xuất hiện
-
-  P(j) = α · P_tail(j) + (1-α) · P_head(j)
-    α = neg_sampling_blend_alpha (mặc định 0.70)
-    α = 1.0 → pure inverse-popularity (chỉ tập trung tail)
-    α = 0.0 → pure popularity-biased (chỉ tập trung head, như word2vec)
-    α = 0.7 → 70% tập trung tail + 30% giữ head (khuyến nghị)
+  Sampling chỉ áp dụng trên warm items (train_freq > 0). Cold items có
+  probability = 0 để không làm nhiễu warm long-tail protocol.
 
 OUTPUT:
   gold/gold_item_train_freq.npy         — shape [N_items], dtype int64
@@ -37,19 +34,36 @@ from pyspark.sql import SparkSession, DataFrame
 
 logger = logging.getLogger(__name__)
 
-# Mapping popularity_group string → integer
+# Mapping popularity_group string → integer.
+# WARM_TAIL/COLD_ITEM are kept as aliases for newer docs/artifacts.
 POP_GROUP_MAP = {
     "HEAD":       0,
     "MID":        1,
     "TAIL":       2,
+    "WARM_TAIL":  2,
     "COLD_START": 3,
+    "COLD_ITEM":  3,
 }
+
+POP_GROUP_DISPLAY = [
+    ("HEAD", 0),
+    ("MID", 1),
+    ("TAIL", 2),
+    ("COLD_START", 3),
+]
 
 # Mapping user_activity_group string → integer
 USER_ACTIVITY_MAP = {
     "INACTIVE":     0,
     "ACTIVE":       1,
     "SUPER_ACTIVE": 2,
+}
+
+VALID_NEGATIVE_SAMPLING_STRATEGIES = {
+    "uniform",
+    "popularity",
+    "inverse_frequency",
+    "blended",
 }
 
 
@@ -94,6 +108,71 @@ def _save_json_s3(data: dict, filename: str, cfg: dict, fs: s3fs.S3FileSystem) -
     logger.info(f"  📤 {filename} → s3://{s3_path}")
 
 
+def _normalize_warm_probs(raw_prob: np.ndarray, warm_mask: np.ndarray) -> np.ndarray:
+    """Normalize probabilities on warm items only; cold items stay at zero."""
+    prob = np.zeros_like(raw_prob, dtype=np.float64)
+    prob[warm_mask] = raw_prob[warm_mask]
+    total = float(prob.sum())
+    if total <= 0.0 or not np.isfinite(total):
+        raise ValueError("Negative sampling probability has non-positive or non-finite mass.")
+    return (prob / total).astype(np.float32)
+
+
+def _build_negative_sampling_prob(
+    train_freq_arr: np.ndarray,
+    strategy: str,
+    beta_ns: float,
+    blend_alpha: float,
+) -> np.ndarray:
+    """
+    Build item negative-sampling probabilities with zero mass for cold items.
+
+    - uniform: equal probability over warm items.
+    - popularity: P(j) proportional to freq(j)^beta.
+    - inverse_frequency: P(j) proportional to freq(j)^(-beta).
+    - blended: alpha * inverse_frequency + (1-alpha) * mild popularity.
+    """
+    strategy = (strategy or "uniform").strip().lower()
+    if strategy not in VALID_NEGATIVE_SAMPLING_STRATEGIES:
+        valid = ", ".join(sorted(VALID_NEGATIVE_SAMPLING_STRATEGIES))
+        raise ValueError(f"Unknown negative_sampling_strategy={strategy!r}. Valid: {valid}")
+    if beta_ns < 0:
+        raise ValueError("negative_sampling_beta must be >= 0.")
+    if not 0.0 <= blend_alpha <= 1.0:
+        raise ValueError("neg_sampling_blend_alpha must be in [0, 1].")
+
+    warm_mask = train_freq_arr > 0
+    n_warm = int(warm_mask.sum())
+    if n_warm == 0:
+        raise ValueError("No warm items available for negative sampling.")
+
+    freq = train_freq_arr.astype(np.float64)
+    raw_prob = np.zeros_like(freq, dtype=np.float64)
+
+    if strategy == "uniform":
+        raw_prob[warm_mask] = 1.0
+        return _normalize_warm_probs(raw_prob, warm_mask)
+
+    if strategy == "popularity":
+        raw_prob[warm_mask] = np.power(freq[warm_mask], beta_ns)
+        return _normalize_warm_probs(raw_prob, warm_mask)
+
+    if strategy == "inverse_frequency":
+        raw_prob[warm_mask] = np.power(freq[warm_mask], -beta_ns)
+        return _normalize_warm_probs(raw_prob, warm_mask)
+
+    tail_component = np.zeros_like(freq, dtype=np.float64)
+    tail_component[warm_mask] = np.power(freq[warm_mask], -beta_ns)
+    p_tail = _normalize_warm_probs(tail_component, warm_mask).astype(np.float64)
+
+    head_component = np.zeros_like(freq, dtype=np.float64)
+    head_component[warm_mask] = np.power(freq[warm_mask], beta_ns * 0.4)
+    p_head = _normalize_warm_probs(head_component, warm_mask).astype(np.float64)
+
+    raw_prob = blend_alpha * p_tail + (1.0 - blend_alpha) * p_head
+    return _normalize_warm_probs(raw_prob, warm_mask)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CORE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -112,6 +191,7 @@ def run(
         edge_info: dict từ Gold Step 2 (chứa n_edges).
     """
     gold_cfg    = cfg.get("gold", {})
+    neg_strategy = str(gold_cfg.get("negative_sampling_strategy", "uniform")).strip().lower()
     beta_ns     = float(gold_cfg.get("negative_sampling_beta", 0.75))
     blend_alpha = float(gold_cfg.get("neg_sampling_blend_alpha", 0.70))
     tmp_dir     = gold_cfg.get("temp_dir", "data/gold_temp")
@@ -148,7 +228,7 @@ def run(
     gc.collect()
 
     # ── Log item distribution ──────────────────────────────────────────────────────
-    for group_name, group_id in POP_GROUP_MAP.items():
+    for group_name, group_id in POP_GROUP_DISPLAY:
         count = int(np.sum(pop_group_arr == group_id))
         pct = count / n_items * 100
         logger.info(f"  📊 ITEM {group_name}: {count:,} items ({pct:.1f}%)")
@@ -182,52 +262,33 @@ def run(
         pct = count / n_users * 100
         logger.info(f"  📊 USER {group_name}: {count:,} users ({pct:.1f}%)")
 
-    # ── Negative sampling probabilities (Blended Strategy) ──────────────────────
-    # Mục tiêu: Tập trung long-tail NHUNG vẫn giữ được chất lượng head.
-    #
-    # Vấn đề với pure inverse-popularity (α=1.0):
-    #   Head items gần như không bao giờ là negative
-    #   → Model không học được rằng “đây là negative” với head
-    #   → Head recall giảm (model dễ bị đánh lừa bởi head items)
-    #
-    # Blended: P(j) = α · P_tail(j) + (1-α) · P_head(j)
-    #   P_tail(j) ∝ freq^{-β}    → tail items được ưu tiên làm negative
-    #   P_head(j) ∝ freq^{+β*0.4} → head items vẫn xuất hiện đủ để học
-    #
-    # Tham số tune:
-    #   blend_alpha = 0.70 (mặc định): 70% tail-focus, 30% head-retain
-    #   blend_alpha = 0.85: tập trung tail hơn nữa (có thể giảm head quality)
-    #   blend_alpha = 0.50: cân bằng hơn
+    # ── Negative sampling probabilities ───────────────────────────────────────
+    # Warm-only by design: cold items have train_freq = 0 and receive zero mass.
+    # This keeps the training artifact aligned with warm long-tail evaluation.
     logger.info(
-        f"⏳ [Gold Step 5] Computing blended neg-sampling probs "
-        f"(β={beta_ns}, α={blend_alpha})..."
+        f"⏳ [Gold Step 5] Computing {neg_strategy} neg-sampling probs "
+        f"(β={beta_ns}, α={blend_alpha}, warm-only=True)..."
     )
 
-    freq_safe = np.maximum(train_freq_arr, 1).astype(np.float64)
-
-    # Component A: Tail-focus — inverse-popularity
-    p_tail = np.power(freq_safe, -beta_ns)
-    p_tail = p_tail / p_tail.sum()
-
-    # Component B: Head-retain — mild popularity-biased (exponent nhỏ hơn)
-    p_head = np.power(freq_safe, beta_ns * 0.4)
-    p_head = p_head / p_head.sum()
-
-    # Blend
-    raw_prob = blend_alpha * p_tail + (1.0 - blend_alpha) * p_head
-
-    # Normalize về tổng = 1
-    neg_sampling_prob = (raw_prob / raw_prob.sum()).astype(np.float32)
-
-    # Clip tránh extreme values
-    eps = 1e-7
-    neg_sampling_prob = np.clip(neg_sampling_prob, eps, 1.0 - eps)
-    neg_sampling_prob = neg_sampling_prob / neg_sampling_prob.sum()  # re-normalize
-
-    logger.info(f"  📊 Sampling prob range: [{neg_sampling_prob.min():.2e}, {neg_sampling_prob.max():.2e}]")
-    logger.info(f"  📊 Blend: {blend_alpha:.0%} tail-focus + {1-blend_alpha:.0%} head-retain")
-    # xác suất cao nhất = tail/cold-start items; thấp nhất = head items
-    logger.info(f"  📊 Max prob (tail): {neg_sampling_prob.max():.2e} | Min prob (head): {neg_sampling_prob.min():.2e}")
+    neg_sampling_prob = _build_negative_sampling_prob(
+        train_freq_arr=train_freq_arr,
+        strategy=neg_strategy,
+        beta_ns=beta_ns,
+        blend_alpha=blend_alpha,
+    )
+    warm_mask = train_freq_arr > 0
+    warm_prob = neg_sampling_prob[warm_mask]
+    cold_prob_mass = float(neg_sampling_prob[~warm_mask].sum())
+    logger.info(f"  📊 Warm sampling prob range: [{warm_prob.min():.2e}, {warm_prob.max():.2e}]")
+    logger.info(f"  📊 Warm items with prob > 0: {int(np.sum(neg_sampling_prob > 0)):,}")
+    logger.info(f"  📊 Cold prob mass: {cold_prob_mass:.2e}")
+    logger.info(
+        "  📊 Prob mass by group: "
+        f"HEAD={float(neg_sampling_prob[pop_group_arr == 0].sum()):.4f}, "
+        f"MID={float(neg_sampling_prob[pop_group_arr == 1].sum()):.4f}, "
+        f"TAIL={float(neg_sampling_prob[pop_group_arr == 2].sum()):.4f}, "
+        f"COLD={float(neg_sampling_prob[pop_group_arr == 3].sum()):.4f}"
+    )
 
 
     # ── Dataset statistics ────────────────────────────────────────────────────
@@ -265,9 +326,13 @@ def run(
         "median_train_freq_item": int(np.median(train_freq_arr[train_freq_arr > 0])) if np.any(train_freq_arr > 0) else 0,
         "median_train_freq_user": int(np.median(user_train_freq_arr[user_train_freq_arr > 0])) if np.any(user_train_freq_arr > 0) else 0,
         "embedding_dim":    int(cfg.get("gold", {}).get("embedding_dim", 384)),
+        "negative_sampling_strategy":   neg_strategy,
         "negative_sampling_beta":        beta_ns,
         "neg_sampling_blend_alpha":      blend_alpha,
-        "neg_sampling_strategy":         "blended",   # α·freq^{-β} + (1-α)·freq^{+0.4β}
+        "neg_sampling_strategy":         neg_strategy,
+        "neg_sampling_warm_only":        True,
+        "neg_sampling_warm_item_count":  int(np.sum(warm_mask)),
+        "neg_sampling_cold_prob_mass":   round(cold_prob_mass, 10),
         "head_ratio_split": 0.20,
         "mid_ratio_split":  0.10,
         "tail_ratio_split": 0.70,

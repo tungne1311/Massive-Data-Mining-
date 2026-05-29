@@ -1,4 +1,4 @@
-# NỘI DUNG SLIDE THUYẾT TRÌNH: TA-RecMind
+﻿# NỘI DUNG SLIDE THUYẾT TRÌNH: TA-RecMind
 # Tail-Augmented Recommendation with LLM-GNN Alignment
 
 ---
@@ -66,8 +66,8 @@
 1. Xây dựng Data Pipeline hoàn chỉnh xử lý ~44M tương tác theo kiến trúc Medallion (Bronze → Silver → Gold)
 2. Thiết kế mô hình TA-RecMind kết hợp LightGCN + LLM qua cơ chế Intra-Layer Gate Fusion
 3. Đề xuất Tail-Weighted Alignment Loss ưu tiên học biểu diễn cho Tail Items
-4. Đánh giá phân tầng theo HEAD/MID/TAIL/COLD-START
-5. Demo ứng dụng trực quan với khả năng Zero-Shot Cold-Start Insertion
+4. Đánh giá phân tầng theo HEAD/MID/TAIL trong giao thức warm long-tail hiện tại
+5. Demo ứng dụng trực quan với khả năng Zero-Shot Cold-Start Insertion như hướng mở rộng
 
 ---
 
@@ -89,7 +89,7 @@
 **Ưu điểm (Pros):**
 - **Dataset chuẩn quốc tế:** Được sử dụng rộng rãi trong nghiên cứu RecSys (McAuley Lab), dễ dàng so sánh với các nghiên cứu SOTA.
 - **Metadata phong phú:** Cung cấp Title, Features, Description, Details... — điều kiện lý tưởng để khai thác sức mạnh của LLM (LLM-GNN alignment).
-- **Trường `helpful_vote`:** Cung cấp tín hiệu chất lượng review khách quan, giúp lọc nhiễu tốt hơn so với chỉ dùng rating.
+- **Trường `helpful_vote`:** Cung cấp tín hiệu chất lượng review khách quan, giúp ưu tiên review hữu ích khi tạo text profile.
 - **Timestamp chính xác:** Đảm bảo chronological split (chia theo thời gian) tuyệt đối, chống rò rỉ dữ liệu (data leakage).
 - **Độ thưa (Sparsity) cao:** Phản ánh đúng thực tế thương mại điện tử, là môi trường hoàn hảo để thử nghiệm khả năng xử lý Long-tail của TA-RecMind.
 
@@ -275,10 +275,10 @@ w(r) = 1 + log(1 + helpful_vote(r))
 - Leakage Val-Test: **0**
 → Giao thức chia thời gian chính xác tuyệt đối.
 
-**Temporal Decay:**
+**Temporal Signal (chưa bật trong loss notebook hiện tại):**
 - Tương tác trải dài hàng nghìn ngày (nhiều năm)
 - Decay formula: `w(u,i) = exp(-λ × (T_max - timestamp) / T_range)`
-- Tích hợp vào BPR Loss tại training
+- Trong `TA_REC.ipynb`, `LAMBDA_TEMPORAL` đang comment out, nên kết quả hiện tại chưa dùng temporal BPR.
 
 ---
 
@@ -338,16 +338,21 @@ h_v = α · z^G_v + (1-α) · z^L_v
 
 ## SLIDE 17: CƠ SỞ LÝ THUYẾT — RANKING & CONTRASTIVE LOSS
 
-**1. BPR Loss (Rendle et al., UAI 2009):**
-Bayesian Personalized Ranking — chuẩn mực cho Implicit Feedback (chỉ có hành vi, không có rating):
-- **Mục tiêu:** Tối ưu hóa thứ tự xếp hạng (Ranking), đảm bảo $score(positive) > score(negative)$.
-- **Công thức:** $L_{BPR} = -\sum_{(u,i,j) \in O} \log \sigma(s(u,i) - s(u,j))$
+**Ba loss gốc trong bài báo nền tảng:**
+1. **Collaborative Filtering Loss (BPR):** học thứ tự $s(u,i^+) > s(u,j^-)$ từ implicit feedback.
+2. **Contrastive Alignment Loss (InfoNCE):** căn chỉnh graph embedding $z^G$ và language embedding $z^L$ của cùng node.
+3. **Regularization Loss (L2):** kiểm soát độ lớn embedding/tham số để tránh overfitting.
 
-**2. InfoNCE Loss (Oord et al., 2018 / SGL 2021):**
-Hàm mất mát cho Contrastive Learning (Học tương phản):
-- **Cơ chế:** Kéo các vector "vùng tích cực" (positive views) lại gần nhau và đẩy các vector "vùng tiêu cực" (negatives) ra xa.
-- **Công thức:** $L_{ssl} = -\sum \log \frac{\exp(z \cdot z^+ / \tau)}{\sum \exp(z \cdot z^- / \tau)}$
-- Giúp biểu diễn (representation) bền vững hơn trước sự thưa thớt dữ liệu.
+**BPR gốc:**
+$$L_{BPR} = -\sum_{(u,i,j)} \log \sigma(s(u,i) - s(u,j))$$
+
+**InfoNCE alignment gốc:**
+$$\ell_v = -\log \frac{\exp(sim(z_v^G, z_v^L)/\tau)}{\sum_{v'} \exp(sim(z_v^G, z_{v'}^L)/\tau)}$$
+
+**L2 regularization:**
+$$\Omega = ||\Theta||_2^2$$
+
+**Vai trò:** BPR học ranking, InfoNCE đưa semantic và collaborative view về cùng không gian, L2 giữ mô hình ổn định khi số user/item rất lớn.
 
 ---
 
@@ -365,8 +370,9 @@ Biến văn bản thành vector ngữ nghĩa trong không gian đa chiều.
 **2. LAGCL (Long-tail Augmented Contrastive Learning):**
 Cơ chế tăng cường dữ liệu đặc thù cho Long-tail:
 - Tạo 2 "góc nhìn" (views) khác nhau cho mỗi node bằng cách thêm nhiễu Gaussian.
-- **Lý thuyết:** Noise tỷ lệ nghịch với tần suất: $\sigma_{noise} \propto \frac{1}{\log(freq)}$
-- Tail items nhận noise mạnh hơn → Buộc model học biểu diễn bền vững hơn từ dữ liệu ít ỏi.
+- **Trong notebook:** $\sigma_i = \frac{0.08}{\log(train\_freq(i)+2)}$
+- Tail items nhận noise mạnh hơn, head items nhận noise nhẹ hơn.
+- InfoNCE giữa hai noised views giúp positive item embedding bền vững hơn trong full-ranking.
 
 ---
 
@@ -377,7 +383,7 @@ Mô hình xử lý dữ liệu phân tầng, mỗi tầng có trách nhiệm rõ
 
 **Bronze (Dữ liệu thô đã chuẩn hóa):**
 - Thu thập từ nguồn gốc (HuggingFace Hub)
-- Chuẩn hóa schema, lọc nhiễu cơ bản
+- Chuẩn hóa schema, kiểm tra ID/timestamp/rating hợp lệ
 - Phân tách Train/Val/Test theo thời gian
 
 **Silver (Dữ liệu đã làm giàu):**
@@ -403,8 +409,9 @@ Mô hình xử lý dữ liệu phân tầng, mỗi tầng có trách nhiệm rõ
 
 **Thiết kế đặc biệt:**
 - Binary Unweighted Edge: KHÔNG đưa Edge Weight vào Â
-- Mọi tương tác nhiễu (rating < 3.0) đã bị lọc từ Bronze
-- Temporal Decay tích hợp vào BPR Loss (không vào ma trận kề)
+- Bronze không lọc rating: mọi review hợp lệ 1-5 là implicit interaction
+- Rating chỉ dùng ở Silver để tách sentiment/text profile, không dùng để xóa edge
+- Temporal decay không đưa vào Â; trong notebook hiện tại temporal term chưa bật trong BPR loss.
 
 **Ước tính Embedding Matrix (d=128, float32):**
 ```
@@ -567,8 +574,9 @@ HuggingFace (McAuley-Lab/Amazon-Reviews-2023)
 ┌───────────────────────────────────────────────────────────┐
 │            3. HUẤN LUYỆN (TA-RECMIND V2)                  │
 │                                                           │
-│  [ Pha 1: Warm-up Alignment ]                             │
-│  - Căn chỉnh z_G & z_L ưu tiên Tail (Tail-Weighted)       │
+│  [ Pha đầu: BPR + Alignment ]                             │
+│  - BPR + Tail-Weighted Alignment từ epoch đầu             │
+│  - Tắt LAGCL trong 10 epoch đầu để ổn định embedding      │
 │                                                           │
 │  [ Pha 2: Joint Training với Intra-Layer Gate Fusion ]    │
 │     ┌────────────────────────────────────────────────┐    │
@@ -580,7 +588,8 @@ HuggingFace (McAuley-Lab/Amazon-Reviews-2023)
 │                                                           │
 │  [ Hàm Mất Mát & Tối Ưu (MTL Loss) ]                      │
 │  - BPR Loss với 3-Component Negative Sampling             │
-│  - LAGCL Contrastive Loss (Noise ∝ 1/freq)                │
+│  - Tail-Weighted Graph/Text Alignment                     │
+│  - LAGCL Contrastive Loss (Noise ∝ 1/log(freq+2))         │
 └──────────────────────────┬────────────────────────────────┘
                            ▼
 ┌───────────────────────────────────────────────────────────┐
@@ -658,61 +667,82 @@ $$h_v = \alpha \cdot \left( \frac{1}{L+1} \sum_{l=0}^{L} \hat{E}_v^{(l)} \right)
 
 ## SLIDE 29: CHIẾN LƯỢC HÀM MẤT MÁT TRONG TA-RECMIND (ÁP DỤNG)
 
-**Hàm mất mát tổng thể (Multi-Task Learning):**
-$$L_{total} = L_{BPR} + \lambda_1 \cdot (L^U_{align,tw} + L^I_{align,tw}) + \lambda_2 \cdot L_{cl} + \beta \cdot \Omega$$
+**Từ loss gốc đến loss đang triển khai:**
+
+Loss gốc trong paper:
+$$L_{original} = L_{CF/BPR} + \lambda \cdot L_{InfoNCE-align} + \beta \cdot \Omega_{L2}$$
+
+Loss trong notebook:
+$$L_{total} = L_{BPR}^{margin} + 0.3 \cdot L_{align}^{tail} + \lambda_{CL}(t) \cdot L_{CL}^{LAGCL} + \beta ||\Theta||_2^2$$
+
+Trong code, L2 được triển khai bằng `AdamW(weight_decay=1e-4)`.
 
 | Thành phần | Vai trò trong dự án |
 |---|---|
-| **$L_{BPR}$** | Học xếp hạng sản phẩm (Positive > Negative) dựa trên tương tác thực. |
-| **$L_{align,tw}$** | **Đóng góp mới:** Căn chỉnh semantic (LLM) và collaborative (GNN), ưu tiên Tail. |
-| **$L_{cl}$** | Contrastive loss với LAGCL noise, tăng cường biểu diễn cho sản phẩm ngách. |
-| **$\Omega$** | L2 Regularization, kiểm soát độ lớn tham số, chống overfitting. |
+| **$L_{BPR}^{margin}$** | BPR có adaptive margin, buộc positive tail item vượt negative xa hơn. |
+| **$L_{align}^{tail}$** | InfoNCE graph-text có trọng số tail, tính riêng cho user và positive item. |
+| **$L_{CL}^{LAGCL}$** | Contrastive loss giữa hai noised views của positive item, noise nghịch đảo tần suất. |
+| **$\Omega_{L2}$** | Regularization qua AdamW, giảm overfitting embedding ID. |
 
 **So sánh sự nâng cấp:**
-- **RecMind:** Chỉ căn chỉnh đồng đều cho mọi Items.
-- **TA-RecMind:** Căn chỉnh đối xứng (User & Item) + Trọng số hóa theo tần suất (Tail-weighted) + Tăng cường tương phản (LAGCL).
+- **Paper gốc:** BPR + InfoNCE alignment đồng đều + L2.
+- **TA-RecMind:** Adaptive-margin BPR + Tail-weighted InfoNCE + LAGCL noise schedule + AdamW L2.
 
 ---
 
 ## SLIDE 30: ĐỘT PHÁ VỀ CĂN CHỈNH & LẤY MẪU (NOVELTY)
 
-**1. Tail-Weighted Alignment Loss:**
-- **Vấn đề:** Tail items có gradient alignment rất nhỏ, model thường bỏ qua.
-- **Giải pháp:** Nhân trọng số tỷ lệ nghịch popularity: $w_v = 1 / \log(1 + freq_v)$
-- **Kết quả:** Gradient căn chỉnh của Tail Items **gấp ~16 lần** so với Head Items cực đoan.
+**1. Adaptive-Margin BPR:**
+$$L_{BPR}^{margin} = -mean(\log\sigma(s^+ - s^- - m_i))$$
+$$m_i = \frac{0.1}{\log(train\_freq(i)+2)}$$
+- Tail positive item có margin lớn hơn, nên cần được xếp cao hơn negative rõ hơn.
 
-**2. 3-Component Negative Sampling (Chiến lược lấy mẫu tiêu cực):**
-Để giải quyết Popularity Bias, ta không lấy mẫu đồng đều (Uniform) mà chia làm 3 phần:
-- **Thành phần 1 (40%):** Uniform Sampling (Giữ phân phối tự nhiên).
-- **Thành phần 2 (40%):** Popularity-biased ($freq^{0.75}$) — Buộc model phân biệt các Head Items.
+**2. Tail-Weighted Alignment Loss:**
+$$w_v = \frac{1}{\log(1 + freq_v + \epsilon)}$$
+$$L_{align}^{tail} = \frac{\sum_v w_v \cdot CE_v}{\sum_v w_v}$$
+- Thay InfoNCE đồng đều bằng weighted InfoNCE.
+- Căn chỉnh cả user view và item view: $L_{align} = (L_U + L_I)/2$.
+
+**3. Lấy mẫu phù hợp long-tail:**
+- **Positive batch:** 70% train edge ngẫu nhiên + 30% tail-positive edge.
+- **Negative sampling:** 30% uniform warm item.
+- **Thành phần 2 (50%):** Blended probability `neg_prob_warm_t` từ pipeline Gold.
 - **Thành phần 3 (20%):** Tail-edge oversampling — Đảm bảo gradient từ các vùng ngách (Tail).
 
-$\rightarrow$ Giúp mô hình không chỉ học từ các sản phẩm phổ biến mà còn học sâu về các sản phẩm ít tương tác.
+$\rightarrow$ Loss và sampler cùng hướng vào mục tiêu warm long-tail, nhưng vẫn giữ head/mid để không phá ranking tổng thể.
 
 ---
 
-## SLIDE 31: CHIẾN LƯỢC HUẤN LUYỆN 2 GIAI ĐOẠN
+## SLIDE 31: CHIẾN LƯỢC HUẤN LUYỆN TRONG NOTEBOOK
 
-**Giai đoạn 1 — Warm-up Alignment (5-10 epochs):**
-- **Mục tiêu:** Đưa không gian ngữ nghĩa (LLM) và không gian cộng tác (Graph) về cùng một hệ quy chiếu trước khi trộn.
-- **Loss:** $L_{warmup} = L^U_{align,tw} + L^I_{align,tw}$
-- **Learning Rate:** 5e-4
-- **Cập nhật (Update):** Lớp chiếu ($W_{proj}$), trọng số cổng (Gate MLP, $w_{freq}, w_{sim}$).
-- **Đóng băng (Frozen):** Mô hình LLM (đã cache offline) và Graph Embeddings (để giữ cấu trúc CF ban đầu không bị méo).
+**Joint training từ epoch đầu:**
+- `WARMUP_EPOCHS = 0`: không tách một phase chỉ alignment.
+- Từ epoch 1: tối ưu BPR margin + Tail-weighted Alignment.
+- LAGCL được tắt 10 epoch đầu để graph/text space ổn định trước khi thêm nhiễu.
 
-**Giai đoạn 2 — Joint Training (50-100 epochs):**
-- **Loss:** $L_{total}$ đầy đủ (BPR + Alignment + Contrastive).
-- **Learning Rate:** 1e-3 với Cosine Decay.
-- **Cập nhật:** Toàn bộ tham số mạng (Graph Embeddings, Gates, Projection).
-- **Early stopping:** Dựa trên **NDCG@20** trên tập Validation, patience = 10 epochs.
+**Lịch $\lambda_{CL}(t)$:**
+| Epoch | $\lambda_{CL}$ |
+|---|---:|
+| 1-11 | 0.000 |
+| 12 | 0.002 |
+| 13 | 0.004 |
+| 14 | 0.006 |
+| 15 | 0.008 |
+| >=16 | 0.010 |
+
+**Tối ưu:**
+- AdamW, learning rate `1e-3`, `weight_decay=1e-4`.
+- CosineAnnealingLR, gradient clipping `1.0`, mixed precision.
+- Early stopping sau `MIN_EPOCHS=20`, patience `10`, chọn checkpoint bằng representative warm validation.
 
 **Auto-scaling Mini-batch theo GPU (Chống OOM):**
 
 | Loại GPU | VRAM | Batch Size | Gradient Accumulation |
 |---|---|---|---|
-| T4/K80 (Colab Free) | 16GB | 2048 | 4 bước |
-| V100/L4 (Kaggle/Pro) | 20-24GB | 6144 | 2 bước |
-| A100 (Colab Pro+) | 40-80GB | 8192 | 1 bước |
+| T4 / small GPU | < 16GB | 2048 | 4 bước |
+| GPU >16GB | 16-35GB | 4096 | 4 bước |
+| A100 40GB | >35GB | 16384 | 2 bước |
+| A100 80GB | >70GB | 32768 | 1 bước |
 
 ---
 
@@ -738,12 +768,17 @@ top_K = topk(s_adj, K)
 
 ---
 
-## SLIDE 33: GIAO THỨC ĐÁNH GIÁ LONG-TAIL
+## SLIDE 33: GIAO THỨC ĐÁNH GIÁ WARM LONG-TAIL
 
 **Chronological Leave-One-Out:**
 - Test: interaction mới nhất mỗi user (1 item/user)
 - Val: interaction mới thứ hai
 - Train: phần còn lại (≥ 3 items/user do Core-5)
+
+**Protocol hiện tại trong notebook:**
+- `EVAL_PROTOCOL = warm_long_tail_v1`
+- `IGNORE_COLD_ITEMS = True`
+- Candidate ranking chỉ gồm warm items; cold-start item được tách khỏi kết quả chính.
 
 **Metrics bắt buộc:**
 
@@ -753,9 +788,8 @@ top_K = topk(s_adj, K)
 | NDCG@K | 1/log₂(rank+1) | Penalize vị trí thấp |
 | Tail Recall@K | Recall chỉ cho TAIL items | **Metric chính** |
 | Tail Coverage@K | distinct tail trong top-K / |TAIL| | Độ đa dạng |
-| Cold Recall@K | Recall chỉ cho cold-start | Gate Fusion hiệu quả? |
 
-**Phân tầng bắt buộc:** HEAD / MID / TAIL / COLD-START / INACTIVE users
+**Phân tầng hiện tại:** HEAD / MID / TAIL và nhóm user INACTIVE / ACTIVE / SUPER_ACTIVE. Cold-start dùng cho phân tích kiến trúc và demo, chưa phải metric chính trong kết quả notebook.
 
 ---
 
@@ -791,15 +825,13 @@ top_K = topk(s_adj, K)
 |---|---|---|
 | Embedding dim d | 128 | Tăng từ 64, cải thiện sức chứa |
 | LightGCN layers L | 2 | Tránh over-smoothing |
-| LR (Warmup) | 5e-4 | Chỉ LoRA + W_proj + gate |
-| LR (Joint) | 1e-3 | Tất cả params |
+| LR Joint | 1e-3 | Huấn luyện từ epoch đầu |
 | Weight Decay | 1e-4 | L2 regularization |
-| λ₁ (Alignment) | 0.2 | Trọng số alignment loss |
-| λ₂ (Contrastive) | 0.1 | Trọng số LAGCL |
-| τ (Temperature) | 0.15 | InfoNCE temperature |
+| λ_align | 0.3 | Trọng số tail-weighted alignment |
+| λ_CL | 0 → 0.01 | Tắt 10 epoch đầu, ramp 5 epoch |
+| τ (Temperature) | 0.2 | InfoNCE temperature trong CFG |
 | λ_penalty | 0.3 | Re-ranking strength |
-| λ_t (temporal) | 1.0 | Temporal decay |
-| α (final fusion) | 0.6 | z^G vs z^L balance |
+| α (final fusion) | Learned | z^G vs z^L balance |
 
 ---
 
@@ -936,9 +968,12 @@ top_K = topk(s_adj, K)
 | **γ = σ(w_base + w_sim·cos + w_freq·log1p)** | **Novel** | **Đóng góp mới** |
 | Ê = γ·z^G + (1-γ)·z^L | RecMind Eq.7 | Trích dẫn + mở rộng |
 | h = α·z^G + (1-α)·z^L | RecMind Eq.9 | Trích dẫn |
-| **w_v·InfoNCE (tail-weighted)** | **Novel** | **Đóng góp mới** |
 | L_BPR = -Σ log σ(s_pos - s_neg) | Rendle 2009 | Trích dẫn |
-| σ_noise ∝ 1/freq | LAGCL | Trích dẫn |
+| InfoNCE graph-text alignment | RecMind Eq.5 / InfoNCE | Trích dẫn |
+| L2: ||Θ||² / AdamW weight decay | RecMind objective / regularization chuẩn | Áp dụng |
+| **Adaptive margin: m_i=0.1/log(freq_i+2)** | **Novel** | **Đóng góp mới** |
+| **w_v·InfoNCE, w_v=1/log(1+freq_v)** | **Novel** | **Đóng góp mới** |
+| σ_i = 0.08/log(freq_i+2) | LAGCL principle + notebook implementation | Trích dẫn + áp dụng |
 | **w(r) = 1 + log(1 + helpful_vote)** | **Novel** | **Đóng góp mới** |
 | **s_adj = s - λ·log(1+freq)** | **Novel** | **Đóng góp mới** |
 | **Anti-leakage: train_freq** | **Novel** | **Đóng góp mới** |
@@ -952,10 +987,11 @@ top_K = topk(s_adj, K)
 - Áp đối xứng cho CẢ User và Item (RecMind chỉ cho Item)
 - Giải quyết cold-start User song song với cold-start Item
 
-**2. Tail-Weighted Alignment Loss:**
-- w_v = 1/log(1+train_freq) nhân vào InfoNCE
-- Gradient tail gấp 16× so với max head
-- Buộc optimizer ưu tiên căn chỉnh z^G ↔ z^L cho tail
+**2. Loss cải tiến cho Long-tail:**
+- Adaptive-margin BPR: $m_i = 0.1/log(train\_freq_i+2)$
+- Tail-weighted InfoNCE: $w_v = 1/log(1+train\_freq_v+\epsilon)$
+- LAGCL noise: $\sigma_i = 0.08/log(train\_freq_i+2)$
+- Buộc optimizer ưu tiên ranking và graph-text alignment cho tail
 
 **3. Anti-Leakage Classification:**
 - Phát hiện rating_number chênh 137-455× so với train_freq

@@ -1,56 +1,50 @@
-# RecSys Pipeline — config (Bronze → Silver → Gold)
-# Chỉ chứa các keys thực sự được đọc bởi pipeline_runner.py và các step files.
-# Mọi giá trị có thể override bằng biến môi trường (xem pipeline_runner.py → load_config).
+# RecSys Pipeline config (Bronze -> Silver -> Gold)
 
-# ── HUGGING FACE ───────────────────────────────────────────────────────────────
 huggingface:
   review_dataset:   "McAuley-Lab/Amazon-Reviews-2023"
   review_subset:    "raw_review_Electronics"
   metadata_dataset: "McAuley-Lab/Amazon-Reviews-2023"
   metadata_subset:  "raw_meta_Electronics"
-  stream_batch_size:    150000       # override bằng env HF_STREAM_BATCH_SIZE
-  max_review_records:   null         # null = toàn bộ | int = giới hạn để test nhanh
-  max_metadata_records: null         # override bằng env MAX_METADATA_RECORDS
+  stream_batch_size:    150000
+  max_review_records:   null
+  max_metadata_records: null
 
-# ── MINIO / S3 ────────────────────────────────────────────────────────────────
 minio:
-  endpoint:    "http://minio:9000"   # override bằng env MINIO_ENDPOINT
-  access_key:  "minioadmin"          # override bằng env MINIO_ACCESS_KEY
-  secret_key:  "minioadmin"          # override bằng env MINIO_SECRET_KEY
-  bucket:      "recsys"              # override bằng env MINIO_BUCKET
+  endpoint:    "http://minio:9000"
+  access_key:  "minioadmin"
+  secret_key:  "minioadmin"
+  bucket:      "recsys"
 
-# ── SPARK ─────────────────────────────────────────────────────────────────────
 spark:
   app_name:          "RecSys_Pipeline"
-  master:            "local[*]"      # override bằng env SPARK_MASTER
-  driver_memory:     "4g"            # override bằng env SPARK_DRIVER_MEMORY
-  executor_memory:   "4g"            # override bằng env SPARK_EXECUTOR_MEMORY
-  executor_cores:    "2"             # override bằng env SPARK_EXECUTOR_CORES
-  shuffle_partitions: "200"          # 2 workers × 2 cores × 25 = 100–200 phù hợp
-  parquet_compression: "zstd"        # codec nén cho toàn bộ output Parquet
-  # AQE hardcoded true trong build_spark() — không cần config ở đây
+  master:            "local[*]"
+  driver_memory:     "4g"
+  executor_memory:   "4g"
+  executor_cores:    "2"
+  shuffle_partitions: "200"
+  parquet_compression: "zstd"
 
-# ── BRONZE ────────────────────────────────────────────────────────────────────
 bronze:
-  write_mode:      "overwrite"
-  cleanup_landing: true              # xóa landing zone tạm sau khi ghi xong Bronze
+  write_mode: "overwrite"
+  cleanup_landing: true
+  view: "full_realistic"              # full_realistic = no k-core | warm_core = user-core benchmark
+  apply_user_core: false
+  warm_core_user_min_interactions: 5
+  upload_workers: 4
 
-# ── SILVER ────────────────────────────────────────────────────────────────────
 silver:
   write_mode: "overwrite"
+  tail_max_train_freq: 10
+  mid_max_train_freq: 50
+  use_item_review_text: true
+  user_profile_top_k_reviews: 3
+  item_review_top_k_reviews: 2
 
-# ── GOLD ──────────────────────────────────────────────────────────────────────
 gold:
-  write_mode:    "overwrite"
-  embedding_dim: 384                 # chiều embedding (dùng để cấp phát bộ nhớ GPU)
-                                     # all-MiniLM-L6-v2 = 384 | all-mpnet-base-v2 = 768
-
-  # ── Negative Sampling — Blended Strategy ──────────────────────────────────
-  # P(j) = α · freq^{-β}  +  (1-α) · freq^{+0.4β}
-  #   α cao → tập trung tail hơn (có thể giảm head quality)
-  #   α thấp → cân bằng hơn
-  negative_sampling_beta:       0.75  # β ∈ {0.5, 0.75, 1.0}
-  neg_sampling_blend_alpha:     0.70  # α ∈ [0.5, 0.9], mặc định 0.70
-
-  # ── Temp Directory ────────────────────────────────────────────────────────
-  temp_dir: "data/gold_temp"          # thư mục local tạm để lưu .npy trước khi upload S3
+  write_mode: "overwrite"
+  embedding_dim: 384
+  negative_sampling_strategy: "uniform"  # uniform | popularity | inverse_frequency | blended
+  negative_sampling_beta: 0.75
+  neg_sampling_blend_alpha: 0.70
+  warm_graph_user_min_train_freq: 3
+  temp_dir: "data/gold_temp"

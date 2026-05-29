@@ -5,7 +5,7 @@ Tạo integer indices liên tục (0 → N-1) cho tất cả items và users.
 LightGCN và PyG yêu cầu node indices là integer liên tục.
 
 QUAN TRỌNG:
-  - Item map bao gồm TẤT CẢ items từ train + val + metadata (kể cả cold-start)
+  - Item map bao gồm TẤT CẢ items từ train + val + test + metadata (kể cả cold-start)
   - Cold-start items cần embedding slot để LLM alignment loss hoạt động
   - User map lấy từ train (leave-one-out → tất cả users có trong train)
 
@@ -54,6 +54,7 @@ def run(
     cfg: dict,
     df_interactions_train: DataFrame,
     df_interactions_val: DataFrame,
+    df_interactions_test: DataFrame | None,
     df_item_text: DataFrame,
     df_popularity: DataFrame,
 ) -> dict:
@@ -63,6 +64,7 @@ def run(
     Args:
         df_interactions_train: silver_interactions_train DataFrame.
         df_interactions_val:   silver_interactions_val DataFrame.
+        df_interactions_test:  silver_interactions_test DataFrame.
         df_item_text:          silver_item_text_profile DataFrame (bao gồm cold-start).
 
     Returns:
@@ -77,14 +79,21 @@ def run(
     fs = _get_s3_filesystem(cfg)
 
     # ── Collect all unique items ──────────────────────────────────────────────
-    # Union: train items + val items + metadata items (bao gồm cold-start)
+    # Union: train items + val items + test items + metadata items (bao gồm cold-start)
     logger.info("⏳ [Gold Step 1] Collecting all unique items...")
 
     items_train = df_interactions_train.select("parent_asin").distinct()
     items_val   = df_interactions_val.select("parent_asin").distinct()
+    items_test  = (
+        df_interactions_test.select("parent_asin").distinct()
+        if df_interactions_test is not None else None
+    )
     items_meta  = df_item_text.select("parent_asin").distinct()
 
-    all_items = items_train.union(items_val).union(items_meta).distinct()
+    all_items = items_train.union(items_val)
+    if items_test is not None:
+        all_items = all_items.union(items_test)
+    all_items = all_items.union(items_meta).distinct()
     item_list = sorted([row["parent_asin"] for row in all_items.collect()])
     item_to_idx = {asin: idx for idx, asin in enumerate(item_list)}
     n_items = len(item_list)

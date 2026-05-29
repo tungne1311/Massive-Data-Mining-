@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 TOP_K_REVIEWS      = 3
 REVIEW_TITLE_CHARS = 120
 REVIEW_TEXT_CHARS   = 220
+RECENCY_HALF_LIFE_DAYS = 365.0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -39,17 +40,35 @@ def _s3a_path(cfg: dict, *parts: str) -> str:
     return f"s3a://{'/'.join([bucket, *parts])}"
 
 
+def _null_string() -> Column:
+    return F.lit(None).cast("string")
+
+
+def _tagged_field(label: str, value_col: Column) -> Column:
+    clean_value = F.trim(F.coalesce(value_col, F.lit("")))
+    return F.when(
+        F.length(clean_value) > 0,
+        F.concat(F.lit(f"{label}: "), clean_value),
+    ).otherwise(_null_string())
+
+
+def _timestamp_days_scale(max_ts: float) -> float:
+    # Amazon sources may expose timestamps in seconds or milliseconds.
+    return 86_400_000.0 if max_ts and max_ts > 10_000_000_000 else 86_400.0
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # PHASE 1 — TÍNH TRỌNG SỐ VÀ TẠO SNIPPET
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _compute_review_weights(df_train: DataFrame) -> DataFrame:
     """
-    Tính w(r) = 1 + log(1 + helpful_vote) và tạo snippet.
-    Dùng Spark built-in log() — vectorized trên JVM.
+    Tạo train-only positive/negative preference snippets.
+
+    review_weight combines recency and helpfulness:
+      exp(-age_days / half_life) * (1 + log1p(helpful_vote))
     """
-    # CHỈ NHẶT LỜI KHEN CỦA USER ĐỂ XÂY DỰNG SỞ THÍCH:
-    df_train = df_train.filter(F.col("rating") >= 4.0)
+    df_train = df_train.filter((F.col("rating") >= 4.0) | (F.col("rating") <= 2.0))
 
     # ÁP DỤNG HÀM LÀM SẠCH TOÀN DIỆN CHO REVIEW TEXT
     clean_title = advanced_clean_text(F.coalesce(F.col("review_title"), F.lit("")))
@@ -74,11 +93,24 @@ def _compute_review_weights(df_train: DataFrame) -> DataFrame:
         F.length(clean_title) > 0, title_part
     ).otherwise(F.lit(""))
 
+    max_ts_row = df_train.agg(F.max(F.col("timestamp").cast("double")).alias("max_ts")).first()
+    max_ts = float(max_ts_row["max_ts"] or 0.0)
+    ts_per_day = _timestamp_days_scale(max_ts)
+
+    timestamp_d = F.coalesce(F.col("timestamp").cast("double"), F.lit(0.0))
+    age_days = F.greatest(
+        (F.lit(max_ts) - timestamp_d) / F.lit(ts_per_day),
+        F.lit(0.0),
+    )
+    recency_weight = F.exp(-age_days / F.lit(RECENCY_HALF_LIFE_DAYS))
+
     helpful = F.coalesce(F.col("helpful_vote").cast(FloatType()), F.lit(0.0))
-    weight_col = F.lit(1.0) + F.log(F.lit(1.0) + helpful)
+    helpful_weight = F.lit(1.0) + F.log(F.lit(1.0) + helpful)
+    weight_col = recency_weight * helpful_weight
 
     return df_train.select(
         "reviewer_id",
+        F.when(F.col("rating") >= 4.0, F.lit("pos")).otherwise(F.lit("neg")).alias("sentiment"),
         snippet_col.alias("review_snippet"),
         weight_col.alias("review_weight"),
         "rating",
@@ -92,52 +124,77 @@ def _compute_review_weights(df_train: DataFrame) -> DataFrame:
 # PHASE 2 — TOP-K + GHÉP TEXT (1 PASS DUY NHẤT)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_user_profiles(df_weighted: DataFrame, shuffle_parts: int) -> DataFrame:
+def _build_user_profiles(
+    df_weighted: DataFrame,
+    shuffle_parts: int,
+    top_k: int = TOP_K_REVIEWS,
+) -> DataFrame:
     """
-    1 groupBy duy nhất: collect_list → sort → slice top-K → join text.
-
-    So với v1 (2 groupBy + checkpoint):
-      - Tiết kiệm 1 shuffle lớn (~35M rows)
-      - Loại bỏ checkpoint tạm ghi MinIO (~9M rows write + read)
+    Build field-tagged user text from train-only positive and negative reviews.
     """
-    logger.info(f"[Step3] groupBy + collect_list + top-{TOP_K_REVIEWS} + join text (1 pass)...")
+    logger.info(f"[Step3] groupBy sentiment + top-{top_k} + field-tagged user text...")
 
-    # Đóng gói review thành struct (thời gian trước để lấy review mới nhất làm gốc)
+    # score first so sort_array(desc) ranks by recency/helpfulness, then timestamp.
     df_struct = df_weighted.withColumn(
         "review_struct",
         F.struct(
+            F.col("review_weight").alias("score"),
             F.col("timestamp").alias("t"),
-            F.col("review_weight").alias("w"),
             F.col("review_snippet").alias("s"),
         )
     ).repartition(shuffle_parts, "reviewer_id")
 
-    # 1 groupBy duy nhất
-    df_user = df_struct.groupBy("reviewer_id").agg(
-        F.collect_list("review_struct").alias("reviews_raw"),
+    df_stats = df_struct.groupBy("reviewer_id").agg(
         F.count("*").alias("review_count_train"),
+        F.sum(F.when(F.col("sentiment") == "pos", 1).otherwise(0)).alias("pos_review_count_train"),
+        F.sum(F.when(F.col("sentiment") == "neg", 1).otherwise(0)).alias("neg_review_count_train"),
         F.avg("rating").alias("avg_rating"),
         F.avg("review_weight").alias("avg_review_weight"),
     )
 
-    # Sort → slice top-K → extract text → join
-    df_user = df_user.withColumn(
-        "reviews_topk",
-        F.slice(F.sort_array(F.col("reviews_raw"), asc=False), 1, TOP_K_REVIEWS)
+    df_by_sentiment = df_struct.groupBy("reviewer_id", "sentiment").agg(
+        F.collect_list("review_struct").alias("reviews_raw"),
     ).withColumn(
-        "user_text",
+        "reviews_topk",
+        F.slice(F.sort_array(F.col("reviews_raw"), asc=False), 1, top_k)
+    ).withColumn(
+        "profile_text",
         F.array_join(
             F.transform(F.col("reviews_topk"), lambda x: x.getField("s")),
             " [SEP] "
         )
-    ).withColumn(
+    )
+
+    df_pos = df_by_sentiment.filter(F.col("sentiment") == "pos").select(
+        "reviewer_id",
+        F.col("profile_text").alias("user_pos_text"),
+    )
+    df_neg = df_by_sentiment.filter(F.col("sentiment") == "neg").select(
+        "reviewer_id",
+        F.col("profile_text").alias("user_neg_text"),
+    )
+
+    df_user = df_stats.join(df_pos, on="reviewer_id", how="left") \
+        .join(df_neg, on="reviewer_id", how="left") \
+        .withColumn(
+            "user_text",
+            F.concat_ws(
+                " [SEP] ",
+                _tagged_field("positive_preferences", F.col("user_pos_text")),
+                _tagged_field("negative_preferences", F.col("user_neg_text")),
+            )
+        ).withColumn(
         "user_text",
         F.when(F.length(F.col("user_text")) > 5, F.col("user_text"))
          .otherwise(F.lit("[NO_TEXT] User interaction profile"))
     ).select(
         "reviewer_id",
         "user_text",
+        "user_pos_text",
+        "user_neg_text",
         "review_count_train",
+        "pos_review_count_train",
+        "neg_review_count_train",
         "avg_rating",
         "avg_review_weight",
     )
@@ -149,7 +206,11 @@ def _build_user_profiles(df_weighted: DataFrame, shuffle_parts: int) -> DataFram
 # VAL GROUND TRUTH
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> DataFrame:
+def _build_eval_ground_truth(
+    df_eval: DataFrame,
+    df_popularity: DataFrame,
+    split_name: str,
+) -> DataFrame:
     """Chỉ lấy (reviewer_id, parent_asin, popularity_group) — không lấy text.
 
     Bao gồm GUARDRAIL kiểm tra phân phối popularity_group trong val:
@@ -157,12 +218,12 @@ def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> Data
       - Nếu TAIL > 85%: cảnh báo val bị dominated bởi long-tail items
       - Nếu HEAD < 10%: cảnh báo HEAD recall sẽ không đại diện
     """
-    logger.info("[Step3] Xây dựng val ground truth...")
+    logger.info(f"[Step3] Xây dựng {split_name} ground truth...")
 
-    val_cols = ["reviewer_id", "parent_asin", "timestamp", "rating"]
+    eval_cols = ["reviewer_id", "parent_asin", "timestamp", "rating"]
     pop_slim = df_popularity.select("parent_asin", "popularity_group", "train_freq")
 
-    df_gt = df_val.select(*val_cols).join(
+    df_gt = df_eval.select(*eval_cols).join(
         F.broadcast(pop_slim), on="parent_asin", how="left"
     ).withColumn(
         "popularity_group",
@@ -176,16 +237,16 @@ def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> Data
         "is_cold_start", (F.col("popularity_group") == "COLD_START").cast("int")
     )
 
-    # ─── GUARDRAIL: Kiểm tra phân phối val_gt ────────────────────────────────
-    # Mục tiêu: phát hiện sớm nếu val bị dominated bởi COLD/TAIL items.
-    # Nếu val_gt chứa quá nhiều COLD_START (items không có embedding trong train),
+    # ─── GUARDRAIL: Kiểm tra phân phối eval_gt ───────────────────────────────
+    # Mục tiêu: phát hiện sớm nếu eval bị dominated bởi COLD/TAIL items.
+    # Nếu eval_gt chứa quá nhiều COLD_START (items không có embedding trong train),
     # Recall@K sẽ thấp không phải vì model tệ, mà vì val biased.
     # Chi phí: 1 groupBy().collect() nhỏ (~1.8M rows → vài giây).
     dist_rows  = df_gt.groupBy("popularity_group").count().collect()
     total_val  = sum(row["count"] for row in dist_rows)
     dist_dict  = {row["popularity_group"]: row["count"] for row in dist_rows}
 
-    logger.info(f"  📊 [GUARDRAIL] Val ground truth distribution ({total_val:,} interactions):")
+    logger.info(f"  📊 [GUARDRAIL] {split_name} ground truth distribution ({total_val:,} interactions):")
     for group in ["HEAD", "MID", "TAIL", "COLD_START"]:
         cnt  = dist_dict.get(group, 0)
         pct  = cnt / max(total_val, 1) * 100
@@ -202,14 +263,14 @@ def _build_val_ground_truth(df_val: DataFrame, df_popularity: DataFrame) -> Data
 
     if cold_pct > 35:
         logger.warning(
-            f"⚠️  [GUARDRAIL] COLD_START chiếm {cold_pct:.1f}% val_gt (ngưỡng: 35%). "
+            f"⚠️  [GUARDRAIL] COLD_START chiếm {cold_pct:.1f}% {split_name}_gt (ngưỡng: 35%). "
             f"Recall@K tổng thể có thể thấp giả tạo — items này chưa có embedding trong train. "
             f"→ Ưu tiên report Recall@K_core (loại COLD_START) khi so sánh mô hình."
         )
     if tail_pct > 85:
         logger.warning(
-            f"⚠️  [GUARDRAIL] TAIL chiếm {tail_pct:.1f}% val_gt (ngưỡng: 85%). "
-            f"Val bị dominated bởi long-tail items — phân phối lệch nhiều so với train."
+            f"⚠️  [GUARDRAIL] TAIL chiếm {tail_pct:.1f}% {split_name}_gt (ngưỡng: 85%). "
+            f"{split_name} bị dominated bởi long-tail items — phân phối lệch nhiều so với train."
         )
     if head_pct < 10:
         logger.warning(
@@ -230,16 +291,20 @@ def run(
     df_popularity: DataFrame,
     df_train: DataFrame,
     df_val: DataFrame,
+    df_test: DataFrame | None = None,
 ) -> None:
     """
     Args:
         df_train: bronze_train (đã projection pushdown bởi orchestrator).
         df_val: bronze_val từ orchestrator.
+        df_test: bronze_test từ orchestrator.
     """
     silver_user_out = _s3a_path(cfg, "silver", "silver_user_text_profile.parquet")
     silver_val_gt   = _s3a_path(cfg, "silver", "silver_val_ground_truth.parquet")
+    silver_test_gt  = _s3a_path(cfg, "silver", "silver_test_ground_truth.parquet")
     write_mode      = cfg.get("silver", {}).get("write_mode", "overwrite")
     shuffle_parts   = int(cfg.get("spark", {}).get("shuffle_partitions", 200))
+    user_top_k      = int(cfg.get("silver", {}).get("user_profile_top_k_reviews", TOP_K_REVIEWS))
 
     # ── Phase 1: Tính trọng số ────────────────────────────────────────────────
     logger.info("[Step3] Tính review weights...")
@@ -250,7 +315,7 @@ def run(
     logger.info(f"  Reviews có text hợp lệ: {w_count:,}")
 
     # ── Phase 2: Top-K + ghép text (1 pass) ───────────────────────────────────
-    df_user_text = _build_user_profiles(df_weighted, shuffle_parts)
+    df_user_text = _build_user_profiles(df_weighted, shuffle_parts, top_k=user_top_k)
     df_weighted.unpersist()
 
     # ── Ghi silver_user_text_profile ──────────────────────────────────────────
@@ -265,14 +330,23 @@ def run(
 
     # ── Ghi silver_val_ground_truth ───────────────────────────────────────────
     logger.info(f"[Step3] Ghi silver_val_ground_truth → {silver_val_gt}")
-    # _build_val_ground_truth() sẽ tự log GUARDRAIL distribution trước khi return
-    df_val_gt = _build_val_ground_truth(df_val, df_popularity)
+    # _build_eval_ground_truth() sẽ tự log GUARDRAIL distribution trước khi return
+    df_val_gt = _build_eval_ground_truth(df_val, df_popularity, "val")
     df_val_gt.coalesce(5) \
              .write.mode(write_mode) \
              .option("compression", "zstd") \
              .parquet(silver_val_gt)
 
     logger.info("[Step3] silver_val_ground_truth ghi xong.")
+
+    if df_test is not None:
+        logger.info(f"[Step3] Ghi silver_test_ground_truth → {silver_test_gt}")
+        df_test_gt = _build_eval_ground_truth(df_test, df_popularity, "test")
+        df_test_gt.coalesce(5) \
+                  .write.mode(write_mode) \
+                  .option("compression", "zstd") \
+                  .parquet(silver_test_gt)
+        logger.info("[Step3] silver_test_ground_truth ghi xong.")
 
     # ── So sánh Train vs Val distribution (để phát hiện skew) ───────────────
     # Lấy distribution từ df_popularity (đã tính từ train, đã cache)

@@ -2,7 +2,7 @@
 ste3_silver.py — Silver Layer Pipeline Orchestrator
 
 TỐI ƯU v2:
-  - Đọc bronze_train/val 1 LẦN DUY NHẤT, truyền DataFrame vào các steps
+  - Đọc bronze_train/val/test 1 LẦN DUY NHẤT, truyền DataFrame vào các steps
   - Đọc trực tiếp từ MinIO (không qua HuggingFace)
   - Thứ tự: Step1 → Step2 → Step4 → Step3 (Step3 tốn RAM nhất, chạy sau)
   - ZSTD compression cho toàn bộ Silver output
@@ -14,7 +14,9 @@ OUTPUT:
     ├── silver_user_text_profile.parquet
     ├── silver_interactions_train.parquet
     ├── silver_interactions_val.parquet
-    └── silver_val_ground_truth.parquet
+    ├── silver_interactions_test.parquet
+    ├── silver_val_ground_truth.parquet
+    └── silver_test_ground_truth.parquet
 """
 
 import gc
@@ -57,7 +59,7 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
 
     Tối ưu chính:
       - bronze_train đọc 1 lần, dùng cho Step 1, 3, 4
-      - bronze_val đọc 1 lần, dùng cho Step 3, 4
+      - bronze_val/test đọc 1 lần, dùng cho Step 3, 4
       - bronze_meta đọc 1 lần cho Step 2
       - ZSTD compression cho tất cả output
     """
@@ -72,9 +74,10 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     # ── ĐỌC BRONZE 1 LẦN DUY NHẤT ───────────────────────────────────────────
     train_path = _s3a_path(cfg, "bronze", "bronze_train.parquet")
     val_path   = _s3a_path(cfg, "bronze", "bronze_val.parquet")
+    test_path  = _s3a_path(cfg, "bronze", "bronze_test.parquet")
     meta_path  = _s3a_path(cfg, "bronze", "bronze_meta.parquet")
 
-    # Data đã được lọc rating >= 3.0 trực tiếp từ tầng Bronze
+    # Bronze giữ mọi rating 1-5 như implicit interactions; không lọc edge theo rating.
     logger.info(f"📂 Đọc bronze_train từ MinIO: {train_path}")
     df_train_raw = spark.read.parquet(train_path)
 
@@ -82,11 +85,14 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     df_train_light = df_train_raw.select(*train_cols_light).cache()
     
     train_count = df_train_light.count()
-    logger.info(f"  📦 bronze_train_light (positive only >= 3.0): {train_count:,} rows")
+    logger.info(f"  📦 bronze_train_light (all valid ratings 1-5): {train_count:,} rows")
 
     logger.info(f"📂 Đọc bronze_val từ MinIO: {val_path}")
     df_val = spark.read.parquet(val_path)
-    # Không cache val — chỉ dùng 2 lần (Step 3, 4) và đủ nhỏ
+    # Không cache val/test — chỉ dùng 2 lần (Step 3, 4) và đủ nhỏ
+
+    logger.info(f"📂 Đọc bronze_test từ MinIO: {test_path}")
+    df_test = spark.read.parquet(test_path)
 
     # ── STEP 1: Item Popularity ───────────────────────────────────────────────
     t0 = time.perf_counter()
@@ -102,8 +108,13 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     t0 = time.perf_counter()
     logger.info("\n📌 SILVER STEP 2: Item Text Profile")
 
+    train_cols_item_text = ["parent_asin", "timestamp", "rating",
+                            "review_title", "review_text", "helpful_vote"]
+    df_train_item_text = df_train_raw.select(*train_cols_item_text)
+
     df_item_text = step2.run(spark, cfg, df_popularity=df_popularity,
-                             meta_path=meta_path)
+                             meta_path=meta_path,
+                             df_train_reviews=df_train_item_text)
     df_item_text.unpersist()
 
     elapsed = timedelta(seconds=int(time.perf_counter() - t0))
@@ -114,7 +125,7 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     logger.info("\n📌 SILVER STEP 4: Enrich Interactions")
 
     step4.run(spark, cfg, df_popularity=df_popularity,
-              df_train=df_train_light, df_val=df_val)
+              df_train=df_train_light, df_val=df_val, df_test=df_test)
 
     elapsed = timedelta(seconds=int(time.perf_counter() - t0))
     logger.info(f"⏱ Step 4 hoàn tất: {elapsed}")
@@ -133,7 +144,7 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     df_train_text = spark.read.parquet(train_path).select(*train_cols_text)
 
     step3.run(spark, cfg, df_popularity=df_popularity,
-              df_train=df_train_text, df_val=df_val)
+              df_train=df_train_text, df_val=df_val, df_test=df_test)
 
     elapsed = timedelta(seconds=int(time.perf_counter() - t0))
     logger.info(f"⏱ Step 3 hoàn tất: {elapsed}")
@@ -152,4 +163,6 @@ def run_silver_pipeline(spark: SparkSession, cfg: dict) -> None:
     logger.info("  ✅ silver_user_text_profile.parquet")
     logger.info("  ✅ silver_interactions_train.parquet")
     logger.info("  ✅ silver_interactions_val.parquet")
+    logger.info("  ✅ silver_interactions_test.parquet")
     logger.info("  ✅ silver_val_ground_truth.parquet")
+    logger.info("  ✅ silver_test_ground_truth.parquet")

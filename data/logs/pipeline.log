@@ -7007,3 +7007,227 @@ py4j.protocol.Py4JError: An error occurred while calling o95.collectToPython
 2026-05-06 12:12:58,463 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:06:29
 2026-05-06 12:12:59,195 [INFO] ⏱ TỔNG THỜI GIAN: 0:06:37
 2026-05-06 12:12:59,217 [INFO] Closing down clientserver connection
+2026-05-24 19:29:12,374 [INFO] === FULL PIPELINE: Bronze → Silver → Gold ===
+2026-05-24 19:29:12,377 [INFO] === Bước 1 & 2: Ingestion & Bronze Processing ===
+2026-05-24 19:29:12,378 [INFO] ⏳ [Metadata] Bắt đầu kéo dữ liệu metadata (streaming write)...
+2026-05-24 20:59:56,438 [INFO]   📦 Metadata: 1,500,000 dòng (5 batches)
+2026-05-24 21:02:21,093 [INFO] Worker hoàn tất: đã xử lý 1,610,012 bản ghi từ 6 batch.
+2026-05-24 21:02:25,957 [INFO] [Metadata] Hoàn tất: 1,610,012 sản phẩm → s3://recsys/bronze/bronze_meta.parquet
+2026-05-24 21:02:26,076 [INFO] [PRE-RUN] Chạy Phase 1 từ đầu.
+2026-05-24 21:02:26,077 [INFO] [Phase 1 – MAP] Streaming batches → Landing Zone (parallel upload)...
+2026-05-24 21:13:56,983 [INFO]   -> [Streaming] Batch 20 | Records xử lý: 6,000,000 | Queue size: 1
+2026-05-24 21:25:08,298 [INFO]   -> [Streaming] Batch 40 | Records xử lý: 12,000,000 | Queue size: 1
+2026-05-24 21:36:10,495 [INFO]   -> [Streaming] Batch 60 | Records xử lý: 18,000,000 | Queue size: 1
+2026-05-24 21:47:17,453 [INFO]   -> [Streaming] Batch 80 | Records xử lý: 24,000,000 | Queue size: 1
+2026-05-24 21:58:01,972 [INFO]   -> [Streaming] Batch 100 | Records xử lý: 30,000,000 | Queue size: 1
+2026-05-24 22:08:35,238 [INFO]   -> [Streaming] Batch 120 | Records xử lý: 36,000,000 | Queue size: 1
+2026-05-24 22:19:04,695 [INFO]   -> [Streaming] Batch 140 | Records xử lý: 42,000,000 | Queue size: 1
+2026-05-24 22:22:21,282 [INFO] Worker hoàn tất: đã xử lý 43,886,944 bản ghi từ 147 batch.
+2026-05-24 22:22:22,196 [INFO] [Phase 1] Đã ghi 147 batch (43,886,944 dòng) vào Landing Zone.
+2026-05-24 22:22:22,221 [INFO] [Phase 1] Wrote _SUCCESS marker (43,886,944 rows, 147 batches).
+2026-05-24 22:22:22,222 [INFO] [Phase 2 – REDUCE] Chạy thuật toán Spark Native (tối ưu Shuffle)...
+2026-05-24 22:22:45,909 [INFO] [CKPT] Ghi core5 ra S3 (bẻ gãy DAG lineage)...
+2026-05-24 22:32:21,038 [INFO] Core-5: 17,659,605 interactions (lineage đã bị cắt)
+2026-05-24 22:32:21,116 [INFO] Đang chia tập Test / Val / Train bằng Double Max Join...
+2026-05-24 22:32:22,394 [INFO] [Phase 3 – SINK] Ghi ra MinIO (ZSTD, coalesce)...
+2026-05-24 22:33:35,857 [INFO] Ghi thành công bronze_test.
+2026-05-24 22:35:59,209 [INFO] Ghi thành công bronze_val.
+2026-05-24 22:40:50,891 [INFO] Ghi thành công bronze_train.
+2026-05-24 22:40:54,405 [INFO] [CKPT] Đã xóa file checkpoint tạm.
+2026-05-24 22:40:55,217 [INFO] Deleted landing zone: s3://recsys/landing/reviews_temp
+2026-05-24 22:40:55,225 [INFO] Bronze Pipeline hoàn tất!
+2026-05-24 22:40:56,143 [INFO] ✓ Bước 1+2 hoàn tất.  ⏱ 3:18:00
+2026-05-24 22:40:56,153 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-05-24 22:41:03,211 [INFO] === Bước 3: Silver Pipeline ===
+2026-05-24 22:41:03,215 [INFO] ============================================================
+2026-05-24 22:41:03,216 [INFO] 🚀 BẮT ĐẦU SILVER PIPELINE (v2 — tối ưu I/O)
+2026-05-24 22:41:03,219 [INFO] ============================================================
+2026-05-24 22:41:03,231 [INFO] 📂 Đọc bronze_train từ MinIO: s3a://recsys/bronze/bronze_train.parquet
+2026-05-24 22:41:36,283 [INFO]   📦 bronze_train_light (all valid ratings 1-5): 13,964,281 rows
+2026-05-24 22:41:36,285 [INFO] 📂 Đọc bronze_val từ MinIO: s3a://recsys/bronze/bronze_val.parquet
+2026-05-24 22:41:36,657 [INFO] 📂 Đọc bronze_test từ MinIO: s3a://recsys/bronze/bronze_test.parquet
+2026-05-24 22:41:36,882 [INFO] 
+📌 SILVER STEP 1: Item Popularity Classification
+2026-05-24 22:41:36,885 [INFO] ⏳ [Step1] Tính train_freq cho mỗi item...
+2026-05-24 22:42:01,356 [INFO]   📊 Tổng items: 1,042,121
+2026-05-24 22:42:01,357 [INFO] ⏳ [Step1] Xác định ngưỡng Pareto HEAD/MID/TAIL...
+2026-05-24 22:43:12,809 [INFO]   🔴 HEAD : 210,925 items | train_freq ≥ 9 | ~20.2%
+2026-05-24 22:43:12,810 [INFO]   🟡 MID  : 116,283 items | 5 ≤ train_freq < 9 | ~11.2%
+2026-05-24 22:43:12,811 [INFO]   🟢 TAIL : 714,913 items | train_freq < 5 | ~68.6%
+2026-05-24 22:43:13,707 [INFO] ⏳ [Step1] Ghi silver_item_popularity → s3a://recsys/silver/silver_item_popularity.parquet
+2026-05-24 22:43:24,179 [INFO] ✅ [Step1] silver_item_popularity: 1,042,121 items
+2026-05-24 22:43:28,110 [INFO] ⏱ Step 1 hoàn tất: 0:01:51
+2026-05-24 22:43:28,111 [INFO] 
+📌 SILVER STEP 2: Item Text Profile
+2026-05-24 22:43:28,202 [INFO] ⏳ [Step2] Đọc bronze_meta từ MinIO: s3a://recsys/bronze/bronze_meta.parquet
+2026-05-24 22:43:28,606 [INFO] [Step2] Build train-only item review text profiles, top-2 per sentiment...
+2026-05-24 22:53:24,144 [INFO] ⏳ [Step2] Ghép item text profile...
+2026-05-24 22:53:27,181 [INFO] ⏳ [Step2] Broadcast join với popularity...
+2026-05-24 22:53:27,409 [INFO] ⏳ [Step2] Ghi silver_item_text_profile → s3a://recsys/silver/silver_item_text_profile.parquet
+2026-05-24 23:32:16,876 [INFO] ✅ [Step2] silver_item_text_profile: 1,610,012 items
+2026-05-24 23:32:18,979 [INFO] ⏱ Step 2 hoàn tất: 0:49:01
+2026-05-24 23:32:18,981 [INFO] 
+📌 SILVER STEP 4: Enrich Interactions
+2026-05-24 23:32:18,999 [INFO] ⏳ [Step4] Enrich train interactions...
+2026-05-24 23:32:19,818 [INFO] ⏳ [Step4] Ghi silver_interactions_train → s3a://recsys/silver/silver_interactions_train.parquet
+2026-05-24 23:33:34,065 [INFO] ✅ [Step4] silver_interactions_train ghi xong.
+2026-05-24 23:33:34,075 [INFO] ⏳ [Step4] Enrich val interactions...
+2026-05-24 23:33:34,513 [INFO] ⏳ [Step4] Ghi silver_interactions_val → s3a://recsys/silver/silver_interactions_val.parquet
+2026-05-24 23:33:50,332 [INFO] ✅ [Step4] silver_interactions_val ghi xong.
+2026-05-24 23:33:50,334 [INFO] ⏳ [Step4] Enrich test interactions...
+2026-05-24 23:33:50,642 [INFO] ⏳ [Step4] Ghi silver_interactions_test → s3a://recsys/silver/silver_interactions_test.parquet
+2026-05-24 23:34:03,606 [INFO] ✅ [Step4] silver_interactions_test ghi xong.
+2026-05-24 23:34:03,610 [INFO] ⏱ Step 4 hoàn tất: 0:01:44
+2026-05-24 23:34:03,617 [INFO] 🧹 [Memory] Giải phóng RAM sau trước Step 3...
+2026-05-24 23:34:12,043 [INFO] 
+📌 SILVER STEP 3: User Text Profile (heavy step)
+2026-05-24 23:34:12,273 [INFO] [Step3] Tính review weights...
+2026-05-24 23:54:25,506 [INFO]   Reviews có text hợp lệ: 12,981,099
+2026-05-24 23:54:25,553 [INFO] [Step3] groupBy sentiment + top-3 + field-tagged user text...
+2026-05-24 23:54:27,581 [INFO] [Step3] Ghi silver_user_text_profile → s3a://recsys/silver/silver_user_text_profile.parquet
+2026-05-25 00:35:27,175 [INFO] [Step3] silver_user_text_profile: 1,846,872 users
+2026-05-25 00:35:27,246 [INFO] [Step3] Ghi silver_val_ground_truth → s3a://recsys/silver/silver_val_ground_truth.parquet
+2026-05-25 00:35:27,251 [INFO] [Step3] Xây dựng val ground truth...
+2026-05-25 00:35:49,813 [INFO]   📊 [GUARDRAIL] val ground truth distribution (1,847,662 interactions):
+2026-05-25 00:35:49,824 [INFO]     HEAD        :  1,525,360  ( 82.6%)
+2026-05-25 00:35:49,825 [INFO]     MID         :     95,608  (  5.2%)
+2026-05-25 00:35:49,826 [INFO]     TAIL        :    154,009  (  8.3%)
+2026-05-25 00:35:49,828 [INFO]     COLD_START  :     72,685  (  3.9%)
+2026-05-25 00:36:05,168 [INFO] [Step3] silver_val_ground_truth ghi xong.
+2026-05-25 00:36:05,169 [INFO] [Step3] Ghi silver_test_ground_truth → s3a://recsys/silver/silver_test_ground_truth.parquet
+2026-05-25 00:36:05,170 [INFO] [Step3] Xây dựng test ground truth...
+2026-05-25 00:36:12,277 [INFO]   📊 [GUARDRAIL] test ground truth distribution (1,847,662 interactions):
+2026-05-25 00:36:12,278 [INFO]     HEAD        :  1,479,141  ( 80.1%)
+2026-05-25 00:36:12,279 [INFO]     MID         :    105,104  (  5.7%)
+2026-05-25 00:36:12,281 [INFO]     TAIL        :    173,508  (  9.4%)
+2026-05-25 00:36:12,282 [INFO]     COLD_START  :     89,909  (  4.9%)
+2026-05-25 00:36:26,207 [INFO] [Step3] silver_test_ground_truth ghi xong.
+2026-05-25 00:36:26,983 [INFO]   📋 [TRAIN vs VAL] Popularity distribution comparison (items trong train vs interactions trong val):
+2026-05-25 00:36:27,044 [INFO]   Group        |  Train items |  Train % |     Val GT |   Val %
+2026-05-25 00:36:27,045 [INFO]   -------------+--------------+----------+------------+--------
+2026-05-25 00:36:27,047 [INFO]   HEAD         |      210,925 |    20.2% | (xem trên) |
+2026-05-25 00:36:27,048 [INFO]   MID          |      116,283 |    11.2% | (xem trên) |
+2026-05-25 00:36:27,050 [INFO]   TAIL         |      714,913 |    68.6% | (xem trên) |
+2026-05-25 00:36:27,055 [INFO] ⏱ Step 3 hoàn tất: 1:02:23
+2026-05-25 00:36:27,060 [INFO] 🧹 [Memory] Giải phóng RAM sau kết thúc Silver pipeline...
+2026-05-25 00:36:34,095 [INFO] ============================================================
+2026-05-25 00:36:34,096 [INFO] 🎉 SILVER PIPELINE HOÀN TẤT — ⏱ TỔNG: 1:55:50
+2026-05-25 00:36:34,097 [INFO] ============================================================
+2026-05-25 00:36:34,099 [INFO] OUTPUT:
+2026-05-25 00:36:34,100 [INFO]   ✅ silver_item_popularity.parquet
+2026-05-25 00:36:34,101 [INFO]   ✅ silver_item_text_profile.parquet
+2026-05-25 00:36:34,102 [INFO]   ✅ silver_user_text_profile.parquet
+2026-05-25 00:36:34,103 [INFO]   ✅ silver_interactions_train.parquet
+2026-05-25 00:36:34,104 [INFO]   ✅ silver_interactions_val.parquet
+2026-05-25 00:36:34,105 [INFO]   ✅ silver_interactions_test.parquet
+2026-05-25 00:36:34,106 [INFO]   ✅ silver_val_ground_truth.parquet
+2026-05-25 00:36:34,108 [INFO]   ✅ silver_test_ground_truth.parquet
+2026-05-25 00:36:34,110 [INFO] ✓ Bước 3 (Silver) hoàn tất.  ⏱ 1:55:50
+2026-05-25 00:36:34,111 [INFO]   🧹 [Memory Manager] Giải phóng RAM và Spark Cache...
+2026-05-25 00:36:36,214 [INFO] === Bước 4: Gold Pipeline ===
+2026-05-25 00:36:36,215 [INFO] ============================================================
+2026-05-25 00:36:36,216 [INFO] 🚀 BẮT ĐẦU GOLD PIPELINE
+2026-05-25 00:36:36,218 [INFO] ============================================================
+2026-05-25 00:36:36,219 [INFO] 📂 Đọc Silver data từ MinIO...
+2026-05-25 00:36:36,220 [INFO]   popularity: s3a://recsys/silver/silver_item_popularity.parquet
+2026-05-25 00:36:36,221 [INFO]   item_text: s3a://recsys/silver/silver_item_text_profile.parquet
+2026-05-25 00:36:36,222 [INFO]   interactions_train: s3a://recsys/silver/silver_interactions_train.parquet
+2026-05-25 00:36:36,224 [INFO]   interactions_val: s3a://recsys/silver/silver_interactions_val.parquet
+2026-05-25 00:36:36,225 [INFO]   interactions_test: s3a://recsys/silver/silver_interactions_test.parquet
+2026-05-25 00:36:37,639 [INFO] 
+📌 GOLD STEP 1: Integer ID Mapping
+2026-05-25 00:36:37,647 [INFO] ⏳ [Gold Step 1] Collecting all unique items...
+2026-05-25 00:38:35,383 [INFO]   📊 Total unique items: 1,610,012
+2026-05-25 00:38:35,385 [INFO] ⏳ [Gold Step 1] Collecting all unique users and computing frequency...
+2026-05-25 00:40:16,158 [INFO]   📊 Total unique users: 1,847,662
+2026-05-25 00:40:16,160 [INFO]   📊 Embedding matrix estimate: 3,457,674 nodes × 384d = 5065 MB
+2026-05-25 00:40:16,162 [INFO] ⏳ [Gold Step 1] Enriching item map with metadata & popularity...
+2026-05-25 00:42:15,600 [INFO] ⏳ [Gold Step 1] Writing item ID map → s3://recsys/gold/gold_item_id_map.parquet
+2026-05-25 00:42:40,909 [INFO] ⏳ [Gold Step 1] Writing user ID map → s3://recsys/gold/gold_user_id_map.parquet
+2026-05-25 00:43:07,402 [INFO] ✅ [Gold Step 1] ID Mapping complete: 1,610,012 items, 1,847,662 users
+2026-05-25 00:44:18,799 [INFO] ⏱ Step 1 hoàn tất: 0:07:42
+2026-05-25 00:44:18,830 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 1...
+2026-05-25 00:44:24,560 [INFO] 
+📌 GOLD STEP 2: Edge List + Semantic Edges
+2026-05-25 00:44:31,532 [INFO] ⏳ [Gold Step 2] Joining interactions with ID maps on Spark (Parallel)...
+2026-05-25 00:44:32,678 [INFO] ⏳ [Gold Step 2] Writing temp parquet to MinIO to bypass Spark RPC limitations...
+2026-05-25 00:45:34,975 [INFO] ⏳ [Gold Step 2] Loading Parquet back to Driver natively via PyArrow Dataset...
+2026-05-25 00:45:39,086 [INFO] ⏳ [Gold Step 2] Converting to NumPy arrays...
+2026-05-25 00:45:39,707 [INFO]   📊 Total edges: 13,964,281
+2026-05-25 00:45:40,099 [INFO] ⏳ [Gold Step 2] Saving edge list to MinIO...
+2026-05-25 00:45:46,532 [INFO]   📤 gold_edge_index.npy → s3://recsys/gold/gold_edge_index.npy (213.1 MB)
+2026-05-25 00:45:46,670 [INFO] ✅ [Gold Step 2] Edge list complete: 13,964,281 edges
+2026-05-25 00:45:46,675 [INFO] ⏱ Step 2 hoàn tất: 0:01:22
+2026-05-25 00:45:46,676 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 2...
+2026-05-25 00:45:47,772 [INFO] 
+📌 GOLD STEP 5: Training Metadata
+2026-05-25 00:45:47,774 [INFO] ⏳ [Gold Step 5] Collecting popularity data from ID Map...
+2026-05-25 00:46:05,908 [INFO]   📦 Collected 1,610,012 item popularity records
+2026-05-25 00:46:15,483 [INFO]   📊 ITEM HEAD: 210,925 items (13.1%)
+2026-05-25 00:46:15,486 [INFO]   📊 ITEM MID: 116,283 items (7.2%)
+2026-05-25 00:46:15,489 [INFO]   📊 ITEM TAIL: 714,913 items (44.4%)
+2026-05-25 00:46:15,491 [INFO]   📊 ITEM COLD_START: 567,891 items (35.3%)
+2026-05-25 00:46:15,492 [INFO] ⏳ [Gold Step 5] Collecting user activity data from ID Map...
+2026-05-25 00:46:34,511 [INFO]   📦 Collected 1,847,662 user activity records
+2026-05-25 00:46:45,631 [INFO]   📊 USER INACTIVE: 827,127 users (44.8%)
+2026-05-25 00:46:45,635 [INFO]   📊 USER ACTIVE: 927,738 users (50.2%)
+2026-05-25 00:46:45,638 [INFO]   📊 USER SUPER_ACTIVE: 92,797 users (5.0%)
+2026-05-25 00:46:45,639 [INFO] ⏳ [Gold Step 5] Computing blended neg-sampling probs (β=0.75, α=0.7)...
+2026-05-25 00:46:46,034 [INFO]   📊 Sampling prob range: [3.81e-07, 3.35e-06]
+2026-05-25 00:46:46,036 [INFO]   📊 Blend: 70% tail-focus + 30% head-retain
+2026-05-25 00:46:46,039 [INFO]   📊 Max prob (tail): 3.35e-06 | Min prob (head): 3.81e-07
+2026-05-25 00:46:46,147 [INFO] ⏳ [Gold Step 5] Saving training metadata...
+2026-05-25 00:46:46,388 [INFO]   📤 gold_item_train_freq.npy → s3://recsys/gold/gold_item_train_freq.npy (12.3 MB)
+2026-05-25 00:46:46,462 [INFO]   📤 gold_item_popularity_group.npy → s3://recsys/gold/gold_item_popularity_group.npy (1.5 MB)
+2026-05-25 00:46:46,751 [INFO]   📤 gold_user_train_freq.npy → s3://recsys/gold/gold_user_train_freq.npy (14.1 MB)
+2026-05-25 00:46:46,861 [INFO]   📤 gold_user_activity_group.npy → s3://recsys/gold/gold_user_activity_group.npy (1.8 MB)
+2026-05-25 00:46:47,195 [INFO]   📤 gold_negative_sampling_prob.npy → s3://recsys/gold/gold_negative_sampling_prob.npy (6.1 MB)
+2026-05-25 00:46:47,216 [INFO]   📤 gold_dataset_stats.json → s3://recsys/gold/gold_dataset_stats.json
+2026-05-25 00:46:47,217 [INFO] 📊 Dataset Statistics:
+2026-05-25 00:46:47,218 [INFO]   n_users: 1847662
+2026-05-25 00:46:47,220 [INFO]   n_items: 1610012
+2026-05-25 00:46:47,221 [INFO]   n_edges_train: 13964281
+2026-05-25 00:46:47,222 [INFO]   sparsity: 0.99999531
+2026-05-25 00:46:47,223 [INFO]   sparsity_pct: 99.9995%
+2026-05-25 00:46:47,225 [INFO]   n_head_items: 210925
+2026-05-25 00:46:47,226 [INFO]   n_mid_items: 116283
+2026-05-25 00:46:47,227 [INFO]   n_tail_items: 714913
+2026-05-25 00:46:47,228 [INFO]   n_cold_items: 567891
+2026-05-25 00:46:47,229 [INFO]   n_inactive_users: 827127
+2026-05-25 00:46:47,230 [INFO]   n_active_users: 927738
+2026-05-25 00:46:47,232 [INFO]   n_super_active_users: 92797
+2026-05-25 00:46:47,233 [INFO]   tail_ratio: 0.444
+2026-05-25 00:46:47,234 [INFO]   cold_ratio: 0.3527
+2026-05-25 00:46:47,235 [INFO]   inactive_user_ratio: 0.4477
+2026-05-25 00:46:47,236 [INFO]   avg_degree_user: 7.56
+2026-05-25 00:46:47,238 [INFO]   avg_degree_item: 8.67
+2026-05-25 00:46:47,239 [INFO]   max_train_freq_item: 41183
+2026-05-25 00:46:47,240 [INFO]   max_train_freq_user: 1005
+2026-05-25 00:46:47,241 [INFO]   median_train_freq_item: 2
+2026-05-25 00:46:47,243 [INFO]   median_train_freq_user: 5
+2026-05-25 00:46:47,244 [INFO]   embedding_dim: 384
+2026-05-25 00:46:47,245 [INFO]   negative_sampling_beta: 0.75
+2026-05-25 00:46:47,246 [INFO]   neg_sampling_blend_alpha: 0.7
+2026-05-25 00:46:47,247 [INFO]   neg_sampling_strategy: blended
+2026-05-25 00:46:47,248 [INFO]   head_ratio_split: 0.2
+2026-05-25 00:46:47,249 [INFO]   mid_ratio_split: 0.1
+2026-05-25 00:46:47,250 [INFO]   tail_ratio_split: 0.7
+2026-05-25 00:46:47,251 [INFO] ✅ [Gold Step 5] Training metadata complete.
+2026-05-25 00:46:47,262 [INFO] ⏱ Step 5 hoàn tất: 0:00:59
+2026-05-25 00:46:47,263 [INFO] 🧹 [Memory] Giải phóng RAM sau Step 5...
+2026-05-25 00:46:48,355 [INFO] ============================================================
+2026-05-25 00:46:48,356 [INFO] 🎉 GOLD PIPELINE HOÀN TẤT — ⏱ TỔNG: 0:10:13
+2026-05-25 00:46:48,357 [INFO] ============================================================
+2026-05-25 00:46:48,358 [INFO] OUTPUT:
+2026-05-25 00:46:48,359 [INFO]   ✅ gold_item_id_map.parquet
+2026-05-25 00:46:48,360 [INFO]   ✅ gold_user_id_map.parquet
+2026-05-25 00:46:48,361 [INFO]   ✅ gold_edge_index.npy
+2026-05-25 00:46:48,362 [INFO]   ✅ gold_item_train_freq.npy
+2026-05-25 00:46:48,363 [INFO]   ✅ gold_item_popularity_group.npy
+2026-05-25 00:46:48,364 [INFO]   ✅ gold_user_train_freq.npy
+2026-05-25 00:46:48,365 [INFO]   ✅ gold_user_activity_group.npy
+2026-05-25 00:46:48,366 [INFO]   ✅ gold_negative_sampling_prob.npy
+2026-05-25 00:46:48,367 [INFO]   ✅ gold_dataset_stats.json
+2026-05-25 00:46:48,369 [INFO] ✓ Bước 4 (Gold) hoàn tất.  ⏱ 0:10:13
+2026-05-25 00:46:49,146 [INFO] ⏱ TỔNG THỜI GIAN: 5:24:21
+2026-05-25 00:46:52,417 [INFO] Closing down clientserver connection

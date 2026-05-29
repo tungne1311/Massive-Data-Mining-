@@ -79,6 +79,7 @@ def run_gold_pipeline(spark: SparkSession, cfg: dict) -> None:
         "item_text":         _s3a_path(cfg, "silver", "silver_item_text_profile.parquet"),
         "interactions_train": _s3a_path(cfg, "silver", "silver_interactions_train.parquet"),
         "interactions_val":  _s3a_path(cfg, "silver", "silver_interactions_val.parquet"),
+        "interactions_test": _s3a_path(cfg, "silver", "silver_interactions_test.parquet"),
     }
 
     logger.info("📂 Đọc Silver data từ MinIO...")
@@ -89,6 +90,7 @@ def run_gold_pipeline(spark: SparkSession, cfg: dict) -> None:
     df_item_text         = spark.read.parquet(silver_paths["item_text"])
     df_interactions_train = spark.read.parquet(silver_paths["interactions_train"])
     df_interactions_val  = spark.read.parquet(silver_paths["interactions_val"])
+    df_interactions_test = spark.read.parquet(silver_paths["interactions_test"])
 
     # ── STEP 1: Integer ID Mapping ────────────────────────────────────────────
     t0 = time.perf_counter()
@@ -98,6 +100,7 @@ def run_gold_pipeline(spark: SparkSession, cfg: dict) -> None:
         spark, cfg,
         df_interactions_train=df_interactions_train,
         df_interactions_val=df_interactions_val,
+        df_interactions_test=df_interactions_test,
         df_item_text=df_item_text,
         df_popularity=df_popularity,
     )
@@ -123,7 +126,7 @@ def run_gold_pipeline(spark: SparkSession, cfg: dict) -> None:
     elapsed = timedelta(seconds=int(time.perf_counter() - t0))
     logger.info(f"⏱ Step 2 hoàn tất: {elapsed}")
 
-    del df_interactions_train, df_interactions_val
+    del df_interactions_train, df_interactions_val, df_interactions_test
     _clear_memory(spark, "Step 2")
 
     # ── STEP 5: Training Metadata ─────────────────────────────────────────────

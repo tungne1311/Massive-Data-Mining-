@@ -2,7 +2,7 @@
 silver_step4_interactions.py — Silver Layer: Enriched Interactions
 
 TỐI ƯU v2:
-  - Nhận df_train, df_val từ orchestrator (không đọc lại)
+  - Nhận df_train, df_val, df_test từ orchestrator (không đọc lại)
   - Bỏ count() action thừa (tiết kiệm 5-10 phút mỗi split)
   - Dùng coalesce thay repartition (tránh shuffle khi ghi)
   - ZSTD compression
@@ -81,14 +81,17 @@ def run(
     df_popularity: DataFrame,
     df_train: DataFrame,
     df_val: DataFrame,
+    df_test: DataFrame | None = None,
 ) -> None:
     """
     Args:
         df_train: bronze_train từ orchestrator.
         df_val: bronze_val từ orchestrator.
+        df_test: bronze_test từ orchestrator.
     """
     silver_train_out = _s3a_path(cfg, "silver", "silver_interactions_train.parquet")
     silver_val_out   = _s3a_path(cfg, "silver", "silver_interactions_val.parquet")
+    silver_test_out  = _s3a_path(cfg, "silver", "silver_interactions_test.parquet")
     write_mode       = cfg.get("silver", {}).get("write_mode", "overwrite")
 
     # ── Enrich + Write Train ──────────────────────────────────────────────────
@@ -114,3 +117,16 @@ def run(
         .option("compression", "zstd") \
         .parquet(silver_val_out)
     logger.info("✅ [Step4] silver_interactions_val ghi xong.")
+
+    if df_test is not None:
+        # ── Enrich + Write Test ────────────────────────────────────────────────
+        df_test_enriched = _enrich_interactions(df_test, df_popularity, "test")
+
+        logger.info(f"⏳ [Step4] Ghi silver_interactions_test → {silver_test_out}")
+        df_test_enriched \
+            .coalesce(5) \
+            .sortWithinPartitions("reviewer_id", "timestamp") \
+            .write.mode(write_mode) \
+            .option("compression", "zstd") \
+            .parquet(silver_test_out)
+        logger.info("✅ [Step4] silver_interactions_test ghi xong.")
