@@ -1,392 +1,637 @@
-# TA-RecMind: Tail-Augmented Recommendation with LLM-GNN Alignment
+# TA-RecMindV2: Long-Tail Recommendation Pipeline
 
-> **Hệ thống gợi ý sản phẩm long-tail trên Amazon Electronics 2023**  
-> Kết hợp LightGCN, Sentence-Transformers và Intra-Layer Gate Fusion để triệt tiêu popularity bias và giải quyết cold-start
+TA-RecMindV2 là hệ thống gợi ý sản phẩm cho Amazon Reviews 2023, subset Electronics. Dự án gồm hai phần chính:
 
----
+- Data pipeline theo kiến trúc Medallion: Bronze -> Silver -> Gold.
+- Notebook training trên Colab: hybrid recommender kết hợp LightGCN, text embeddings từ SentenceTransformer và degree-aware intra-layer gate.
 
-## Mục Lục
-
-- [Tổng Quan](#tổng-quan)
-- [Vấn Đề Nghiên Cứu](#vấn-đề-nghiên-cứu)
-- [Kiến Trúc Hệ Thống](#kiến-trúc-hệ-thống)
-- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
-- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
-- [Hướng Dẫn Cài Đặt & Chạy Pipeline](#hướng-dẫn-cài-đặt--chạy-pipeline)
-- [Kết Quả EDA Chính](#kết-quả-eda-chính)
-- [Đóng Góp Kỹ Thuật (Novel Contributions)](#đóng-góp-kỹ-thuật-novel-contributions)
-- [Tài Liệu Tham Khảo](#tài-liệu-tham-khảo)
+Mục tiêu thực tế của phiên bản hiện tại là **warm long-tail recommendation**: cải thiện khả năng xếp hạng các item `TAIL` có ít tương tác trong train nhưng vẫn có graph edge. Cold-start item vẫn được giữ trong metadata, item text profile và evaluation ground truth, nhưng protocol training/evaluation chính trong notebook đang đặt `IGNORE_COLD_ITEMS = True`, nên candidate set chính chỉ gồm warm items (`train_freq > 0`).
 
 ---
 
-## Tổng Quan
+## Bài Toán
 
-**TA-RecMind** (**T**ail-**A**ugmented **Rec**ommendation **Mind**) là hệ thống gợi ý học sâu được thiết kế để giải quyết thách thức cốt lõi của bài toán **Long-tail Recommendation** và **Cold-start** trên tập dữ liệu Amazon Reviews 2023 — subset Electronics (~44M interactions).
+Dữ liệu Amazon Reviews có phân phối power-law: một nhóm nhỏ item head nhận phần lớn tương tác, trong khi phần lớn catalog là mid/tail item có rất ít signal cộng tác. Nếu chỉ dùng Matrix Factorization hoặc LightGCN thuần collaborative filtering, model dễ học thiên lệch popularity và bỏ qua tail item.
 
-Hệ thống xây dựng trên nền tảng **RecMind (Xue et al., 2025)** với ba đóng góp kỹ thuật cốt lõi: Bipartite Intra-Layer Gate Fusion, Tail-Weighted Alignment Loss, và Popularity-Penalized Re-ranking.
+TA-RecMindV2 xử lý bài toán này bằng ba hướng:
 
-### Ba Thành Phần Chính
+- Dùng `train_freq` để phân nhóm item `HEAD`, `MID`, `TAIL`, tránh leakage từ metadata như `rating_number`.
+- Đưa text profile của user/item vào từng layer propagation qua degree-aware gate: item/user ít tương tác dựa vào text nhiều hơn, item/user giàu tương tác dựa vào graph nhiều hơn.
+- Huấn luyện và checkpoint theo metric long-tail: tail positive oversampling, warm-only negative sampling, stratified validation và weighted harmonic mean giữa Tail NDCG và Overall NDCG.
 
-| Thành Phần | Vai Trò |
+---
+
+## Nguồn Dữ Liệu
+
+Nguồn raw:
+
+```text
+McAuley-Lab/Amazon-Reviews-2023
+├── raw_review_Electronics
+└── raw_meta_Electronics
+```
+
+Repos Hugging Face sau khi upload artifact:
+
+```text
+chuongdo1104/amazon-2023-bronze
+chuongdo1104/amazon-2023-silver
+chuongdo1104/amazon-2023-gold
+```
+
+Các ID chính:
+
+| Khái niệm | Cột |
 |---|---|
-| **LightGCN (L=2)** | Học biểu diễn cộng tác (collaborative embeddings) qua message passing trên đồ thị user-item bipartite |
-| **Sentence-Transformers** | Học biểu diễn ngữ nghĩa (semantic embeddings) từ văn bản item và user (offline cache) |
-| **Intra-Layer Gate Fusion** | Trộn động hai không gian embedding *bên trong* mỗi layer GNN — đặc biệt hiệu quả với tail/cold-start |
+| User | `reviewer_id` |
+| Item | `parent_asin` |
+| Implicit interaction | một review hợp lệ, không lọc theo rating |
+| Time split | `timestamp` theo từng user |
 
-### Đóng Góp So Với RecMind Gốc (Xue et al., 2025)
-
-| Đóng Góp | Mô Tả | File Liên Quan |
-|---|---|---|
-| **Bipartite Gate Symmetry** | Gate fusion áp dụng đối xứng cho cả User và Item node (RecMind chỉ cho Item) | `02_model_architecture.md` |
-| **Tail-Weighted Alignment Loss** | `w_v = 1/log(1+train_freq)` nhân vào InfoNCE loss, ép optimizer tập trung tail | `03_training_strategy.md` |
-| **Anti-Leakage Classification** | Phân loại HEAD/MID/TAIL dựa trên `train_freq` chứ không phải `rating_number` (chống data leakage) | `01_data_pipeline.md` |
-| **Popularity-Penalized Re-ranking** | `s_adj = s_model - λ·log(1+train_freq)` tại inference time | `02_model_architecture.md` |
-| **Review Quality Weighting** | `w(r) = 1 + log(1 + helpful_vote)` ưu tiên review chất lượng khi tạo text profile | `01_data_pipeline.md` |
+Bronze giữ mọi rating hợp lệ từ 1 đến 5 như implicit feedback. Rating chỉ được dùng như feature/metadata và dùng để chọn positive/negative review snippets trong Silver text profile, không dùng để loại bỏ interaction.
 
 ---
 
-## Vấn Đề Nghiên Cứu
+## Kiến Trúc Data
 
-### Bối Cảnh
+Luồng tổng thể:
 
-Tập dữ liệu Amazon Electronics 2023 thể hiện phân phối **power-law** cực đoan:
-
+```text
+Hugging Face raw dataset
+        |
+        v
+Bronze: normalize, dedup, validation, user Core-5, chronological split
+        |
+        v
+Silver: popularity labels, item/user text profiles, enriched interactions, ground truth
+        |
+        v
+Gold: integer ID maps, train edge_index, metadata arrays, negative sampling probability
+        |
+        v
+Colab notebook: encode text, build graph, train/evaluate TA-RecMindV2
 ```
-Tổng raw interactions:    ~44,066,834 rows (giữ toàn bộ, không lọc rating — implicit feedback)
-Users (sau Core-5 filter): 1,847,662
-Items (train):             1,042,121
-Sparsity:                  99.9993%
-Tail items (≤ 5 tương tác): 72.51% (755,609 items)
-Cold-start trong Val/Test:  23.17% (130,746 items)
+
+Storage runtime:
+
+- MinIO/S3 local bucket: `recsys`
+- Spark đọc/ghi bằng `s3a://`
+- PyArrow/S3FS dùng cho một số artifact single-file và upload
+- Hugging Face Hub dùng để backup và để Colab tải artifact trực tiếp
+
+### Bronze
+
+Code:
+
+```text
+src/bronze/ste1.py
+src/bronze/ste2.py
 ```
 
-**Vấn đề:** Các hệ thống gợi ý truyền thống (LightGCN, MF) tối ưu hóa chủ yếu cho **head items** do chúng chiếm ~80% tổng tương tác (Pareto principle), bỏ qua phần lớn catalog sản phẩm. GNN hoàn toàn bị mù với cold-start items vì chúng có degree = 0 trong đồ thị.
+Logic chính:
 
-### Câu Hỏi Nghiên Cứu
+- Stream raw review/meta từ Hugging Face bằng `datasets`.
+- Normalize schema review và metadata bằng PyArrow.
+- Review landing zone: `s3://recsys/landing/reviews_temp/`.
+- Dedup interaction theo `reviewer_id, parent_asin`.
+- Validation: ID không rỗng, timestamp > 0, rating trong `[1, 5]`.
+- User Core-5 đang được áp hard-code trong `ste2.py`: chỉ giữ user có ít nhất 5 interactions trước split.
+- Chronological split theo từng user:
+  - test = interaction có timestamp lớn nhất
+  - val = interaction lớn nhất còn lại
+  - train = phần còn lại
 
-> Làm thế nào để xây dựng hệ thống gợi ý vừa duy trì độ chính xác tổng thể vừa cải thiện đáng kể khả năng gợi ý **tail items** và **cold-start items** — những sản phẩm chất lượng nhưng chưa được khám phá?
+Bronze artifacts:
+
+```text
+s3a://recsys/bronze/
+├── bronze_meta.parquet
+├── bronze_train.parquet/
+├── bronze_val.parquet/
+└── bronze_test.parquet/
+```
+
+Review schema sau normalize:
+
+```text
+reviewer_id, parent_asin, rating, review_title, review_text, timestamp, helpful_vote
+```
+
+Metadata schema sau normalize:
+
+```text
+parent_asin, title, main_category, store, price, average_rating,
+rating_number, categories, features, description, details
+```
+
+### Silver
+
+Code:
+
+```text
+src/silver/ste3_silver.py
+src/silver/silver_step1_popularity.py
+src/silver/silver_step2_item_profile.py
+src/silver/silver_step3_user_profile.py
+src/silver/silver_step4_interactions.py
+src/silver/silver_utils.py
+```
+
+Orchestration trong `ste3_silver.py`:
+
+```text
+Step 1: item popularity
+Step 2: item text profile
+Step 4: enriched interactions
+Step 3: user text profile + val/test ground truth
+```
+
+Silver artifacts:
+
+```text
+s3a://recsys/silver/
+├── silver_item_popularity.parquet/
+├── silver_item_text_profile.parquet/
+├── silver_interactions_train.parquet/
+├── silver_interactions_val.parquet/
+├── silver_interactions_test.parquet/
+├── silver_user_text_profile.parquet/
+├── silver_val_ground_truth.parquet/
+└── silver_test_ground_truth.parquet/
+```
+
+Popularity:
+
+- Tính `train_freq = count(*)` theo `parent_asin` chỉ từ train.
+- Phân nhóm chính: `HEAD`, `MID`, `TAIL`.
+- Item có metadata/eval nhưng không có train edge được gán `COLD_START`.
+- Không dùng `average_rating` hoặc `rating_number` để phân nhóm popularity.
+
+Text profile:
+
+- `item_text` được tạo từ metadata field tags: title, category, store, features, description, details.
+- Có thể thêm positive/negative review snippets từ train-only reviews.
+- `user_text` được tạo từ train-only review snippets của user.
+- Val/test review text không được dùng để tạo profile, tránh leakage.
+
+Interaction enriched schema:
+
+```text
+parent_asin, reviewer_id, rating, timestamp, helpful_vote,
+train_freq, popularity_group, year_month
+```
+
+Ground truth schema:
+
+```text
+parent_asin, reviewer_id, timestamp, rating,
+popularity_group, train_freq, is_tail, is_cold_start
+```
+
+### Gold
+
+Code:
+
+```text
+src/gold/ste4_gold.py
+src/gold/gold_step1_id_mapping.py
+src/gold/gold_step2_edge_list.py
+src/gold/gold_step5_training_meta.py
+```
+
+Orchestration trong `ste4_gold.py`:
+
+```text
+Step 1: integer ID mapping
+Step 2: train edge_index.npy
+Step 5: training metadata arrays + negative sampling probability
+```
+
+Gold artifacts:
+
+```text
+s3a://recsys/gold/
+├── gold_item_id_map.parquet
+├── gold_user_id_map.parquet
+├── gold_edge_index.npy
+├── gold_item_train_freq.npy
+├── gold_item_popularity_group.npy
+├── gold_user_train_freq.npy
+├── gold_user_activity_group.npy
+├── gold_negative_sampling_prob.npy
+└── gold_dataset_stats.json
+```
+
+`gold_edge_index.npy`:
+
+```text
+shape = [2, n_edges]
+row 0 = user_idx
+row 1 = item_idx
+dtype = int64
+```
+
+Item group encoding:
+
+```text
+HEAD       -> 0
+MID        -> 1
+TAIL       -> 2
+COLD_START -> 3
+```
+
+User activity encoding:
+
+```text
+INACTIVE     -> 0
+ACTIVE       -> 1
+SUPER_ACTIVE -> 2
+```
+
+Negative sampling probability trong Gold chỉ cấp mass cho warm items (`train_freq > 0`). Cold items có probability bằng 0.
 
 ---
 
-## Kiến Trúc Hệ Thống
+## Kiến Trúc Mô Hình
 
+Notebook chính:
+
+```text
+notebooks/TA_REC_lần_1_đổi_data.ipynb
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                    MEDALLION DATA PIPELINE                       │
-│                                                                  │
-│  HuggingFace ──► BRONZE ──► SILVER ──► GOLD ──► Training        │
-│  (Amazon 2023)   (Raw)      (Clean)   (Ready)   (Colab/Kaggle)   │
-│                                                                  │
-│  Lưu trữ: MinIO (local) + HuggingFace Hub (backup)              │
-└──────────────────────────────────────────────────────────────────┘
 
-┌──────────────────────────────────────────────────────────────────┐
-│                    MODEL ARCHITECTURE                            │
-│                                                                  │
-│  Item Text ──► Sentence-Transformer ──► z^L_i  (offline cache)  │
-│  User Text ──► Sentence-Transformer ──► z^L_u  (offline cache)  │
-│                                            │                     │
-│  Graph G ──► LightGCN (L=2 layers) ──► z^G_v                    │
-│                                            │                     │
-│  ┌─────── INTRA-LAYER GATE FUSION ─────────┤                     │
-│  │  γ_v = σ(w_base + w_sim·cos(z^G,z^L)   │                     │
-│  │           + w_freq·log1p(freq_v))       │                     │
-│  │  Ê_v = γ_v·z^G_v + (1-γ_v)·z^L_v      │                     │
-│  │  E^(l+1) = Â · Ê^(l)  ← fused!        │                     │
-│  └─────────────────────────────────────────┘                     │
-│                                            │                     │
-│  h_v = α·z^G_v + (1-α)·z^L_v             │                     │
-│  s(u,i) = ⟨h_u, h_i⟩                     │                     │
-│                                            │                     │
-│  Re-ranking: s_adj = s - λ·log(1+freq_i)  ▼                     │
-└──────────────────────────────────────────────────────────────────┘
+Config trung tâm trong notebook:
 
-┌──────────────────────────────────────────────────────────────────┐
-│                    LOSS FUNCTION                                  │
-│                                                                  │
-│  L = L_BPR + λ₁·(L^U_align,tw + L^I_align,tw) + λ₂·L_cl + β·Ω │
-│                                                                  │
-│  L_BPR:         Popularity-debiased negative sampling            │
-│  L_align,tw:    InfoNCE + tail weighting (Novel)                 │
-│  L_cl:          LAGCL contrastive (noise ∝ 1/freq)               │
-└──────────────────────────────────────────────────────────────────┘
+```text
+REPO_ID = chuongdo1104/amazon-2023-gold
+SILVER_REPO_ID = chuongdo1104/amazon-2023-silver
+TEXT_ENCODER_NAME = all-MiniLM-L6-v2
+LLM_DIM = 384
+EMBED_DIM = 128
+GCN_LAYERS = 2
+EVAL_PROTOCOL = warm_long_tail_v1
+IGNORE_COLD_ITEMS = True
+```
+
+Model flow:
+
+```text
+Silver item_text/user_text
+        |
+        v
+SentenceTransformer(all-MiniLM-L6-v2) -> raw text embeddings, dim 384
+        |
+        v
+Linear projection 384 -> 128
+        |
+        +------------------------------+
+        |                              |
+        v                              v
+Text view z_L                  ID embeddings E(0)
+                                      |
+Gold train edge_index -> normalized bipartite adjacency
+                                      |
+                                      v
+                   Degree-aware intra-layer gated LightGCN
+                                      |
+                                      v
+                              Graph view z_G
+                                      |
+                                      v
+                 Final fusion h = alpha*z_G + (1-alpha)*z_L
+                                      |
+                                      v
+                         score(u, i) = dot(h_u, h_i)
+```
+
+### Degree-Aware Intra-Layer Gate
+
+Gate dùng train-only degree:
+
+```text
+d_v = normalized log1p(train_degree_v)
+gamma_prior_v = gamma_min + (gamma_max - gamma_min) * d_v
+delta_v(l) = MLP([E_v(l), z_L_v, d_v])
+gamma_v(l) = sigmoid(logit(gamma_prior_v) + delta_v(l))
+E_tilde_v(l) = gamma_v(l) * E_v(l) + (1 - gamma_v(l)) * z_L_v
+E(l+1) = A_hat @ E_tilde(l)
+```
+
+Config hiện tại:
+
+```text
+GATE_PRIOR_ENABLED = True
+GATE_GAMMA_MIN = 0.25
+GATE_GAMMA_MAX = 0.85
+GATE_TYPEWISE_DEGREE_NORM = True
+```
+
+Ý nghĩa:
+
+- Low-degree/tail nodes có `gamma` thấp hơn, dựa vào text nhiều hơn.
+- High-degree/head nodes có `gamma` cao hơn, dựa vào graph/ID signal nhiều hơn.
+- Gate áp dụng cho cả user và item trong từng GCN layer.
+
+### Loss
+
+Notebook hiện tại dùng:
+
+```text
+LOSS_TYPE = weighted_bpr_graph_text_align_degree_prior_gate_v3
+```
+
+Loss chính:
+
+```text
+L = L_weighted_BPR + lambda_u * L_user_align + lambda_i * L_item_align
+```
+
+Trong đó:
+
+- Weighted BPR dùng group weight theo popularity của positive/negative item.
+- Graph-text alignment là InfoNCE giữa graph view và text view của cùng node.
+- Weight decay được xử lý bởi AdamW.
+- Alignment warm-up chạy trong các epoch đầu trước khi kết hợp BPR.
+
+BPR group weights hiện tại:
+
+```text
+BPR_POS_GROUP_WEIGHTS = {HEAD: 1.0, MID: 1.1, TAIL: 1.5}
+BPR_NEG_GROUP_WEIGHTS = {HEAD: 1.0, MID: 0.75, TAIL: 0.35}
+```
+
+### Sampling
+
+Positive sampling:
+
+```text
+80% random train edges
+20% warm-tail train edges
+```
+
+Negative sampling:
+
+```text
+80% uniform warm items
+20% Gold probability over warm items
+```
+
+Negative sampler luôn:
+
+- Loại cold items khi `IGNORE_COLD_ITEMS = True`.
+- Reject train positives của user bằng pair-key lookup.
+
+### Evaluation
+
+Protocol chính:
+
+```text
+EVAL_PROTOCOL = warm_long_tail_v1
+IGNORE_COLD_ITEMS = True
+MASK_VALIDATION_IN_TEST = True
+```
+
+Metrics:
+
+```text
+Recall@20, Recall@40
+NDCG@20, NDCG@40
+Coverage@K
+TailCoverage@K
+TailShare@K
+ListAvgPopularity@K
+UniqueAvgPopularity@K
+```
+
+Segmentation:
+
+```text
+Item_HEAD, Item_MID, Item_TAIL
+User_INACTIVE, User_ACTIVE, User_SUPER
+```
+
+Checkpoint score:
+
+```text
+weighted harmonic mean giữa TailNDCG và OverallNDCG
+w_tail = 2.0
+w_overall = 1.0
 ```
 
 ---
 
-## Cấu Trúc Dự Án
+## Orchestration
 
-```
-recsys_pipeline_minio/
-├── README.md                            # File này — tổng quan dự án
-├── 01_data_pipeline.md                  # Kiến trúc pipeline Bronze→Silver→Gold (chi tiết)
-├── 02_model_architecture.md             # Kiến trúc mô hình TA-RecMind (chi tiết)
-├── 03_training_strategy.md              # Hàm mất mát & chiến lược huấn luyện (chi tiết)
-├── 04_evaluation_protocol.md            # Giao thức đánh giá Long-tail (chi tiết)
-├── 05_demo_application_design.md        # Thiết kế Streamlit Demo App (chi tiết)
-├── 06_infrastructure.md                 # Hạ tầng Docker + MinIO + Spark (chi tiết)
-├── 07_eda_insights.md                   # EDA insights & quyết định kiến trúc (chi tiết)
-├── references.md                        # Tài liệu tham khảo & nguồn gốc công thức
-│
-├── config/
-│   └── config.yaml                      # Cấu hình toàn bộ pipeline
-│
-├── scripts/
-│   ├── audit_val_distribution.py        # Kiểm tra phân phối val_gt vs train (standalone)
-│   ├── evaluate_most_popular_baseline.py # Baseline MostPopular full-ranking warm-only
-│   └── run_pipeline.sh                  # Shell script chạy pipeline theo tầng
-│
-├── src/
-│   ├── pipeline_runner.py               # Main entry point — điều phối toàn bộ pipeline
-│   ├── TA_RecMind_V2_IntraLayer.ipynb   # Training notebook (phiên bản IntraLayer Gate)
-│   ├── Bản_sao_của_TA_RecMind_V2_IntraLayer.ipynb  # Bản sao training notebook
-│   ├── Fix8_5_của_TA_RecMind_V2_IntraLayer_fixed (2).ipynb  # Phiên bản fixed
-│   ├── demo_recmind_final.ipynb         # Demo notebook hoàn chỉnh
-│   │
-│   ├── bronze/
-│   │   ├── ste1.py                      # HuggingFace streaming ingestion (Producer-Consumer)
-│   │   ├── ste2.py                      # PySpark Bronze processing & Chronological split
-│   │   └── upload-bronze.py             # Push Bronze artifacts lên HuggingFace Hub
-│   │
-│   ├── silver/
-│   │   ├── ste3_silver.py               # Silver orchestrator (thứ tự: Step1→Step2→Step4→Step3)
-│   │   ├── silver_step1_popularity.py   # HEAD/MID/TAIL classification (train_freq CDF)
-│   │   ├── silver_step2_item_profile.py # Item text profile (Field-Aware Token Budget)
-│   │   ├── silver_step3_user_profile.py # User text profile + val_gt + GUARDRAIL (v2: 1-pass)
-│   │   ├── silver_step4_interactions.py # Enrich interactions (popularity_group, year_month)
-│   │   ├── silver_utils.py              # Shared utils: advanced_clean_text()
-│   │   └── upload_silver_to_hf.py       # Push Silver artifacts lên HuggingFace Hub
-│   │
-│   └── gold/
-│       ├── ste4_gold.py                 # Gold orchestrator (ID mapping → Edge → Meta)
-│       ├── gold_step1_id_mapping.py     # Integer indexing cho users & items
-│       ├── gold_step2_edge_list.py      # PyG-format edge_index [2, E]
-│       ├── gold_step5_training_meta.py  # Training metadata arrays (npy) + configurable warm-only neg-sampling
-│       └── upload_gold_to_hf.py         # Push Gold artifacts lên HuggingFace (full/partial)
-│
-├── data/
-│   └── logs/
-│       └── pipeline.log                 # Runtime logs của pipeline
-│
-├── docker-compose.yml                   # Hạ tầng: MinIO + Spark + Pipeline Driver
-├── Dockerfile                           # Image: Spark 3.5.2 + Python 3.12 + deps
-├── .env                                 # Biến môi trường (không commit lên git)
-├── .dockerignore                        # Loại trừ file khi build image
-├── .gitignore                           # Loại trừ file khỏi git
-└── requirements.txt                     # Python dependencies
+Entry point:
+
+```text
+src/pipeline_runner.py
 ```
 
----
-
-## Yêu Cầu Hệ Thống
-
-### Môi Trường Data Pipeline (Docker)
-
-| Tài Nguyên | Tối Thiểu | Khuyến Nghị |
-|---|---|---|
-| RAM | 16 GB | 32 GB |
-| CPU | 4 cores | 8 cores |
-| Disk | 50 GB | 100 GB |
-| Docker | 24.x+ | 24.x+ |
-| Python | 3.10+ | 3.12 |
-
-**Phân bổ RAM (16 GB):**
-```
-MinIO:            ~1.5 GB
-Spark Master:     ~1.0 GB
-Spark Worker:     ~8.0 GB  (6 GB JVM + 2 GB overhead/off-heap)
-Pipeline Driver:  ~5.0 GB  (3 GB driver memory + 2 GB overhead)
-OS + Buffer:      ~0.5 GB
-```
-
-### Môi Trường Training (Google Colab / Kaggle)
-
-| GPU | VRAM | Batch Size | Ghi Chú |
-|---|---|---|---|
-| T4 / K80 | 15-16 GB | 2048 | Free Colab — dùng Gradient Accumulation × 4 |
-| V100 | 16-32 GB | 6144 | Kaggle GPU |
-| A100 | 40-80 GB | 8192 | Colab Pro+ |
-| L4 | 24 GB | 4096 | Colab Pro |
-
----
-
-## Hướng Dẫn Cài Đặt & Chạy Pipeline
-
-### 1. Clone và Cấu Hình
+CLI:
 
 ```bash
-git clone https://github.com/<your-repo>/ta-recmind.git
-cd ta-recmind
-cp .env.example .env
-# Chỉnh sửa .env: HF_TOKEN, MINIO credentials, Spark resources
-```
-
-### 2. Khởi Động Hạ Tầng Docker
-
-```bash
-# Khởi động MinIO + Spark cluster
-docker compose up -d minio minio-init spark-master spark-worker-1
-
-# Kiểm tra trạng thái (đợi healthy)
-docker compose ps
-
-# Spark UI: http://localhost:18080
-# MinIO UI: http://localhost:9001 (minioadmin/minioadmin)
-```
-
-### 3. Chạy Pipeline Theo Từng Tầng
-
-```bash
-# Tầng Bronze: Ingestion (HuggingFace streaming) + Spark processing
-# Thời gian: ~2-4 giờ với full dataset (44M rows)
 docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
-
-# Tầng Silver: Popularity, Text Profiles, Interactions
-# Thời gian: ~1-2 giờ
 docker compose run --rm pipeline python src/pipeline_runner.py --step 3_silver
+docker compose run --rm pipeline python src/pipeline_runner.py --step 4_gold
+docker compose run --rm pipeline python src/pipeline_runner.py --all
+```
 
-# Tầng Gold: ID Mapping, Edge List, Training Metadata
-# Thời gian: ~30 phút
+Các step:
+
+| CLI | Tầng | Mô tả |
+|---|---|---|
+| `--step 1_2` | Bronze | Hugging Face ingestion, landing zone, dedup, validation, Core-5, chronological split |
+| `--step 3_silver` | Silver | Popularity, item/user text profile, enriched interactions, ground truth |
+| `--step 4_gold` | Gold | ID maps, edge index, metadata arrays, negative sampling probability |
+| `--all` | All | Chạy Bronze -> Silver -> Gold, có clear Spark cache giữa các tầng |
+
+Config:
+
+```text
+config/config.yaml
+```
+
+Một số override bằng biến môi trường:
+
+```text
+SPARK_DRIVER_MEMORY
+SPARK_EXECUTOR_MEMORY
+SPARK_EXECUTOR_CORES
+SPARK_MASTER
+MAX_REVIEW_RECORDS
+MAX_METADATA_RECORDS
+HF_STREAM_BATCH_SIZE
+BRONZE_BASE_PATH
+MINIO_ENDPOINT
+MINIO_ACCESS_KEY
+MINIO_SECRET_KEY
+MINIO_BUCKET
+HF_TOKEN
+```
+
+---
+
+## Hướng Dẫn Chạy Pipeline
+
+### 1. Khởi động hạ tầng
+
+```bash
+docker compose up -d minio minio-init spark-master spark-worker-1
+docker compose ps
+```
+
+UI:
+
+```text
+MinIO:    http://localhost:9001
+Spark UI: http://localhost:18080
+```
+
+### 2. Chạy từng tầng
+
+```bash
+docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
+docker compose run --rm pipeline python src/pipeline_runner.py --step 3_silver
 docker compose run --rm pipeline python src/pipeline_runner.py --step 4_gold
 ```
 
-### 4. Chạy Baseline Đối Chứng
+Hoặc chạy toàn bộ:
 
 ```bash
-# MostPopular exact full-ranking trên warm candidates.
-# Test mặc định mask train + validation positives.
-docker compose run --rm pipeline \
-    python scripts/evaluate_most_popular_baseline.py --split test --ks 20,40
+docker compose run --rm pipeline python src/pipeline_runner.py --all
 ```
 
-Script ghi báo cáo vào `data/evaluation/most_popular_test.json` và tách metric theo `OVERALL/HEAD/MID/TAIL`.
+Log:
 
-### 5. Push Artifacts Lên HuggingFace Hub
+```text
+data/logs/pipeline.log
+```
+
+### 3. Chạy nhanh với sample nhỏ
 
 ```bash
-# Đẩy Bronze (backup toàn bộ)
-docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline \
-    python src/bronze/upload-bronze.py
-
-# Đẩy Silver (batching 10 files/lô, xóa cũ trước)
-docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline \
-    python src/silver/upload_silver_to_hf.py
-
-# Đẩy Gold (mode partial: chỉ metadata + edge, không embedding)
-docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline \
-    python src/gold/upload_gold_to_hf.py --mode partial
-
-# Đẩy Gold (mode full: bao gồm cả numpy embeddings)
-docker compose run --rm -e HF_TOKEN=hf_xxxx pipeline \
-    python src/gold/upload_gold_to_hf.py --mode full
+docker compose run --rm ^
+  -e MAX_REVIEW_RECORDS=20000 ^
+  -e MAX_METADATA_RECORDS=5000 ^
+  pipeline python src/pipeline_runner.py --all
 ```
 
-### 6. Test Nhanh (20k records)
+Trên bash/Linux:
 
 ```bash
-# Kiểm tra pipeline end-to-end với dataset nhỏ (~5-10 phút)
-MAX_REVIEW_RECORDS=20000 MAX_METADATA_RECORDS=5000 \
-docker compose run --rm pipeline python src/pipeline_runner.py --step 1_2
+docker compose run --rm \
+  -e MAX_REVIEW_RECORDS=20000 \
+  -e MAX_METADATA_RECORDS=5000 \
+  pipeline python src/pipeline_runner.py --all
 ```
 
-### 7. Training (Google Colab)
+### 4. Upload artifacts lên Hugging Face
 
-Mở `src/TA_RecMind_V2_IntraLayer.ipynb` trên Google Colab:
-- Notebook tự động tải artifacts từ HuggingFace Hub
-- LLM embedding tính offline theo chunk (30k records/chunk, checkpoint tự động)
-- ColabCheckpointManager tự động resume nếu runtime bị ngắt
+Bronze:
+
+```bash
+docker compose run --rm -e HF_TOKEN=hf_xxx pipeline \
+  python src/bronze/upload-bronze.py
+```
+
+Silver:
+
+```bash
+docker compose run --rm -e HF_TOKEN=hf_xxx pipeline \
+  python src/silver/upload_silver_to_hf.py
+```
+
+Gold:
+
+```bash
+docker compose run --rm -e HF_TOKEN=hf_xxx pipeline \
+  python src/gold/upload_gold_to_hf.py --mode partial
+```
+
+`--mode partial` là chế độ đúng với pipeline hiện tại vì text embeddings không được tạo ở Gold local; chúng được encode trong notebook Colab và cache trên Drive.
 
 ---
 
-## Kết Quả EDA Chính
+## Hướng Dẫn Chạy Training
 
-### Thống Kê Dataset (Amazon Electronics 2023)
+Mở notebook:
 
-| Chỉ Số | Giá Trị | Nguồn |
-|---|---|---|
-| Raw interactions (Bronze) | ~44,066,834 | `pipeline.log` |
-| Users (sau Core-5 filter) | 1,847,662 | EDA Bronze |
-| Items (train) | 1,042,121 | EDA Bronze |
-| Items (train + cold val) | ~1,172,867 | EDA Gold |
-| Interactions (train edges) | 1,396,428 | EDA Bronze |
-| Sparsity đồ thị | 99.9993% | EDA Bronze |
-| Tail items (≤ 5 tương tác) | 755,609 (72.51%) | EDA Silver |
-| Cold-start items trong Val/Test | 130,746 (23.17%) | EDA Silver |
-
-### Phân Phối Rating (Lý Do Dùng helpful_vote)
-
-| Rating | Tỷ Lệ | Nhận Xét |
-|---|---|---|
-| ⭐⭐⭐⭐⭐ (5 sao) | 65.7% | Skew nặng → không dùng rating để phân loại chất lượng |
-| ⭐⭐⭐⭐ (4 sao) | 14.7% | |
-| ⭐⭐⭐ (3 sao) | 7.0% | |
-| ⭐⭐ (2 sao) | 4.5% | |
-| ⭐ (1 sao) | 8.0% | |
-
-> **Implicit Feedback Protocol:** Bronze giữ TOÀN BỘ interactions (mọi rating 1-5). Sự kiện "user đã tương tác" là tín hiệu chính, bất kể sentiment. Ngưỡng `rating ≥ 4.0` chỉ dùng riêng trong **Silver Step 3** (xây dựng user text profile) để lấy "lời khen" thể hiện sở thích. Thay vì dùng rating, dùng `w(r) = 1 + log(1 + helpful_vote)` để xếp hạng chất lượng review.
-
-### Bằng Chứng Data Leakage (Lý Do Không Dùng `rating_number`)
-
-```
-Item B07H65KP63:
-  train_freq      = 1,561   (thực tế trong tập train)
-  rating_number   = 710,348 (tổng tích lũy toàn thời gian)
-  → Chênh lệch ~455 lần → leakage nghiêm trọng nếu dùng rating_number
+```text
+notebooks/TA_REC_lần_1_đổi_data.ipynb
 ```
 
----
+Notebook sẽ:
 
-## Đóng Góp Kỹ Thuật (Novel Contributions)
+1. Mount Google Drive.
+2. Tải Gold artifacts từ `chuongdo1104/amazon-2023-gold`.
+3. Tải Silver text profile và ground truth từ `chuongdo1104/amazon-2023-silver`.
+4. Encode `item_text` và `user_text` bằng `all-MiniLM-L6-v2`.
+5. Cache text embeddings theo chunk lên Drive/local SSD.
+6. Dựng bipartite graph từ `gold_edge_index.npy`.
+7. Train TA-RecMindV2 bằng weighted BPR + graph-text alignment.
+8. Chọn checkpoint theo representative warm validation.
+9. Chạy full-ranking test và xuất `final_evaluation_report.json`.
 
-| Đóng Góp | Công Thức | Nguồn Gốc |
-|---|---|---|
-| **Adaptive Gate Fusion (Bipartite)** | `γ = σ(w_base + w_sim·cos + w_freq·log1p(freq))` | Mở rộng RecMind Eq.6-8, đối xứng User+Item |
-| **Tail-Weighted Alignment** | `w_v = 1/log(1+train_freq)` × InfoNCE | Mở rộng RecMind Eq.5 + LAGCL inverse-freq |
-| **Anti-Leakage Classification** | Dùng `train_freq` thay vì `rating_number` | Phát hiện từ EDA (chênh lệch 455 lần) |
-| **Review Quality Weighting** | `w(r) = 1 + log(1 + helpful_vote)` | Feature engineering Amazon 2023 |
-| **Popularity-Penalized Re-ranking** | `s_adj = s_model - λ·log(1 + train_freq)` | Dựa trên "Challenging the Long Tail" |
+Các thư mục Drive mặc định:
 
----
-
-## Luồng Dữ Liệu Tổng Thể (HuggingFace Repos)
-
+```text
+/content/drive/MyDrive/tarecmindV2/data
+/content/drive/MyDrive/tarecmindV2/weights
 ```
-chuongdo1104/amazon-2023-bronze
-├── bronze/bronze_train.parquet/   (thư mục, nhiều part files — PySpark output)
-├── bronze/bronze_val.parquet/     (thư mục)
-├── bronze/bronze_test.parquet/    (thư mục — KHÔNG ĐỘNG VÀO sau Bronze)
-└── bronze/bronze_meta.parquet     (single file — PyArrow output)
 
-chuongdo1104/amazon-2023-silver
-├── silver/silver_item_popularity.parquet/
-├── silver/silver_item_text_profile.parquet/
-├── silver/silver_user_text_profile.parquet/
-├── silver/silver_interactions_train.parquet/
-├── silver/silver_interactions_val.parquet/
-└── silver/silver_val_ground_truth.parquet/
+## Cấu Trúc Dự Án
 
-chuongdo1104/amazon-2023-gold
-├── gold/gold_item_id_map.parquet      (single file)
-├── gold/gold_user_id_map.parquet      (single file)
-├── gold/gold_edge_index.npy           (single file — PyG format [2, E])
-├── gold/gold_item_train_freq.npy
-├── gold/gold_item_popularity_group.npy
-├── gold/gold_user_train_freq.npy
-├── gold/gold_user_activity_group.npy
-├── gold/gold_negative_sampling_prob.npy
-└── gold/gold_dataset_stats.json
+```text
+recsys_pipeline_minio/
+├── README.md
+├── config/
+│   └── config.yaml
+├── docs/
+│   ├── 01_data_pipeline.md
+│   ├── 02_model_architecture.md
+│   
+├── notebooks/
+│   ├── TA_REC_lần_1_đổi_data.ipynb
+│   
+│   
+├── src/
+│   ├── pipeline_runner.py
+│   ├── bronze/
+│   │   ├── ste1.py
+│   │   ├── ste2.py
+│   │   └── upload-bronze.py
+│   ├── silver/
+│   │   ├── ste3_silver.py
+│   │   ├── silver_step1_popularity.py
+│   │   ├── silver_step2_item_profile.py
+│   │   ├── silver_step3_user_profile.py
+│   │   ├── silver_step4_interactions.py
+│   │   ├── silver_utils.py
+│   │   └── upload_silver_to_hf.py
+│   └── gold/
+│       ├── ste4_gold.py
+│       ├── gold_step1_id_mapping.py
+│       ├── gold_step2_edge_list.py
+│       ├── gold_step5_training_meta.py
+│       └── upload_gold_to_hf.py
+├── docker-compose.yml
+├── Dockerfile
+└── requirements.txt
 ```
 
 ---
 
-## Tài Liệu Tham Khảo
+## Tài Liệu Chi Tiết
 
-1. **He et al. (2020).** LightGCN: Simplifying and Powering GCN. *SIGIR 2020.*
-2. **Xue et al. (2025).** RecMind: LLM-Powered Recommendation. *arXiv:2509.06286v1.*
-3. **Wu et al. (2021).** Self-supervised Graph Learning for Recommendation (SGL). *SIGIR 2021.*
-4. **Hu et al. (2022).** LoRA: Low-Rank Adaptation of LLMs. *ICLR 2022.*
-5. **Rendle et al. (2009).** BPR: Bayesian Personalized Ranking. *UAI 2009.*
-6. **LAGCL.** Long-tail Augmented Graph Contrastive Learning.
-7. **Hou et al. (2024).** Amazon Reviews 2023 Dataset. *arXiv:2403.03952.*
+- [Data pipeline](docs/01_data_pipeline.md)
+- [Model architecture](docs/02_model_architecture.md)
+---
 
-Xem đầy đủ tại [`references.md`](./references.md).
+## Ghi Chú Kỹ Thuật Quan Trọng
+
+- Bronze đang áp user Core-5 trong code, dù một số flag config liên quan Core chưa điều khiển logic chạy.
+- Silver popularity hiện dùng Pareto item-rank từ `train_freq`, không dùng `tail_max_train_freq` và `mid_max_train_freq` trong config.
+- Gold không encode text embeddings; embedding được tạo trong notebook Colab để tận dụng GPU và Drive cache.
+- Evaluation chính là warm long-tail. Cold-start được ghi nhận trong data artifacts nhưng bị loại khỏi candidate set khi `IGNORE_COLD_ITEMS = True`.
+- Không dùng val/test review text để tạo user/item profile.
