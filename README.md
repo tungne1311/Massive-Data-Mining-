@@ -5,7 +5,7 @@ TA-RecMindV2 là hệ thống gợi ý sản phẩm cho Amazon Reviews 2023, sub
 - Data pipeline theo kiến trúc Medallion: Bronze -> Silver -> Gold.
 - Notebook training trên Colab: hybrid recommender kết hợp LightGCN, text embeddings từ SentenceTransformer và degree-aware intra-layer gate.
 
-Mục tiêu thực tế của phiên bản hiện tại là **warm long-tail recommendation**: cải thiện khả năng xếp hạng các item `TAIL` có ít tương tác trong train nhưng vẫn có graph edge. Cold-start item vẫn được giữ trong metadata, item text profile và evaluation ground truth, nhưng protocol training/evaluation chính trong notebook đang đặt `IGNORE_COLD_ITEMS = True`, nên candidate set chính chỉ gồm warm items (`train_freq > 0`).
+Mục tiêu của hệ thống là **warm long-tail recommendation**: cải thiện khả năng xếp hạng các item `TAIL` có ít tương tác trong train nhưng vẫn có graph edge. Cold-start item được giữ trong metadata, item text profile và evaluation ground truth. Protocol training/evaluation chính dùng warm candidate set (`train_freq > 0`) với `IGNORE_COLD_ITEMS = True`.
 
 ---
 
@@ -257,7 +257,7 @@ Negative sampling probability trong Gold chỉ cấp mass cho warm items (`train
 Notebook chính:
 
 ```text
-notebooks/TA_REC_lần_1_đổi_data.ipynb
+notebooks/TA_REC_đổi_data.ipynb
 ```
 
 Config trung tâm trong notebook:
@@ -334,31 +334,25 @@ GATE_TYPEWISE_DEGREE_NORM = True
 
 ### Loss
 
-Notebook hiện tại dùng:
+Notebook dùng:
 
 ```text
-LOSS_TYPE = weighted_bpr_graph_text_align_degree_prior_gate_v3
+LOSS_TYPE = bpr_graph_text_align_degree_prior_gate_v2
 ```
 
 Loss chính:
 
 ```text
-L = L_weighted_BPR + lambda_u * L_user_align + lambda_i * L_item_align
+L = L_BPR + lambda_u * L_user_align + lambda_i * L_item_align
 ```
 
 Trong đó:
 
-- Weighted BPR dùng group weight theo popularity của positive/negative item.
+- `L_BPR` là BPR gốc: `-log sigmoid(s_ui - s_uj)`, tính trên score của positive item và negative item.
 - Graph-text alignment là InfoNCE giữa graph view và text view của cùng node.
 - Weight decay được xử lý bởi AdamW.
 - Alignment warm-up chạy trong các epoch đầu trước khi kết hợp BPR.
-
-BPR group weights hiện tại:
-
-```text
-BPR_POS_GROUP_WEIGHTS = {HEAD: 1.0, MID: 1.1, TAIL: 1.5}
-BPR_NEG_GROUP_WEIGHTS = {HEAD: 1.0, MID: 0.75, TAIL: 0.35}
-```
+- Long-tail được xử lý qua degree-aware gate, tail positive oversampling, warm-only negative sampling và checkpoint score.
 
 ### Sampling
 
@@ -558,7 +552,7 @@ docker compose run --rm -e HF_TOKEN=hf_xxx pipeline \
 Mở notebook:
 
 ```text
-notebooks/TA_REC_lần_1_đổi_data.ipynb
+notebooks/TA_REC_đổi_data.ipynb
 ```
 
 Notebook sẽ:
@@ -569,7 +563,7 @@ Notebook sẽ:
 4. Encode `item_text` và `user_text` bằng `all-MiniLM-L6-v2`.
 5. Cache text embeddings theo chunk lên Drive/local SSD.
 6. Dựng bipartite graph từ `gold_edge_index.npy`.
-7. Train TA-RecMindV2 bằng weighted BPR + graph-text alignment.
+7. Train TA-RecMindV2 bằng standard BPR + graph-text alignment.
 8. Chọn checkpoint theo representative warm validation.
 9. Chạy full-ranking test và xuất `final_evaluation_report.json`.
 
@@ -592,7 +586,7 @@ recsys_pipeline_minio/
 │   ├── 02_model_architecture.md
 │   
 ├── notebooks/
-│   ├── TA_REC_lần_1_đổi_data.ipynb
+│   ├── TA_REC_đổi_data.ipynb
 │   
 │   
 ├── src/
@@ -630,8 +624,8 @@ recsys_pipeline_minio/
 
 ## Ghi Chú Kỹ Thuật Quan Trọng
 
-- Bronze đang áp user Core-5 trong code, dù một số flag config liên quan Core chưa điều khiển logic chạy.
-- Silver popularity hiện dùng Pareto item-rank từ `train_freq`, không dùng `tail_max_train_freq` và `mid_max_train_freq` trong config.
-- Gold không encode text embeddings; embedding được tạo trong notebook Colab để tận dụng GPU và Drive cache.
-- Evaluation chính là warm long-tail. Cold-start được ghi nhận trong data artifacts nhưng bị loại khỏi candidate set khi `IGNORE_COLD_ITEMS = True`.
+- Bronze áp user Core-5 trong code; các flag config liên quan Core chỉ đóng vai trò khai báo.
+- Silver popularity dùng Pareto item-rank từ `train_freq`.
+- Gold tạo artifact cấu trúc và metadata; text embeddings được tạo trong notebook Colab để tận dụng GPU và Drive cache.
+- Evaluation chính là warm long-tail. Candidate set gồm warm items khi `IGNORE_COLD_ITEMS = True`.
 - Không dùng val/test review text để tạo user/item profile.
