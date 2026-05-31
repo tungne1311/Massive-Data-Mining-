@@ -7,6 +7,30 @@ TA-RecMindV2 là hệ thống gợi ý sản phẩm cho Amazon Reviews 2023, sub
 
 Mục tiêu của hệ thống là **warm long-tail recommendation**: cải thiện khả năng xếp hạng các item `TAIL` có ít tương tác trong train nhưng vẫn có graph edge. Cold-start item được giữ trong metadata, item text profile và evaluation ground truth. Protocol training/evaluation chính dùng warm candidate set (`train_freq > 0`) với `IGNORE_COLD_ITEMS = True`.
 
+## Mục Lục
+
+- [Bài Toán](#bài-toán)
+- [Nguồn Dữ Liệu](#nguồn-dữ-liệu)
+- [Kiến Trúc Data](#kiến-trúc-data)
+  - [Bronze](#bronze)
+  - [Silver](#silver)
+  - [Gold](#gold)
+- [Kiến Trúc Mô Hình](#kiến-trúc-mô-hình)
+  - [Degree-Aware Intra-Layer Gate](#degree-aware-intra-layer-gate)
+  - [Loss](#loss)
+  - [Sampling](#sampling)
+  - [Evaluation](#evaluation)
+- [Orchestration](#orchestration)
+- [Hướng Dẫn Chạy Pipeline](#hướng-dẫn-chạy-pipeline)
+  - [1. Khởi động hạ tầng](#1-khởi-động-hạ-tầng)
+  - [2. Chạy từng tầng](#2-chạy-từng-tầng)
+  - [3. Chạy nhanh với sample nhỏ](#3-chạy-nhanh-với-sample-nhỏ)
+  - [4. Upload artifacts lên Hugging Face](#4-upload-artifacts-lên-hugging-face)
+- [Hướng Dẫn Chạy Training](#hướng-dẫn-chạy-training)
+- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+- [Tài Liệu Chi Tiết](#tài-liệu-chi-tiết)
+- [Ghi Chú Kỹ Thuật Quan Trọng](#ghi-chú-kỹ-thuật-quan-trọng)
+
 ---
 
 ## Bài Toán
