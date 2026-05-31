@@ -1,17 +1,30 @@
-# Kiến Trúc Mô Hình TA-RecMindV2
+# Kiến Trúc Mô Hình TA-RecMind V2
 
-Tài liệu này mô tả kiến trúc model và quy trình training/evaluation trong notebook:
+Tài liệu này mô tả kiến trúc mô hình, dữ liệu đầu vào, quy trình huấn luyện, cơ chế đánh giá và các độ đo đang được sử dụng trong notebook:
 
+```text
+notebooks/TA_REC_đổi_data.ipynb
+```
 
-Model sử dụng artifact từ pipeline Bronze -> Silver -> Gold. Bronze/Silver/Gold tạo dữ liệu model-ready; notebook GPU/Colab phụ trách tải artifact, encode text bằng SentenceTransformer, dựng graph, train TA-RecMindV2, checkpoint và full-ranking evaluation.
+TA-RecMind V2 là mô hình gợi ý hybrid graph + text cho bài toán warm long-tail recommendation. Mô hình kết hợp tín hiệu collaborative từ đồ thị user-item với tín hiệu ngữ nghĩa từ `user_text` và `item_text`, sau đó huấn luyện bằng BPR loss kết hợp graph-text alignment.
 
-Mục tiêu chính là warm long-tail recommendation: item `TAIL` vẫn có train edge nhưng ít collaborative signal. Cold-start items vẫn tồn tại trong item universe/text profile, nhưng protocol training/evaluation hiện tại đặt `IGNORE_COLD_ITEMS = True`, nên candidate set chính chỉ gồm warm items (`train_freq > 0`).
+Protocol chính trong notebook là:
+
+```text
+EVAL_PROTOCOL = warm_long_tail_v1
+IGNORE_COLD_ITEMS = True
+MASK_VALIDATION_IN_TEST = True
+```
+
+Với cấu hình này, item cold-start vẫn tồn tại trong metadata/text profile, nhưng không nằm trong candidate set khi train negative sampling và khi evaluate. Candidate set chính chỉ gồm warm items, tức item có `train_freq > 0`.
 
 ---
 
-## Central Config Trong Notebook
+## 1. Cấu Hình Chính
 
-Notebook dùng một dict `CFG` làm nguồn cấu hình chính.
+Notebook dùng dict `CFG` làm cấu hình trung tâm.
+
+### Dataset và cache
 
 ```text
 REPO_ID = chuongdo1104/amazon-2023-gold
@@ -25,7 +38,7 @@ CACHE_DIR = /content/recsys_cache
 SEED = 2026
 ```
 
-Model config:
+### Model
 
 ```text
 EMBED_DIM = 128
@@ -36,7 +49,7 @@ GCN_LAYERS = 2
 TEMPERATURE = 0.2
 ```
 
-Gate config:
+### Degree-aware gate
 
 ```text
 GATE_PRIOR_ENABLED = True
@@ -45,7 +58,7 @@ GATE_GAMMA_MAX = 0.85
 GATE_TYPEWISE_DEGREE_NORM = True
 ```
 
-Training config:
+### Training
 
 ```text
 EPOCHS = 50
@@ -60,14 +73,14 @@ LAMBDA_U_ALIGN = 0.05
 LAMBDA_I_ALIGN = 0.05
 ```
 
-Sampling config:
+### Sampling
 
 ```text
 TAIL_POSITIVE_SAMPLE_RATIO = 0.20
 NEGATIVE_POPULARITY_SAMPLE_RATIO = 0.20
 ```
 
-Evaluation/checkpoint config:
+### Evaluation và checkpoint
 
 ```text
 EVAL_EVERY = 2
@@ -78,25 +91,28 @@ REP_VAL_N = 100000
 REP_VAL_SEED = 2026
 USE_REPRESENTATIVE_FOR_BEST = True
 PATIENCE_REP = 4
+
 FAST_SCORE_TYPE = tail_monitor_v2
+FAST_SCORE_WEIGHTS = {
+  TailNDCG: 0.70,
+  TailRecall: 0.20,
+  TailCoverage: 0.10
+}
+
 CHECKPOINT_SCORE_TYPE = weighted_hmean_warm_tail_overall_ndcg_v2
 CHECKPOINT_W_TAIL = 2.0
 CHECKPOINT_W_OVERALL = 1.0
 CHECKPOINT_BASELINE_OVERALL_NDCG = None
 CHECKPOINT_OVERALL_GUARDRAIL_RATIO = 0.95
-IGNORE_COLD_ITEMS = True
-EVAL_PROTOCOL = warm_long_tail_v1
-MASK_VALIDATION_IN_TEST = True
-EVAL_STRAT_GROUPS = {HEAD: 5000, MID: 5000, TAIL: 20000}
 ```
 
 ---
 
-## Data Contract Từ Pipeline
+## 2. Data Contract
 
-### Gold Artifacts
+Notebook đọc dữ liệu từ hai tầng Silver và Gold.
 
-Notebook tải Gold artifact từ `REPO_ID`.
+### Gold artifacts
 
 ```text
 gold/gold_dataset_stats.json
@@ -110,76 +126,37 @@ gold/gold_item_id_map.parquet
 gold/gold_user_id_map.parquet
 ```
 
-`gold_dataset_stats.json` cung cấp:
+Ý nghĩa chính:
 
-```text
-n_users
-n_items
-sparsity / sparsity_pct
-avg_degree_user
-```
+| Artifact | Vai trò |
+|---|---|
+| `gold_dataset_stats.json` | Số user, số item, số edge train, sparsity, average degree |
+| `gold_edge_index.npy` | Danh sách cạnh train dạng `[2, n_edges]`, hàng 0 là `user_idx`, hàng 1 là `item_idx` |
+| `gold_item_train_freq.npy` | Số interaction train của từng item |
+| `gold_item_popularity_group.npy` | Nhãn popularity của item: `0=HEAD`, `1=MID`, `2=TAIL`, `3=COLD_START` |
+| `gold_user_train_freq.npy` | Số interaction train của từng user |
+| `gold_user_activity_group.npy` | Nhãn activity của user: `0=INACTIVE`, `1=ACTIVE`, `2=SUPER_ACTIVE` |
+| `gold_negative_sampling_prob.npy` | Xác suất negative sampling theo chiến lược từ Gold |
+| `gold_item_id_map.parquet` | Map `parent_asin -> item_idx` |
+| `gold_user_id_map.parquet` | Map `reviewer_id -> user_idx` |
 
-`gold_edge_index.npy`:
-
-```text
-shape = [2, E]
-dtype = int64
-row 0 = user_idx
-row 1 = item_idx
-```
-
-Item popularity encoding:
-
-```text
-0 = HEAD
-1 = MID
-2 = TAIL
-3 = COLD_START
-```
-
-User activity encoding:
-
-```text
-0 = INACTIVE
-1 = ACTIVE
-2 = SUPER_ACTIVE
-```
-
-`gold_negative_sampling_prob.npy` là probability vector `float32` có length bằng `num_items` và tổng xấp xỉ 1. Notebook mask lại vector này để chỉ sample negative từ warm items.
-
-### Silver Artifacts
-
-Notebook tải Silver artifact từ `SILVER_REPO_ID`.
-
-Text profiles:
+### Silver artifacts
 
 ```text
 silver/silver_item_text_profile.parquet/
 silver/silver_user_text_profile.parquet/
+silver/silver_val_ground_truth.parquet/
+silver/silver_test_ground_truth.parquet/
 ```
 
-Các text field chính:
+Text profile dùng để encode:
 
 ```text
 item_text
 user_text
 ```
 
-ID mapping khi encode text:
-
-```text
-gold/gold_item_id_map.parquet: parent_asin -> item_idx
-gold/gold_user_id_map.parquet: reviewer_id -> user_idx
-```
-
-Evaluation labels:
-
-```text
-silver/silver_val_ground_truth.parquet/
-silver/silver_test_ground_truth.parquet/
-```
-
-Ground truth schema notebook cần:
+Ground truth dùng để validation/test:
 
 ```text
 reviewer_id
@@ -190,59 +167,62 @@ is_tail
 is_cold_start
 ```
 
-Val/test ground truth dùng string IDs từ Silver, sau đó map sang integer IDs bằng Gold maps.
+Silver giữ string IDs. Notebook map string IDs sang integer IDs bằng Gold maps trước khi train/evaluate.
 
 ---
 
-## Tổng Quan Kiến Trúc
+## 3. Tổng Quan Kiến Trúc
 
-TA-RecMindV2 là hybrid graph + text recommender:
+TA-RecMind V2 gồm ba phần chính:
+
+1. Text encoder tạo semantic embeddings từ profile text.
+2. LightGCN trên graph user-item tạo graph embeddings.
+3. Degree-aware gated fusion trộn text signal và graph signal.
+
+Luồng tổng quát:
 
 ```text
-Silver item_text/user_text
+Silver user_text / item_text
         |
         v
 SentenceTransformer(all-MiniLM-L6-v2)
         |
         v
-Raw semantic embeddings, dim 384
+Raw text embeddings, dim 384
         |
         v
 Linear projection 384 -> 128
         |
-        +--------------------------------+
-        |                                |
-        v                                v
-Text view z_L                    ID embeddings E^(0)
-                                         |
-Gold train edge_index -> A_hat ----------+
-                                         |
-                                         v
-                       Degree-aware intra-layer gated LightGCN
-                                         |
-                                         v
-                                Graph view z_G
-                                         |
-                                         v
-                         Final fusion: alpha*z_G + (1-alpha)*z_L
-                                         |
-                                         v
-                            BPR + graph-text alignment
+        +-----------------------------+
+        |                             |
+        v                             v
+Text view z_L                  ID embeddings E^(0)
+                                      |
+Gold train edge_index -> A_hat -------+
+                                      |
+                                      v
+              Degree-aware intra-layer gated LightGCN
+                                      |
+                                      v
+                              Graph view z_G
+                                      |
+                                      v
+                    Final fusion alpha*z_G + (1-alpha)*z_L
+                                      |
+                                      v
+                 Dot-product scoring with normalized embeddings
 ```
 
-Thành phần chính:
+Mục tiêu thiết kế:
 
-- User/item ID embeddings tạo collaborative signal.
-- SentenceTransformer tạo semantic embeddings từ `item_text` và `user_text`.
-- Linear projection đưa text embedding 384 chiều về latent dimension 128.
-- Degree-aware gate prior giúp low-degree/tail nodes dựa nhiều hơn vào text, high-degree/head nodes dựa nhiều hơn vào graph.
-- Intra-layer gated LightGCN trộn text vào từng propagation layer.
-- Loss chính là standard BPR cộng user/item graph-text alignment.
-- Long-tail được xử lý bằng gate, positive tail oversampling, warm-only negative sampling và checkpoint score theo tail NDCG.
+- Head/high-degree items có nhiều collaborative signal nên được phép dựa nhiều hơn vào graph.
+- Tail/low-degree items có ít collaborative signal nên được hỗ trợ mạnh hơn bằng text profile.
+- User và item đều có text view, graph view và final representation.
+- Long-tail không được xử lý bằng một loss riêng có weight theo group; trọng tâm long-tail nằm ở gate prior, tail positive oversampling, warm-only negative sampling và checkpoint score ưu tiên tail.
 
 ---
 
-## Text Embedding
+## 4. Text Embedding
 
 Notebook dùng:
 
@@ -250,9 +230,38 @@ Notebook dùng:
 TEXT_ENCODER_NAME = all-MiniLM-L6-v2
 LLM_DIM = 384
 ENCODE_CHUNK = 30000
-ENCODE_BATCH = tự chỉnh theo VRAM
 FORCE_ENCODE = False
 ```
+
+### Item text flow
+
+1. Tải `gold_item_id_map.parquet`.
+2. Tải `silver_item_text_profile.parquet/`.
+3. Merge theo `parent_asin`.
+4. Sort theo `item_idx`.
+5. Nếu thiếu text, dùng fallback:
+
+```text
+[NO_TEXT] Item description
+```
+
+6. Encode bằng SentenceTransformer với `normalize_embeddings=True`.
+
+### User text flow
+
+1. Tải `gold_user_id_map.parquet`.
+2. Tải `silver_user_text_profile.parquet/`.
+3. Merge theo `reviewer_id`.
+4. Sort theo `user_idx`.
+5. Nếu thiếu text, dùng fallback:
+
+```text
+[NO_TEXT] User interaction profile
+```
+
+6. Encode bằng SentenceTransformer với `normalize_embeddings=True`.
+
+### Cache
 
 Cache key:
 
@@ -260,70 +269,51 @@ Cache key:
 {DATA_VERSION}_{TEXT_PROFILE_VERSION}_{TEXT_ENCODER_NAME}
 ```
 
-Drive cache:
+File embedding:
 
 ```text
 data/gold_item_embeddings_{TEXT_CACHE_KEY}.npy
 data/gold_user_embeddings_{TEXT_CACHE_KEY}.npy
-data/ckpt_item_{TEXT_CACHE_KEY}_{start}_{end}.npy
-data/ckpt_user_{TEXT_CACHE_KEY}_{start}_{end}.npy
-```
-
-Local SSD cache:
-
-```text
 /content/recsys_cache/gold_item_embeddings_{TEXT_CACHE_KEY}.npy
 /content/recsys_cache/gold_user_embeddings_{TEXT_CACHE_KEY}.npy
 ```
 
-Item encoding flow:
-
-1. Load `gold_item_id_map.parquet`.
-2. Load `silver_item_text_profile.parquet/` bằng `datasets.load_dataset(..., data_dir=...)`.
-3. Merge theo `parent_asin`.
-4. Sort theo `item_idx`.
-5. Fill missing text bằng `[NO_TEXT] Item description`.
-6. Encode bằng SentenceTransformer với `normalize_embeddings=True`.
-
-User encoding flow:
-
-1. Load `gold_user_id_map.parquet`.
-2. Load `silver_user_text_profile.parquet/`.
-3. Merge theo `reviewer_id`.
-4. Sort theo `user_idx`.
-5. Fill missing text bằng `[NO_TEXT] User interaction profile`.
-6. Encode bằng SentenceTransformer với `normalize_embeddings=True`.
-
-Output tensors:
+Mỗi embedding text ban đầu có shape:
 
 ```text
-item_emb_llm: [num_items, 384], float32 khi load vào RAM
-user_emb_llm: [num_users, 384], float32 khi load vào RAM
+item_emb_llm: [num_items, 384]
+user_emb_llm: [num_users, 384]
 ```
 
-Trước khi training, notebook normalize L2 trên GPU và cast sang fp16:
+Trước training, notebook normalize L2 và đưa về fp16 trên GPU:
 
 ```text
 item_emb_llm = normalize(item_emb_llm).half()
 user_emb_llm = normalize(user_emb_llm).half()
 ```
 
-Projected text cache:
+Projection từ 384 về 128 được học trong model:
 
 ```text
-data/z_llm_projected_{RUN_ID}_{TEXT_PROFILE_VERSION}_{TEXT_ENCODER_NAME}.pt
+z_L = text_prj(raw_text_embedding)
 ```
-
-Cache projected text được lưu fp16 nhưng khi load lại được convert về float32. Sau resume, notebook recompute `z_llm_all_cached` để tránh cache stale.
 
 ---
 
-## Graph Construction
+## 5. Graph Construction
 
 Train graph lấy từ:
 
 ```text
 gold/gold_edge_index.npy
+```
+
+`gold_edge_index.npy` chứa user-item train edges:
+
+```text
+shape = [2, E]
+row 0 = user_idx
+row 1 = item_idx
 ```
 
 Notebook dựng graph bipartite đối xứng:
@@ -333,7 +323,7 @@ user_idx -> num_users + item_idx
 num_users + item_idx -> user_idx
 ```
 
-Adjacency normalization:
+Adjacency được chuẩn hóa kiểu LightGCN:
 
 ```text
 A_hat = D^(-1/2) A D^(-1/2)
@@ -344,59 +334,26 @@ Sparse adjacency:
 
 ```text
 shape = [num_users + num_items, num_users + num_items]
-format = sparse CSR
 dtype = float16
 device = cuda nếu có GPU
 ```
 
-Rating không tham gia graph. Mọi train edge trong `gold_edge_index.npy` được coi là binary observed interaction.
+Rating không được dùng làm trọng số graph. Mỗi train edge được xem là một implicit positive interaction.
 
-Val edges được build từ:
-
-```text
-silver/silver_val_ground_truth.parquet/
-gold/gold_item_id_map.parquet
-gold/gold_user_id_map.parquet
-```
-
-Notebook inner join val ground truth với Gold maps để tạo:
-
-```text
-val_edges_t: [2, VAL_SIZE]
-val_meta_t:
-  is_tail
-  is_cold_start
-```
-
-Graph/cache files:
-
-```text
-data/train_edges.pt
-data/val_edges.pt
-data/val_meta.pt
-data/sparse_adj.pt
-```
-
-Warm/cold protocol:
+Warm/cold mask:
 
 ```text
 warm_item_mask = item_train_freq > 0
 cold_item_mask = item_train_freq == 0
 ```
 
-Notebook assert train positives không chứa cold items:
-
-```text
-cold_item_mask[train_edge_index[1]].sum() == 0
-```
-
-Cold items bị loại khỏi negative sampling và candidate set khi `IGNORE_COLD_ITEMS = True`.
+Khi `IGNORE_COLD_ITEMS = True`, cold items bị loại khỏi negative sampling và candidate set evaluation.
 
 ---
 
-## Model Class: `TARecMindV2`
+## 6. Model Class `TARecMindV2`
 
-### Modules
+### Module chính
 
 ```text
 user_id_emb = Embedding(num_users, 128)
@@ -406,20 +363,20 @@ gate_mlp    = Linear(257, 64) -> ReLU -> Linear(64, 1)
 alpha       = learnable scalar, initialized as tensor(0.5)
 ```
 
-ID embedding init:
+ID embeddings được init:
 
 ```text
 normal(mean=0, std=0.01)
 ```
 
-Gate MLP init:
+Gate MLP được init rất nhỏ để ban đầu gate đi gần theo degree prior:
 
 ```text
-linear weights: normal(std=0.001)
-linear bias: 0
+linear weight std = 0.001
+linear bias = 0
 ```
 
-`gate_mlp` input gồm:
+Input của `gate_mlp` gồm:
 
 ```text
 graph_embedding_128
@@ -427,27 +384,22 @@ text_embedding_128
 degree_feature_1
 ```
 
-Tổng input dimension:
+Tổng dimension:
 
 ```text
 128 + 128 + 1 = 257
 ```
 
-### Degree Feature
+### Degree feature
 
-Notebook tạo:
+Notebook tạo degree feature cho toàn bộ nodes:
 
 ```text
 freq_all = concat(user_train_freq, item_train_freq)
-```
-
-Raw degree được log-transform:
-
-```text
 log_deg_v = log1p(freq_v)
 ```
 
-Với `GATE_TYPEWISE_DEGREE_NORM = True`, user và item được normalize riêng:
+Khi `GATE_TYPEWISE_DEGREE_NORM = True`, user và item được normalize riêng:
 
 ```text
 user_degree_feature = log1p(user_train_freq) / max(log1p(user_train_freq))
@@ -461,7 +413,7 @@ Kết quả:
 d_v in [0, 1]
 ```
 
-### Degree-Aware Gate Prior
+### Degree-aware gate prior
 
 Gate prior:
 
@@ -483,26 +435,20 @@ Final gate:
 gamma_v^(l) = sigmoid(logit(gamma_prior_v) + delta_v^(l))
 ```
 
-Nếu `GATE_PRIOR_ENABLED = False`:
+Ý nghĩa:
+
+- `gamma` cao: node tin graph/ID signal nhiều hơn.
+- `gamma` thấp: node tin text signal nhiều hơn.
+- Head/high-degree nodes có `d_v` cao nên prior đẩy `gamma` lên.
+- Tail/low-degree nodes có `d_v` thấp nên prior giữ `gamma` thấp hơn.
+
+Nếu `GATE_PRIOR_ENABLED = False`, gate chỉ là:
 
 ```text
 gamma_v^(l) = sigmoid(delta_v^(l))
 ```
 
-Diễn giải:
-
-- `gamma` cao: node tin graph/ID signal nhiều hơn.
-- `gamma` thấp: node tin text signal nhiều hơn.
-- Head/high-degree nodes có `d_v` cao, prior đẩy `gamma` lên.
-- Tail/low-degree nodes có `d_v` thấp, prior giữ `gamma` thấp hơn.
-
-Notebook tính gate theo chunk:
-
-```text
-chunk_size = 500000 nodes
-```
-
-### Intra-Layer Gated LightGCN
+### Intra-layer gated LightGCN
 
 Initial graph embedding:
 
@@ -524,32 +470,26 @@ E_tilde^(l) = gamma^(l) * E^(l) + (1 - gamma^(l)) * z_L
 E^(l+1) = A_hat @ E_tilde^(l)
 ```
 
-Trong code, fusion dùng:
+Trong code, dòng:
 
 ```python
 x_fused = torch.lerp(z_llm_all, x, gamma)
 ```
 
-Tương đương:
+tương đương:
 
 ```text
 x_fused = (1 - gamma) * z_L + gamma * E
 ```
 
-Graph output:
+Graph output là trung bình các layer:
 
 ```text
 z_G = (E^(0) + E^(1) + ... + E^(L)) / (L + 1)
 L = GCN_LAYERS = 2
 ```
 
-### Final Representation
-
-Text projection:
-
-```text
-z_L = text_prj(raw_llm_embedding)
-```
+### Final representation
 
 Final fusion:
 
@@ -558,18 +498,20 @@ alpha = sigmoid(model.alpha)
 h_v = alpha * z_G_v + (1 - alpha) * z_L_v
 ```
 
-Vì `model.alpha` init bằng `0.5`, initial `sigmoid(alpha)` xấp xỉ `0.622`.
+Vì `model.alpha` init bằng `0.5`, giá trị ban đầu của `sigmoid(alpha)` xấp xỉ `0.622`.
 
-Training và evaluation normalize final embeddings trước scoring:
+Khi scoring, final embeddings được L2-normalize:
 
 ```text
 h_norm = normalize(h, p=2)
 score(u, i) = dot(h_user_norm, h_item_norm)
 ```
 
+Do đã normalize, dot product tương đương cosine similarity.
+
 ---
 
-## Loss Objective
+## 7. Loss Objective
 
 Notebook dùng:
 
@@ -580,27 +522,35 @@ LOSS_TYPE = bpr_graph_text_align_degree_prior_gate_v2
 Loss tổng:
 
 ```text
-L = L_BPR + lambda_u * L_user_align + lambda_i * L_item_align + weight_decay
+L = L_BPR + lambda_u * L_user_align + lambda_i * L_item_align
 ```
 
-Trong đó `weight_decay` được xử lý bởi `AdamW`, không cộng thủ công vào tensor loss.
+`weight_decay` được xử lý bởi AdamW, không cộng thủ công vào tensor loss.
 
-### Standard BPR
+### BPR loss
 
-Notebook dùng standard BPR:
+BPR dùng triplet `(user, positive_item, negative_item)`.
 
 ```text
-u = normalize(user_emb)
+u  = normalize(user_emb)
 pi = normalize(pos_emb)
 ni = normalize(neg_emb)
+
 s_pos = dot(u, pi)
 s_neg = dot(u, ni)
+
 L_BPR = mean(-logsigmoid(s_pos - s_neg))
 ```
 
-Không có group weight trong BPR loss. Long-tail emphasis nằm ở gate, tail positive sampling, negative sampling và checkpoint/evaluation score.
+Ý nghĩa:
 
-### Graph-Text Alignment
+- Nếu `s_pos > s_neg`, loss giảm.
+- Nếu negative item được score cao hơn positive item, loss tăng.
+- BPR tối ưu thứ hạng tương đối, phù hợp implicit feedback.
+
+Notebook không dùng group weight trong BPR. Long-tail emphasis đến từ sampling, gate và checkpoint score.
+
+### Graph-text alignment loss
 
 Alignment dùng InfoNCE giữa graph view và text view của cùng node:
 
@@ -611,6 +561,11 @@ sim = z_g @ z_t.T / TEMPERATURE
 labels = arange(batch_size)
 L_align = cross_entropy(sim, labels)
 ```
+
+Mục tiêu:
+
+- Graph embedding của một node gần text embedding của chính node đó.
+- Graph embedding của node đó xa text embedding của node khác trong batch.
 
 Notebook tính alignment cho:
 
@@ -625,10 +580,9 @@ Config:
 TEMPERATURE = 0.2
 LAMBDA_U_ALIGN = 0.05
 LAMBDA_I_ALIGN = 0.05
-ALIGN_SUBBATCH = tự chỉnh theo VRAM
 ```
 
-### Alignment Warm-Up
+### Alignment warm-up
 
 Trong `ALIGN_WARMUP_EPOCHS = 3` epoch đầu:
 
@@ -642,13 +596,15 @@ Sau warm-up:
 loss = bpr_loss + alignment_loss
 ```
 
+Warm-up giúp text projection và graph-text space ổn định trước khi tối ưu ranking.
+
 ---
 
-## Sampling
+## 8. Sampling
 
-### Positive Edge Sampling
+### Positive sampling
 
-Notebook train theo chunk:
+Training chạy theo chunk:
 
 ```text
 chunk_samples = CHUNK_STEPS * BATCH_SIZE
@@ -656,7 +612,7 @@ tail_samples = int(chunk_samples * TAIL_POSITIVE_SAMPLE_RATIO)
 std_samples = chunk_samples - tail_samples
 ```
 
-Với config hiện tại:
+Với cấu hình hiện tại:
 
 ```text
 80% random train edges
@@ -669,9 +625,9 @@ Tail train edges được xác định bằng:
 item_pop_group[edge_item_idx] == 2
 ```
 
-Sau khi concat standard edges và tail edges, notebook shuffle lại trong chunk.
+Trong đó `2 = TAIL`.
 
-### Negative Sampling
+### Negative sampling
 
 Negative sampler:
 
@@ -684,13 +640,6 @@ Protocol:
 ```text
 80% uniform warm items
 20% Gold probability over warm items
-```
-
-Trong đó:
-
-```text
-warm_item = item_train_freq > 0
-cold_item = item_train_freq == 0
 ```
 
 Gold probability được mask lại:
@@ -706,17 +655,13 @@ False-negative rejection:
 train_pair_key = user_idx * num_items + item_idx
 ```
 
-Notebook sort toàn bộ train pair keys, sau đó dùng `torch.searchsorted` để phát hiện negative item nào thật ra là train positive của user. Conflict được resample bằng uniform warm item, tối đa:
-
-```text
-max_retries = 10
-```
+Notebook sort toàn bộ train pair keys, rồi dùng `torch.searchsorted` để kiểm tra negative item có phải train positive của user đó không. Nếu trùng, negative được resample, tối đa 10 lần.
 
 ---
 
-## Training Runtime
+## 9. Training Runtime
 
-### GPU Batch Auto-Tuning
+### GPU batch auto-tuning
 
 Notebook chọn batch theo VRAM:
 
@@ -735,12 +680,12 @@ torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 ```
 
-### Optimizer Và Scheduler
+### Optimizer và scheduler
 
 Optimizer:
 
 ```text
-AdamW(fused=True nếu cuda)
+AdamW
 weight_decay = 1e-4
 ```
 
@@ -769,7 +714,7 @@ torch.amp.GradScaler("cuda")
 clip_grad_norm_(model.parameters(), GRAD_CLIP)
 ```
 
-### Graph Reuse Trong Training
+### Graph reuse
 
 Notebook assert:
 
@@ -777,12 +722,12 @@ Notebook assert:
 CHUNK_STEPS % ACCUM_STEPS == 0
 ```
 
-Mỗi accumulation block:
+Trong mỗi accumulation block:
 
 1. Tính `z_G_all = model.forward_gcn_gated(...)`.
 2. Split thành `user_G_all`, `item_G_all`.
-3. Dùng lại graph representation cho các micro-batches trong block.
-4. Xóa `z_G_all`, `user_G_all`, `item_G_all` sau optimizer step.
+3. Reuse graph representations cho nhiều micro-batches.
+4. Sau optimizer step thì giải phóng tensor trung gian.
 
 Số step mỗi epoch:
 
@@ -792,34 +737,40 @@ steps_per_epoch = n_train_edges // BATCH_SIZE
 
 Phần dư nhỏ hơn `BATCH_SIZE` không được dùng trong epoch đó.
 
-`z_llm_all_cached` được refresh mỗi epoch vì:
-
-```text
-CACHE_REFRESH = 1
-```
-
 ---
 
-## Validation Protocol
+## 10. Validation Protocol
 
-Protocol:
+### Candidate set
 
-```text
-EVAL_PROTOCOL = warm_long_tail_v1
-IGNORE_COLD_ITEMS = True
-```
-
-Candidate set:
+Khi `IGNORE_COLD_ITEMS = True`:
 
 ```text
 candidate_item_mask = item_train_freq > 0
 ```
 
-Cold-start positives/candidates bị loại khỏi validation khi `IGNORE_COLD_ITEMS = True`.
+Cold positives bị loại khỏi validation/test warm protocol. Cold items cũng bị set score `-1e9` trong full-ranking.
 
-### Fast Tail-Heavy Validation
+### Seen-item masking
 
-Notebook tạo eval groups từ val edges theo `EVAL_STRAT_GROUPS`:
+Khi evaluate, notebook:
+
+1. Tính score user với toàn bộ items.
+2. Block item ngoài candidate set.
+3. Mask train positives của user.
+4. Restore score của ground-truth positive để tính rank.
+
+Với final test, nếu `MASK_VALIDATION_IN_TEST = True`, seen-item mask gồm:
+
+```text
+train interactions + validation interactions
+```
+
+Điều này phù hợp chronological test: item đã xuất hiện trong train/val của user không được khuyến nghị lại trong test ranking.
+
+### Fast tail-heavy validation
+
+Notebook build stratified eval groups từ validation:
 
 ```text
 HEAD: 5000
@@ -827,83 +778,382 @@ MID:  5000
 TAIL: 20000
 ```
 
-Mỗi group chứa:
-
-```text
-u
-i
-is_tail
-is_cold
-```
-
-Nếu một group không có sample, notebook fallback sang `HEAD`.
-
 Fast validation chạy mỗi:
 
 ```text
 EVAL_EVERY = 2 epochs
 ```
 
-Fast validation dùng để monitor, không chọn best checkpoint khi:
+Fast score:
 
 ```text
-USE_REPRESENTATIVE_FOR_BEST = True
+FastScore =
+  0.70 * TailNDCG
++ 0.20 * TailRecall
++ 0.10 * TailCoverage
 ```
 
-### Representative Warm Validation
+Fast score dùng để monitor long-tail progress.
 
-Representative validation sample:
+### Representative validation
+
+Representative validation:
 
 ```text
 REP_VAL_N = 100000
 REP_VAL_SEED = 2026
+REP_VAL_EVERY = 5
 ```
 
-Sample này lấy random warm validation interactions và giữ phân phối HEAD/MID/TAIL tự nhiên. Nó chạy mỗi:
+Representative sample lấy random warm validation interactions và giữ phân phối tự nhiên của HEAD/MID/TAIL. Khi `USE_REPRESENTATIVE_FOR_BEST = True`, checkpoint tốt nhất được chọn bằng representative validation.
+
+---
+
+## 11. Độ Đo Ranking
+
+Notebook dùng full-ranking single-positive evaluation. Mỗi test/validation row có một ground-truth item. Model xếp hạng ground-truth item trong toàn bộ candidate items sau khi mask seen items.
+
+Với mỗi interaction `(u, i*)`:
 
 ```text
-REP_VAL_EVERY = 5 epochs
+rank(u, i*) = 1 + số candidate item có score > score(u, i*)
 ```
 
-Khi `USE_REPRESENTATIVE_FOR_BEST = True`, representative validation là nguồn chọn best checkpoint.
+Nếu `rank <= K`, mô hình hit tại K.
 
-### Evaluation Masking
+### Recall@K
 
-Khi evaluate validation:
-
-1. Compute full item scores:
+Trong single-positive setting:
 
 ```text
-scores = user_final @ item_final.T
+Recall@K = hits@K / N
 ```
 
-2. Block item ngoài candidate set:
+Trong đó:
 
 ```text
-scores[:, cold_or_blocked_items] = -1e9
+hits@K = số interaction có rank <= K
+N = số interaction được evaluate
 ```
 
-3. Mask train positives của user:
+Vì mỗi row chỉ có một positive item, Recall@K tương đương HitRate@K ở cấp interaction.
+
+Ý nghĩa:
+
+- Recall@20 = 0.10 nghĩa là 10% ground-truth positives xuất hiện trong top 20.
+- Recall@K chỉ đo có trúng hay không, không phân biệt item đứng rank 1 hay rank K.
+
+### NDCG@K
+
+Notebook dùng:
 
 ```text
-scores[user_train_items] = -1e9
+NDCG@K = 1 / log2(rank + 1) nếu rank <= K
+NDCG@K = 0 nếu rank > K
 ```
 
-4. Restore score của ground-truth positive item trước khi tính rank:
+Sau đó lấy trung bình trên các interaction:
 
 ```text
-scores[row, ground_truth_item] = original_positive_score
+Mean NDCG@K = sum(NDCG@K per row) / N
 ```
 
-### Validation Metrics
+Ý nghĩa:
 
-Notebook report:
+- NDCG thưởng cao hơn nếu ground-truth item đứng gần đầu danh sách.
+- Nếu item ở rank 1, đóng góp là `1 / log2(2) = 1`.
+- Nếu item ở rank 10, đóng góp là `1 / log2(11)`.
+- Nếu item ngoài top K, đóng góp là 0.
+
+NDCG@K phù hợp hơn Recall@K khi cần phân biệt chất lượng thứ tự trong top-K.
+
+### Overall metrics
+
+Overall Recall@K và Overall NDCG@K được tính trên toàn bộ warm validation/test interactions:
 
 ```text
-OVERALL Recall@K / NDCG@K
-HEAD Recall@K / NDCG@K
-MID Recall@K / NDCG@K
-TAIL Recall@K / NDCG@K
+OVERALL Recall@K = hits_all@K / N_all
+OVERALL NDCG@K = sum_ndcg_all@K / N_all
+```
+
+Đây là độ đo tổng quát nhất về chất lượng ranking.
+
+### Item group metrics
+
+Notebook report theo item popularity group:
+
+```text
+Item_HEAD Recall@K / NDCG@K
+Item_MID Recall@K / NDCG@K
+Item_TAIL Recall@K / NDCG@K
+```
+
+Mỗi group chỉ tính trên những test rows có ground-truth item thuộc group đó:
+
+```text
+Item_TAIL Recall@K = tail_hits@K / N_tail_rows
+Item_TAIL NDCG@K = tail_ndcg_sum@K / N_tail_rows
+```
+
+Ý nghĩa:
+
+- `Item_HEAD` đo khả năng gợi ý item phổ biến.
+- `Item_MID` đo vùng trung gian.
+- `Item_TAIL` là độ đo quan trọng cho mục tiêu long-tail.
+
+Nếu `IGNORE_COLD_ITEMS = False`, notebook có thể thêm `Item_COLD`. Với cấu hình hiện tại, cold positives bị loại khỏi warm evaluation.
+
+### User group metrics
+
+Notebook report theo user activity:
+
+```text
+User_SUPER Recall@K / NDCG@K
+User_ACTIVE Recall@K / NDCG@K
+User_INACTIVE Recall@K / NDCG@K
+```
+
+Group lấy từ `gold_user_activity_group.npy`:
+
+```text
+0 = INACTIVE
+1 = ACTIVE
+2 = SUPER_ACTIVE
+```
+
+Ý nghĩa:
+
+- `User_SUPER`: user có nhiều train interactions, collaborative signal mạnh.
+- `User_ACTIVE`: user hoạt động vừa phải.
+- `User_INACTIVE`: user ít train interactions, thường khó gợi ý hơn.
+
+Các metric này giúp xem model có chỉ tốt với user nhiều lịch sử hay có tổng quát được cho user ít dữ liệu.
+
+---
+
+## 12. Độ Đo Coverage Và Popularity
+
+Các độ đo coverage/popularity đánh giá độ đa dạng và mức độ long-tail của danh sách khuyến nghị, không chỉ đánh giá hit ground truth.
+
+### Coverage@K
+
+Notebook track toàn bộ unique recommended warm candidate items trong top-K của tất cả evaluated users:
+
+```text
+Coverage@K =
+  số unique recommended candidate items trong top-K
+  / số warm candidate items
+```
+
+Ý nghĩa:
+
+- Coverage cao: model dùng nhiều item khác nhau trong catalog.
+- Coverage thấp: model chỉ lặp lại một nhóm item nhỏ.
+- Với long-tail recommendation, coverage giúp phát hiện model có bị collapse về vài head items không.
+
+### TailCoverage@K
+
+```text
+TailCoverage@K =
+  số unique recommended tail items trong top-K
+  / số tail candidate items
+```
+
+Chỉ tính trên tail items thuộc candidate set.
+
+Ý nghĩa:
+
+- TailCoverage cao: model có khả năng đưa nhiều tail items khác nhau vào recommendation lists.
+- TailCoverage thấp: model có thể vẫn hit một vài tail item nhưng không phủ được long-tail catalog.
+
+### TailShare@K
+
+```text
+TailShare@K =
+  số recommendation positions là tail items
+  / tổng số recommendation positions trong top-K
+```
+
+Trong đó tổng số recommendation positions xấp xỉ:
+
+```text
+N_users_evaluated * K
+```
+
+Ý nghĩa:
+
+- TailShare đo tỷ trọng tail trong danh sách khuyến nghị.
+- TailShare cao nhưng Recall/NDCG thấp có thể nghĩa là model đưa nhiều tail item nhưng không đúng.
+- TailShare thấp nhưng Overall NDCG cao có thể nghĩa là model thiên về head items.
+
+### ListAvgPopularity@K
+
+```text
+ListAvgPopularity@K =
+  trung bình train_freq của mọi item xuất hiện ở mọi vị trí top-K
+```
+
+Item bị recommend nhiều lần cho nhiều user sẽ được tính nhiều lần.
+
+Ý nghĩa:
+
+- Đo mức phổ biến trung bình của recommendation positions.
+- Giá trị cao nghĩa là danh sách khuyến nghị nghiêng về popular/head items.
+- Giá trị thấp nghĩa là danh sách có xu hướng đưa nhiều item ít phổ biến hơn.
+
+### ListMedianPopularity@K
+
+```text
+ListMedianPopularity@K =
+  median train_freq của mọi recommendation positions trong top-K
+```
+
+Ý nghĩa:
+
+- Bền hơn average khi có vài item cực kỳ phổ biến.
+- Nếu average cao nhưng median thấp, danh sách có thể gồm nhiều tail/mid nhưng bị một số head item kéo trung bình lên.
+
+### UniqueAvgPopularity@K
+
+```text
+UniqueAvgPopularity@K =
+  trung bình train_freq của unique recommended items
+```
+
+Mỗi item chỉ tính một lần dù được recommend cho nhiều user.
+
+Ý nghĩa:
+
+- Đo độ phổ biến của tập item được model phủ tới.
+- Khác với `ListAvgPopularity`, metric này ít bị ảnh hưởng bởi item được recommend lặp lại nhiều lần.
+
+### UniqueMedianPopularity@K
+
+```text
+UniqueMedianPopularity@K =
+  median train_freq của unique recommended items
+```
+
+Ý nghĩa:
+
+- Cho biết item điển hình trong tập unique recommended items là head, mid hay tail.
+- Hữu ích khi đánh giá coverage long-tail.
+
+---
+
+## 13. Checkpoint Selection
+
+Notebook có hai loại score chính.
+
+### Fast score
+
+Dùng cho fast tail-heavy validation:
+
+```text
+FastScore =
+  0.70 * TailNDCG
++ 0.20 * TailRecall
++ 0.10 * TailCoverage
+```
+
+Ý nghĩa:
+
+- `TailNDCG` có trọng số cao nhất vì model cần đưa tail positive lên vị trí cao.
+- `TailRecall` đo tỷ lệ tail positives lọt top-K.
+- `TailCoverage` tránh việc model chỉ tập trung vào một số tail items nhỏ.
+
+### Weighted harmonic mean checkpoint score
+
+Checkpoint chính dùng weighted harmonic mean giữa TailNDCG và OverallNDCG:
+
+```text
+WHM =
+  (w_tail + w_overall)
+  / (w_tail / TailNDCG + w_overall / OverallNDCG)
+```
+
+Với:
+
+```text
+w_tail = 2.0
+w_overall = 1.0
+```
+
+Nếu một trong hai giá trị bằng 0, score bằng 0.
+
+Ý nghĩa:
+
+- Harmonic mean phạt mạnh trường hợp một metric cao nhưng metric còn lại thấp.
+- `w_tail = 2.0` ưu tiên long-tail hơn overall.
+- OverallNDCG vẫn được giữ để tránh mô hình cải thiện tail bằng cách phá hỏng chất lượng tổng thể.
+
+### Overall guardrail
+
+Config:
+
+```text
+CHECKPOINT_BASELINE_OVERALL_NDCG = None
+CHECKPOINT_OVERALL_GUARDRAIL_RATIO = 0.95
+```
+
+Khi baseline là `None`, guardrail bị disable. Nếu baseline được set, checkpoint chỉ eligible khi:
+
+```text
+OverallNDCG >= 0.95 * baseline_overall_ndcg
+```
+
+### Early stopping
+
+```text
+MIN_EPOCHS = 20
+PATIENCE_REP = 4
+```
+
+Patience tăng khi representative checkpoint score không cải thiện sau `MIN_EPOCHS`, hoặc checkpoint bị guardrail block.
+
+---
+
+## 14. Final Test Evaluation
+
+Final test dùng best checkpoint nếu tồn tại:
+
+```text
+weights/tarecmind_{RUN_ID}_best.pth
+```
+
+Test flow:
+
+1. Load `silver/silver_test_ground_truth.parquet/`.
+2. Load Gold user/item maps.
+3. Map `reviewer_id -> user_idx`, `parent_asin -> item_idx`.
+4. Drop rows không map được.
+5. Nếu `IGNORE_COLD_ITEMS = True`, loại cold positives.
+6. Candidate set là warm items.
+7. Nếu `MASK_VALIDATION_IN_TEST = True`, seen-item mask gồm train + validation interactions.
+8. Chạy full-ranking với `Ks = [20, 40]`.
+
+Test segmentation:
+
+```text
+Item_HEAD
+Item_MID
+Item_TAIL
+User_INACTIVE
+User_ACTIVE
+User_SUPER
+```
+
+Các metric test chính:
+
+```text
+OVERALL Recall@20 / NDCG@20
+OVERALL Recall@40 / NDCG@40
+Item_HEAD Recall@K / NDCG@K
+Item_MID Recall@K / NDCG@K
+Item_TAIL Recall@K / NDCG@K
+User_SUPER Recall@K / NDCG@K
+User_ACTIVE Recall@K / NDCG@K
+User_INACTIVE Recall@K / NDCG@K
 Coverage@K
 TailCoverage@K
 TailShare@K
@@ -913,85 +1163,51 @@ UniqueAvgPopularity@K
 UniqueMedianPopularity@K
 ```
 
-Coverage definitions:
+Long-tail final score:
 
 ```text
-Coverage@K = unique recommended warm candidate items / number of warm candidate items
-TailCoverage@K = unique recommended tail candidate items / number of tail candidate items
-TailShare@K = tail recommendations in top-K lists / total top-K recommendations
+LongTailTestScore@20 =
+  0.60 * TailNDCG@20
++ 0.30 * TailRecall@20
++ 0.10 * TailCoverage@20
 ```
 
-Popularity diagnostics:
+Ý nghĩa:
+
+- `TailNDCG@20` được ưu tiên vì rank trong top 20 rất quan trọng.
+- `TailRecall@20` đảm bảo tail positives xuất hiện trong top 20.
+- `TailCoverage@20` đảm bảo model không chỉ gợi ý một nhóm tail items hẹp.
+
+Final report được lưu tại:
 
 ```text
-ListAvgPopularity@K:
-  average train_freq over repeated recommendation positions
+data/final_evaluation_report.json
+```
 
-UniqueAvgPopularity@K:
-  average train_freq over unique recommended items
+Report gồm:
+
+```text
+protocol
+evaluation_type
+ignore_cold_items
+mask_validation_in_test
+test_filtering
+full_ranking_overall
+full_ranking_tail
+coverage
+tail_coverage
+tail_share
+list_avg_popularity
+list_median_popularity
+unique_avg_popularity
+unique_median_popularity
+long_tail_test_score
+timestamp
 ```
 
 ---
 
-## Checkpoint Selection
-
-Fast monitor score:
-
-```text
-FAST_SCORE_TYPE = tail_monitor_v2
-FastScore =
-  0.70 * TailNDCG
-+ 0.20 * TailRecall
-+ 0.10 * TailCoverage
-```
-
-Checkpoint score:
-
-```text
-CHECKPOINT_SCORE_TYPE = weighted_hmean_warm_tail_overall_ndcg_v2
-```
-
-Weighted harmonic mean:
-
-```text
-WHM = (w_tail + w_overall) /
-      (w_tail / TailNDCG + w_overall / OverallNDCG)
-```
-
-Weights:
-
-```text
-w_tail = 2.0
-w_overall = 1.0
-```
-
-Guardrail:
-
-```text
-CHECKPOINT_BASELINE_OVERALL_NDCG = None
-CHECKPOINT_OVERALL_GUARDRAIL_RATIO = 0.95
-```
-
-Khi baseline là `None`, overall guardrail bị disable. Nếu baseline được set, checkpoint chỉ eligible khi:
-
-```text
-OverallNDCG >= 0.95 * baseline_overall_ndcg
-```
-
-Early stopping:
-
-```text
-MIN_EPOCHS = 20
-PATIENCE_REP = 4
-```
-
-Patience chỉ tăng khi representative checkpoint score không cải thiện sau `MIN_EPOCHS`, hoặc bị guardrail block.
-
----
-
-## Checkpoint Và Cache Files
-
-Checkpoint manager dùng `RUN_ID` để tạo file names.
+## 15. Checkpoint Và Cache Files
 
 Weights:
 
@@ -1000,7 +1216,7 @@ weights/tarecmind_{RUN_ID}_best.pth
 weights/tarecmind_{RUN_ID}_last.pth
 ```
 
-History:
+Training history:
 
 ```text
 data/training_history_{RUN_ID}.json
@@ -1012,7 +1228,7 @@ Projected text cache:
 data/z_llm_projected_{RUN_ID}_{TEXT_PROFILE_VERSION}_{TEXT_ENCODER_NAME}.pt
 ```
 
-Eval group cache:
+Evaluation cache:
 
 ```text
 data/eval_sample_groups_{RUN_ID}_{EVAL_PROTOCOL}.pt
@@ -1026,15 +1242,6 @@ data/train_edges.pt
 data/val_edges.pt
 data/val_meta.pt
 data/sparse_adj.pt
-```
-
-Text embedding cache:
-
-```text
-data/gold_item_embeddings_{TEXT_CACHE_KEY}.npy
-data/gold_user_embeddings_{TEXT_CACHE_KEY}.npy
-/content/recsys_cache/gold_item_embeddings_{TEXT_CACHE_KEY}.npy
-/content/recsys_cache/gold_user_embeddings_{TEXT_CACHE_KEY}.npy
 ```
 
 Checkpoint payload:
@@ -1060,105 +1267,7 @@ Nếu loss protocol hoặc text protocol khác, notebook bắt đầu lại từ
 
 ---
 
-## Final Test Evaluation
-
-Final test flow:
-
-1. Load best checkpoint nếu `weights/tarecmind_{RUN_ID}_best.pth` tồn tại.
-2. Load `silver/silver_test_ground_truth.parquet/`.
-3. Load Gold user/item maps.
-4. Map `reviewer_id -> user_idx`, `parent_asin -> item_idx`.
-5. Drop rows không map được.
-6. Giữ rows có `user_idx < num_users` và `item_idx < num_items`.
-7. Nếu `IGNORE_COLD_ITEMS = True`, loại cold positives khỏi test.
-8. Candidate set là warm items.
-9. Nếu `MASK_VALIDATION_IN_TEST = True`, seen-item mask gồm train + validation interactions.
-
-Test segmentation dùng Gold metadata:
-
-```text
-Item_HEAD
-Item_MID
-Item_TAIL
-User_INACTIVE
-User_ACTIVE
-User_SUPER
-```
-
-Final representation:
-
-```text
-z_llm_all_final = update_llm_cache(...)
-z_G_all = model.forward_gcn_gated(...)
-item_final_all = normalize(final item repr) trên GPU
-user_final_all = normalize(final user repr) trên CPU
-```
-
-Full-ranking test chạy:
-
-```text
-Ks = [20, 40]
-user_batch = 128
-```
-
-Test metrics:
-
-```text
-OVERALL Recall@K / NDCG@K
-Item_HEAD Recall@K / NDCG@K
-Item_MID Recall@K / NDCG@K
-Item_TAIL Recall@K / NDCG@K
-User_SUPER Recall@K / NDCG@K
-User_ACTIVE Recall@K / NDCG@K
-User_INACTIVE Recall@K / NDCG@K
-Coverage@K
-TailCoverage@K
-TailShare@K
-ListAvgPopularity@K
-ListMedianPopularity@K
-UniqueAvgPopularity@K
-UniqueMedianPopularity@K
-```
-
-Long-tail test score:
-
-```text
-LongTailTestScore@20 =
-  0.60 * TailNDCG@20
-+ 0.30 * TailRecall@20
-+ 0.10 * TailCoverage@20
-```
-
-Final report:
-
-```text
-data/final_evaluation_report.json
-```
-
-Report fields:
-
-```text
-protocol
-evaluation_type = full_ranking_only
-ignore_cold_items
-mask_validation_in_test
-test_filtering
-full_ranking_overall
-full_ranking_tail
-coverage
-tail_coverage
-tail_share
-list_avg_popularity
-list_median_popularity
-unique_avg_popularity
-unique_median_popularity
-long_tail_test_score
-timestamp
-```
-
----
-
-## Hyperparameter Summary
+## 16. Hyperparameter Summary
 
 | Nhóm | Tham số | Giá trị |
 |---|---|---|
@@ -1200,21 +1309,17 @@ timestamp
 
 ---
 
-## Pipeline Artifact Mapping
+## 17. Tóm Tắt
 
-| Artifact | Vai trò trong notebook/model |
-|---|---|
-| `silver_item_text_profile.parquet/` | Nguồn `item_text` để encode item semantic embeddings |
-| `silver_user_text_profile.parquet/` | Nguồn `user_text` để encode user semantic embeddings |
-| `silver_val_ground_truth.parquet/` | Validation positives, build stratified/representative eval groups |
-| `silver_test_ground_truth.parquet/` | Final full-ranking test positives |
-| `gold_edge_index.npy` | Train user-item graph |
-| `gold_item_train_freq.npy` | Warm/cold mask, item degree feature, popularity diagnostics |
-| `gold_item_popularity_group.npy` | Tail edge sampling, stratified validation/test metrics |
-| `gold_user_train_freq.npy` | User degree feature cho gate |
-| `gold_user_activity_group.npy` | User activity segmentation trong final test |
-| `gold_negative_sampling_prob.npy` | 20% Gold-prob component trong negative sampling |
-| `gold_item_id_map.parquet` | Map `parent_asin` sang `item_idx`; giữ item order khi encode |
-| `gold_user_id_map.parquet` | Map `reviewer_id` sang `user_idx`; giữ user order khi encode |
+TA-RecMind V2 trong notebook là mô hình degree-aware intra-layer gated LightGCN với semantic text projection. Mô hình dùng:
 
-TA-RecMindV2 trong notebook này là **degree-aware intra-layer gated LightGCN với semantic text projection**, huấn luyện bằng **standard BPR + graph-text alignment**, dùng **tail positive oversampling**, **warm-only negative sampling**, và chọn checkpoint bằng **representative warm validation WHM giữa TailNDCG và OverallNDCG**.
+- SentenceTransformer `all-MiniLM-L6-v2` để encode `user_text` và `item_text`.
+- LightGCN trên graph user-item train.
+- Gate theo degree để trộn graph và text ở từng layer propagation.
+- Final fusion giữa graph view và text view.
+- BPR loss cho ranking.
+- InfoNCE graph-text alignment cho user và positive item.
+- Tail positive oversampling để tăng exposure cho tail train edges.
+- Warm-only negative sampling để đúng protocol warm long-tail.
+- Full-ranking evaluation với Recall@K, NDCG@K, coverage, tail coverage, tail share và popularity diagnostics.
+- Checkpoint selection ưu tiên TailNDCG nhưng vẫn giữ OverallNDCG bằng weighted harmonic mean.
